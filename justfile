@@ -22,25 +22,25 @@ lock:
 # Run all checks (lint, format, typecheck, config files)
 check:
     #!/usr/bin/env bash
-    set +e
     failed=0
-    uv run ruff check src/ tests/ || { echo "FAILED: ruff check"; failed=1; }
-    uv run ruff format --check src/ tests/ || { echo "FAILED: ruff format"; failed=1; }
-    uv run mypy src/ || { echo "FAILED: mypy"; failed=1; }
-    uv run yamllint $(find . \( -name "*.yml" -o -name "*.yaml" \) | grep -vE "^\./(.venv|src|tests)/") || { echo "FAILED: yamllint"; failed=1; }
-    uv run check-jsonschema --builtin-schema github-workflows .github/workflows/*.yaml || { echo "FAILED: check-jsonschema"; failed=1; }
-    uv run taplo check $(find . -name "*.toml" | grep -vE "^\./(.venv|src|tests)/") || { echo "FAILED: taplo"; failed=1; }
+    run_checked() { if ! "$@"; then echo "FAILED: $*"; failed=1; fi; }
+    run_checked uv run ruff check src/ tests/
+    run_checked uv run ruff format --check src/ tests/
+    run_checked uv run mypy src/
+    run_checked uv run yamllint $(find . \( -name "*.yml" -o -name "*.yaml" \) | grep -vE "^\./(.venv|src|tests)/")
+    run_checked uv run check-jsonschema --builtin-schema github-workflows .github/workflows/*.yaml
+    run_checked uv run taplo check $(find . -name "*.toml" | grep -vE "^\./(.venv|src|tests)/")
     exit $failed
 
 # Auto-fix lint and formatting issues
 fix:
     #!/usr/bin/env bash
-    set +e
     failed=0
-    uv run ruff check --fix src/ tests/ || { echo "FAILED: ruff check"; failed=1; }
-    uv run ruff format src/ tests/ || { echo "FAILED: ruff format"; failed=1; }
-    uv run yamlfix $(find . \( -name "*.yml" -o -name "*.yaml" \) | grep -vE "^\./(.venv|src|tests)/") || { echo "FAILED: yamlfix"; failed=1; }
-    uv run taplo fmt $(find . -name "*.toml" | grep -vE "^\./(.venv|src|tests)/") || { echo "FAILED: taplo"; failed=1; }
+    run_checked() { if ! "$@"; then echo "FAILED: $*"; failed=1; fi; }
+    run_checked uv run ruff check --fix src/ tests/
+    run_checked uv run ruff format src/ tests/
+    run_checked uv run yamlfix $(find . \( -name "*.yml" -o -name "*.yaml" \) | grep -vE "^\./(.venv|src|tests)/")
+    run_checked uv run taplo fmt $(find . -name "*.toml" | grep -vE "^\./(.venv|src|tests)/")
     exit $failed
 
 # == Pre-Commit =================================================================
@@ -75,8 +75,8 @@ publish:
 
 # Remove build artifacts and cache
 clean:
-    rm -rf dist/ .coverage htmlcov/ .pytest_cache/ .mypy_cache/ .ruff_cache/
-    find . -type d -name __pycache__ -exec rm -rf {} +
+    rm -rf dist/ coverage.xml .coverage  htmlcov/ .pytest_cache/ .mypy_cache/ .ruff_cache/
+    find . -type d -name __pycache__ -print0 | xargs -0 rm -rf 2>/dev/null || true
     find . -type f -name "*.pyc" -delete
 
 # Re-create venv from existing lockfile
