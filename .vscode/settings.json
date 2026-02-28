@@ -12,16 +12,21 @@
     "htmlcov",
     "httpx",
     "isort",
+    "jsonschema",
+    "junitxml",
     "mypy",
+    "pipx",
     "pycache",
     "pydantic",
+    "pypi",
     "pytest",
     "pyyaml",
+    "taplo",
     "testpaths",
     "typer",
     "venv",
-    "pipx",
-    "pypi"
-  ],
+    "whitelines",
+    "yamlfix"
+],
   "python-envs.pythonProjects": []
 }
