@@ -111,7 +111,7 @@ strict = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "--cov=src/dnsight --cov-report=term-missing --junitxml=junit.xml -o junit_family=legacy"
+addopts = "--cov=src/dnsight --cov-report=term-missing --cov-report=xml --junitxml=junit.xml -o junit_family=legacy"
 
 [tool.coverage.run]
 source = ["src/dnsight"]
