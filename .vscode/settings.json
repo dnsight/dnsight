@@ -1,0 +1,32 @@
+{
+  "sonarlint.connectedMode.project": {
+    "connectionId": "dnsight",
+    "projectKey": "dnsight_dnsight"
+  },
+  "cSpell.words": [
+    "addopts",
+    "asyncio",
+    "dmarc",
+    "dnsight",
+    "dnspython",
+    "htmlcov",
+    "httpx",
+    "isort",
+    "jsonschema",
+    "junitxml",
+    "mypy",
+    "pipx",
+    "pycache",
+    "pydantic",
+    "pypi",
+    "pytest",
+    "pyyaml",
+    "taplo",
+    "testpaths",
+    "typer",
+    "venv",
+    "whitelines",
+    "yamlfix"
+],
+  "python-envs.pythonProjects": []
+}

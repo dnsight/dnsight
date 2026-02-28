@@ -1,0 +1,15 @@
+repos:
+  # Make check
+  - repo: local
+    hooks:
+      - id: check
+        name: check
+        entry: just check
+        language: system
+        pass_filenames: false
+
+  # Aikido security scanner (secrets, passwords, API keys)
+  - repo: https://github.com/AikidoSec/pre-commit
+    rev: 77ecd16894235d3260203df342995eda0f14c5b5
+    hooks:
+      - id: aikido-local-scanner
