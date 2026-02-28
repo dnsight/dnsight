@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./.github/actions/setup.yaml
+      - uses: ./.github/actions/setup
 
       - name: Run Checks
         shell: bash
