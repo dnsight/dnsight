@@ -1,6 +1,6 @@
 # dnsight
 
-[![CI](https://github.com/dnsight/dnsight/actions/workflows/ci.yml/badge.svg)](https://github.com/dnsight/dnsight/actions/workflows/ci.yml)
+[![CI](https://github.com/dnsight/dnsight/actions/workflows/ci.yaml/badge.svg)](https://github.com/dnsight/dnsight/actions/workflows/ci.yaml)
 [![PyPI version](https://img.shields.io/pypi/v/dnsight)](https://pypi.org/project/dnsight/)
 [![Python versions](https://img.shields.io/pypi/pyversions/dnsight)](https://pypi.org/project/dnsight/)
 [![codecov](https://codecov.io/github/dnsight/dnsight/graph/badge.svg?token=B4BKEX1G8O)](https://codecov.io/github/dnsight/dnsight)
@@ -28,10 +28,6 @@ uv add dnsight
 dnsight --help
 dnsight --version
 ```
-
-## Development
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions.
 
 ## License
 

@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0  # required for hatch-vcs to resolve version from tag
 
-      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/setup.yaml
 
       - name: Build
         run: just build
