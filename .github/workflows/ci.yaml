@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths-ignore:
       - '**.md'
-      - 'LICENSE'
+      - LICENSE
   pull_request:
     branches: [main]
     paths-ignore:
       - '**.md'
-      - 'LICENSE'
+      - LICENSE
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,7 +28,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: ./.github/actions/setup
+      - name: Setup
+        uses: ./.github/actions/setup
 
       - name: Run Checks
         shell: bash
@@ -71,3 +72,6 @@ jobs:
         with:
           files: junit.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Scan Code
+        uses: ./.github/actions/scan
