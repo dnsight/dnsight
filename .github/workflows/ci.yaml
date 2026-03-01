@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths-ignore:
       - '**.md'
-      - 'LICENSE'
+      - LICENSE
   pull_request:
     branches: [main]
     paths-ignore:
       - '**.md'
-      - 'LICENSE'
+      - LICENSE
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -74,3 +74,5 @@ jobs:
       - name: Scan Code
         if: ${{ !cancelled() && matrix.python-version == '3.14' }}
         uses: ./.github/actions/scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
