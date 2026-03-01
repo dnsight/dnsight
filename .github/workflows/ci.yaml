@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths-ignore:
       - '**.md'
-      - LICENSE
+      - 'LICENSE'
   pull_request:
     branches: [main]
     paths-ignore:
       - '**.md'
-      - LICENSE
+      - 'LICENSE'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
