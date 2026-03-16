@@ -1,0 +1,39 @@
+version: 1
+
+# If true, recommend strictest best practice; if false, recommend alignment to configured policy
+strict_recommendations: false
+
+# DNS resolver: system (default), google, cloudflare, quad9, or opendns
+resolver:
+  provider: cloudflare
+
+# What to run against: domains and optional paths
+targets:
+  - domain: corp.example.com # run just for domain
+  - domain: foo.com
+    paths:
+      - /
+      - /foo
+  - domain: partner-a.com
+    subdomains: true # run for all subdomains
+
+throttle: # global throttle config for all targets
+  rps: 50
+  concurrency: 8
+
+# Pattern-glob rules: order = precedence (later can override). Each rule has pattern, checks, and config to merge.
+config:
+  - include: "*"                    # match all; lowest precedence - if include is * and no exclude then set as default config
+    checks: [dmarc]
+    rps: 50 # override rps all targets matching
+    dmarc:
+      required_policy: none
+  - include: "*.example.com"
+    checks: [dmarc]
+    dmarc:
+      required_policy: quarantine
+  - include: "corp.example.com"
+    exclude: "corp.example.com/skip"
+    checks: [dmarc]
+    dmarc:
+      required_policy: reject

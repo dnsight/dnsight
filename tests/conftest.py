@@ -1,0 +1,27 @@
+"""Shared fixtures for the dnsight test suite."""
+
+from __future__ import annotations
+
+import pytest
+
+import dnsight.core.registry as registry
+from dnsight.utils.dns import reset_resolver
+from dnsight.utils.http import reset_http_client
+
+
+@pytest.fixture(autouse=True)
+def _clean_registry() -> None:  # noqa: PT004
+    """Clear the check registry before each test so registrations don't leak."""
+    saved = dict(registry._CHECKS)
+    registry._CHECKS.clear()
+    yield  # type: ignore[misc]
+    registry._CHECKS.clear()
+    registry._CHECKS.update(saved)
+
+
+@pytest.fixture(autouse=True)
+def _reset_singletons() -> None:  # noqa: PT004
+    """Reset DNS resolver and HTTP client singletons after each test."""
+    yield  # type: ignore[misc]
+    reset_resolver()
+    reset_http_client()
