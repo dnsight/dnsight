@@ -1,11 +1,13 @@
-from importlib.metadata import PackageNotFoundError
+"""dnsight — DNS, email, and web security hygiene."""
+
+from importlib.metadata import PackageNotFoundError, version
 
 
 try:
-    from importlib.metadata import version
-
     raw = version("dnsight")
-    # Show clean version for releases, "dev" for untagged local builds
+    # hatch-vcs: clean version for releases, dev.local for untagged builds
     __version__ = raw if "dev" not in raw else "dev.local"
 except PackageNotFoundError:
-    __version__ = "dev"
+    __version__ = "dev.local"
+
+__all__ = ["__version__"]

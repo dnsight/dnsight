@@ -1,7 +1,12 @@
+"""CLI entrypoint for dnsight."""
+
 from rich.console import Console
 import typer
 
 from dnsight import __version__
+
+
+__all__ = ["app", "main"]
 
 
 app = typer.Typer(
