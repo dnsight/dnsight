@@ -67,6 +67,8 @@ def parse_checks(raw: str | list[str] | None) -> ChecksUpdate | None:
             remove.add(name)
         else:
             add.add(name)
+    if not add and not remove:
+        return None
     return ChecksDelta(
         add=frozenset(add) if add else None,
         remove=frozenset(remove) if remove else None,

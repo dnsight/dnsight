@@ -21,6 +21,7 @@ from dnsight.core.config.blocks import (
 )
 from dnsight.core.config.config_manager import ConfigManager
 from dnsight.core.config.defaults import (
+    DEFAULT_DNS_PROVIDER,
     DEFAULT_GLOBAL_CONCURRENCY_LIMIT,
     DEFAULT_GLOBAL_MAX_RPS,
 )
@@ -90,7 +91,9 @@ def _parse_targets(raw: list[dict[str, Any]]) -> list[Target]:
 def _parse_resolver(raw: dict[str, Any] | None) -> ResolverConfig:
     if raw is None:
         return ResolverConfig()
-    return ResolverConfig(provider=DNSProvider(raw["provider"]))
+    return ResolverConfig(
+        provider=DNSProvider(raw.get("provider", DEFAULT_DNS_PROVIDER))
+    )
 
 
 # ---------------------------------------------------------------------------

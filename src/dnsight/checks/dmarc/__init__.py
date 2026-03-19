@@ -16,7 +16,21 @@ from dnsight.checks.dmarc.models import (
     DMARCIssueId,
     DMARCRecommendationId,
 )
-from dnsight.checks.dmarc.rules import DMARCRules
+from dnsight.checks.dmarc.rules import (
+    DMARC1_PREFIX,
+    extract_dmarc_config,
+    normalise_config,
+    parse_dmarc_record,
+    process_raw_records,
+    result_missing_dns,
+    result_no_valid_record,
+    rule_alignment,
+    rule_pct,
+    rule_policy_strength,
+    rule_rua,
+    rule_ruf,
+    rule_subdomain_policy,
+)
 from dnsight.core.config.blocks import Config, DmarcConfig
 from dnsight.core.exceptions import CheckError
 from dnsight.core.models import CheckResult, GeneratedRecord, Recommendation
@@ -53,53 +67,12 @@ class DMARCCheck(BaseCheck[DMARCData, DMARCGenerateParams]):
     name = "dmarc"
     capabilities = frozenset({Capability.CHECK, Capability.GENERATE})
 
-    # -- Parser (public static for SDK use) --------------------------------
+    # -- Static methods (direct public API) --------------------------------
 
     @staticmethod
     def parse_dmarc_record(raw: str) -> DMARCData:
-        """Parse a single DMARC TXT string into DMARCData.
-
-        Uses defaults for missing tags. Safe to call with empty or malformed
-        strings; invalid tag values are preserved in raw_record for validation.
-
-        Args:
-            raw: The raw TXT record string (e.g. "v=DMARC1; p=reject; pct=100").
-
-        Returns:
-            Parsed DMARCData with raw_record set to the input string.
-        """
-        raw = (raw or "").strip()
-        state: dict[str, Any] = {
-            "policy": "none",
-            "subdomain_policy": None,
-            "percentage": 100,
-            "alignment_dkim": "r",
-            "alignment_spf": "r",
-            "rua": [],
-            "ruf": [],
-        }
-        for part in raw.split(";"):
-            part = part.strip()
-            if "=" not in part:
-                continue
-            tag, _, value = part.partition("=")
-            tag = tag.strip().lower()
-            value = value.strip()
-            if tag == "v":
-                continue
-            DMARCRules.apply_dmarc_tag(state, tag, value)
-        return DMARCData(
-            policy=state["policy"],
-            subdomain_policy=state["subdomain_policy"],
-            percentage=state["percentage"],
-            alignment_dkim=state["alignment_dkim"],
-            alignment_spf=state["alignment_spf"],
-            rua=state["rua"],
-            ruf=state["ruf"],
-            raw_record=raw,
-        )
-
-    # -- Static methods (direct public API) --------------------------------
+        """Parse a single DMARC TXT string into DMARCData. See rules.parse_dmarc_record."""
+        return parse_dmarc_record(raw)
 
     @staticmethod
     async def get_dmarc(
@@ -117,22 +90,20 @@ class DMARCCheck(BaseCheck[DMARCData, DMARCGenerateParams]):
         Raises:
             CheckError: When DNS lookup fails (e.g. no TXT record).
         """
-        _ = DMARCRules.extract_dmarc_config(
-            config
-        )  # reserved for future use (e.g. timeout)
+        _ = extract_dmarc_config(config)  # reserved for future use (e.g. timeout)
         resolver = get_resolver()
         name = f"_dmarc.{domain}"
         raw_list = await resolver.resolve_txt(name)
 
         record = ""
         for s in raw_list:
-            if (s or "").strip().lower().startswith(DMARCRules.DMARC1_PREFIX):
+            if (s or "").strip().lower().startswith(DMARC1_PREFIX):
                 record = (s or "").strip()
                 break
         if not record and raw_list:
             record = (raw_list[0] or "").strip()
 
-        return DMARCCheck.parse_dmarc_record(record)
+        return parse_dmarc_record(record)
 
     @staticmethod
     async def check_dmarc(
@@ -150,25 +121,25 @@ class DMARCCheck(BaseCheck[DMARCData, DMARCGenerateParams]):
         Returns:
             ``CheckResult[DMARCData]`` with status, data, issues, and recommendations.
         """
-        dmarc_config, strict_recommendations = DMARCRules.normalise_config(config)
+        dmarc_config, strict_recommendations = normalise_config(config)
         try:
             raw_list = await get_resolver().resolve_txt(f"_dmarc.{domain}")
         except CheckError:
-            return DMARCRules.result_missing_dns()
+            return result_missing_dns()
 
-        record, issues = DMARCRules.process_raw_records(raw_list)
-        if not record or not record.lower().startswith(DMARCRules.DMARC1_PREFIX):
-            return DMARCRules.result_no_valid_record(record, issues, [])
+        record, issues = process_raw_records(raw_list)
+        if not record or not record.lower().startswith(DMARC1_PREFIX):
+            return result_no_valid_record(record, issues, [])
 
-        data = DMARCCheck.parse_dmarc_record(record)
+        data = parse_dmarc_record(record)
         recommendations: list[Recommendation] = []
         for rule in (
-            DMARCRules.rule_policy_strength,
-            DMARCRules.rule_subdomain_policy,
-            DMARCRules.rule_rua,
-            DMARCRules.rule_ruf,
-            DMARCRules.rule_pct,
-            DMARCRules.rule_alignment,
+            rule_policy_strength,
+            rule_subdomain_policy,
+            rule_rua,
+            rule_ruf,
+            rule_pct,
+            rule_alignment,
         ):
             i, r = rule(data, dmarc_config, strict_recommendations)
             issues.extend(i)
@@ -200,7 +171,7 @@ class DMARCCheck(BaseCheck[DMARCData, DMARCGenerateParams]):
             ``GeneratedRecord`` with record type ``TXT``, host ``_dmarc``.
         """
         if params is None and config is not None:
-            dmarc_config = DMARCRules.extract_dmarc_config(config)
+            dmarc_config = extract_dmarc_config(config)
             params = DMARCGenerateParams.from_config(dmarc_config)
         p = params or DMARCGenerateParams(subdomain_policy=None)
         parts = ["v=DMARC1", f"p={p.policy}", f"pct={p.percentage}"]
@@ -237,4 +208,3 @@ class DMARCCheck(BaseCheck[DMARCData, DMARCGenerateParams]):
 get_dmarc = DMARCCheck.get_dmarc
 check_dmarc = DMARCCheck.check_dmarc
 generate_dmarc = DMARCCheck.generate_dmarc
-parse_dmarc_record = DMARCCheck.parse_dmarc_record

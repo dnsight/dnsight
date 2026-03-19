@@ -58,7 +58,7 @@ class TestSuffixValidation:
 
 class TestFileNotFound:
     def test_missing_file_raises(self, config_dir: Path) -> None:
-        with pytest.raises(FileNotFoundError):
+        with pytest.raises(ConfigError, match="not found"):
             config_manager_from_file(config_dir / "nope.yaml")
 
 

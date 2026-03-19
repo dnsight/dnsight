@@ -114,7 +114,10 @@ class AsyncDNSResolver:
         """
         try:
             answer = await self._inner.resolve(name, "TXT")
-            return [b"".join(rdata.strings).decode() for rdata in answer]
+            return [
+                b"".join(rdata.strings).decode("utf-8", errors="replace")
+                for rdata in answer
+            ]
         except DNSException as exc:
             raise CheckError(f"DNS TXT lookup failed for {name}: {exc}") from exc
 

@@ -17,6 +17,7 @@ from typing import Any, Protocol, runtime_checkable
 import httpx
 from pydantic import BaseModel, ConfigDict
 
+from dnsight import __version__
 from dnsight.core.exceptions import CheckError
 
 
@@ -97,7 +98,7 @@ def reset_http_client() -> None:
 
 
 _DEFAULT_TIMEOUT = 10.0
-_DEFAULT_USER_AGENT = "dnsight/0.1"
+_DEFAULT_USER_AGENT = f"dnsight/{__version__}"
 
 
 class AsyncHTTPClient:
@@ -119,9 +120,11 @@ class AsyncHTTPClient:
         user_agent: str = _DEFAULT_USER_AGENT,
         follow_redirects: bool = True,
     ) -> None:
-        self._timeout = timeout
-        self._user_agent = user_agent
-        self._follow_redirects = follow_redirects
+        self._client = httpx.AsyncClient(
+            timeout=timeout,
+            follow_redirects=follow_redirects,
+            headers={"User-Agent": user_agent},
+        )
 
     async def get(self, url: str, **kwargs: Any) -> HTTPResponse:
         """Send an HTTP GET request.
@@ -170,17 +173,12 @@ class AsyncHTTPClient:
             CheckError: On transport or protocol errors.
         """
         try:
-            async with httpx.AsyncClient(
-                timeout=self._timeout,
-                follow_redirects=self._follow_redirects,
-                headers={"User-Agent": self._user_agent},
-            ) as client:
-                response = await client.request(method, url, **kwargs)
-                return HTTPResponse(
-                    status_code=response.status_code,
-                    headers=dict(response.headers),
-                    text=response.text,
-                )
+            response = await self._client.request(method, url, **kwargs)
+            return HTTPResponse(
+                status_code=response.status_code,
+                headers=dict(response.headers),
+                text=response.text,
+            )
         except httpx.HTTPError as exc:
             raise CheckError(f"HTTP {method} request failed for {url}: {exc}") from exc
 

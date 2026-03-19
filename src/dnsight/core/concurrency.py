@@ -10,10 +10,18 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from typing import Protocol, runtime_checkable
 
 
-__all__ = ["ConcurrencyManager", "NoopConcurrencyManager"]
+__all__ = ["ConcurrencyLimiter", "ConcurrencyManager", "NoopConcurrencyManager"]
+
+
+@runtime_checkable
+class ConcurrencyLimiter(Protocol):
+    """Protocol for concurrency limiters."""
+
+    def acquire(self) -> AbstractAsyncContextManager[None]: ...
 
 
 class ConcurrencyManager:

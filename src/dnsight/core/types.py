@@ -33,11 +33,11 @@ class RecommendationId(StrEnum):
 class RankedEnum(str, Enum):  # noqa: UP042 - custom __new__ with rank; StrEnum doesn't support tuple values
     """Base for ranked enums."""
 
-    __slots__ = ("_rank", "_value")
+    __slots__ = ("_rank",)
 
     def __new__(cls, value: str, rank: int) -> Self:
         obj = str.__new__(cls, value)
-        obj._value = value
+        obj._value_ = value
         obj._rank = rank
         return obj
 
@@ -64,7 +64,7 @@ class RankedEnum(str, Enum):  # noqa: UP042 - custom __new__ with rank; StrEnum 
     def __eq__(self, other: object) -> bool | NotImplementedType:
         if type(other) is not type(self):
             if isinstance(other, str):
-                return self._value == other
+                return self.value == other
             return NotImplemented
         same: Self = cast(Self, other)
         return self._rank == same._rank
@@ -72,13 +72,13 @@ class RankedEnum(str, Enum):  # noqa: UP042 - custom __new__ with rank; StrEnum 
     def __ne__(self, other: object) -> bool | NotImplementedType:
         if type(other) is not type(self):
             if isinstance(other, str):
-                return self._value != other
+                return self.value != other
             return NotImplemented
         same: Self = cast(Self, other)
         return self._rank != same._rank
 
     def __str__(self) -> str:
-        return str(self._value)
+        return self.value
 
 
 class Severity(RankedEnum):

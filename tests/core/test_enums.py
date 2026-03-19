@@ -113,3 +113,32 @@ def test_severity_is_str_subclass() -> None:
     for member in Severity:
         assert isinstance(member, str)
         assert str(member) == member.value
+
+
+class TestRankedEnumOrdering:
+    def test_ordering(self) -> None:
+        assert (
+            Severity.INFO
+            < Severity.LOW
+            < Severity.MEDIUM
+            < Severity.HIGH
+            < Severity.CRITICAL
+        )
+
+    def test_le_and_ge(self) -> None:
+        assert Severity.LOW <= Severity.MEDIUM
+        assert Severity.MEDIUM >= Severity.LOW
+
+    def test_eq_same_type(self) -> None:
+        assert Severity.HIGH == Severity.HIGH
+        assert Severity.HIGH != Severity.LOW
+
+    def test_eq_and_ne_str(self) -> None:
+        assert Severity.HIGH == "high"
+        assert Severity.HIGH != "low"
+
+    def test_compare_wrong_type_raises(self) -> None:
+        from dnsight.core.types import Priority
+
+        with pytest.raises(TypeError):
+            _ = Severity.HIGH < Priority.HIGH  # type: ignore[operator]

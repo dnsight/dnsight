@@ -56,18 +56,14 @@ class ThrottleManager:
 
     async def _acquire(self) -> None:
         """Acquire one local token, sleeping if necessary."""
-        async with self._lock:
-            self._refill()
-            if self._tokens >= 1.0:
-                self._tokens -= 1.0
-                return
-            delay = (1.0 - self._tokens) / self._max_rps
-
-        await asyncio.sleep(delay)
-
-        async with self._lock:
-            self._refill()
-            self._tokens = max(0.0, self._tokens - 1.0)
+        while True:
+            async with self._lock:
+                self._refill()
+                if self._tokens >= 1.0:
+                    self._tokens -= 1.0
+                    return
+                delay = (1.0 - self._tokens) / self._max_rps
+            await asyncio.sleep(delay)
 
     def _refill(self) -> None:
         """Add tokens based on elapsed time since last refill."""
@@ -99,13 +95,7 @@ class NoopThrottleManager(ThrottleManager):
     """
 
     def __init__(self) -> None:
-        # Bypass parent __init__ — we don't need any state.
-        self._max_rps = 0.0
-        self._burst = 0
-        self._parent = None
-        self._tokens = 0.0
-        self._last_refill = 0.0
-        self._lock = asyncio.Lock()
+        super().__init__(max_rps=1.0)
 
     async def wait(self) -> None:
         """No-op: returns immediately without rate limiting."""

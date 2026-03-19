@@ -45,10 +45,12 @@ def configure(level: int = logging.INFO, format_string: str | None = None) -> No
     """
     if format_string is None:
         format_string = "%(name)s %(levelname)s %(message)s (%(filename)s:%(lineno)d)"
+    formatter = logging.Formatter(format_string)
     root = logging.getLogger(_ROOT_NAME)
-    if not root.handlers:
-        handler = logging.StreamHandler()
-        handler.setLevel(level)
-        handler.setFormatter(logging.Formatter(format_string))
-        root.addHandler(handler)
+    sh = next((h for h in root.handlers if isinstance(h, logging.StreamHandler)), None)
+    if sh is None:
+        sh = logging.StreamHandler()
+        root.addHandler(sh)
+    sh.setLevel(level)
+    sh.setFormatter(formatter)
     root.setLevel(level)

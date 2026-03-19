@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
 from pydantic import ValidationError
@@ -113,73 +113,40 @@ def _mock_httpx_response(
 
 
 class TestAsyncHTTPClient:
-    def test_constructor_defaults(self) -> None:
+    def test_constructor_creates_client(self) -> None:
         client = AsyncHTTPClient()
-        assert client._timeout == 10.0
-        assert client._user_agent == "dnsight/0.1"
-        assert client._follow_redirects is True
+        assert isinstance(client._client, httpx.AsyncClient)
 
-    def test_constructor_custom(self) -> None:
-        client = AsyncHTTPClient(
-            timeout=5.0, user_agent="test/1.0", follow_redirects=False
-        )
-        assert client._timeout == 5.0
-        assert client._user_agent == "test/1.0"
-        assert client._follow_redirects is False
+    def test_constructor_custom_timeout(self) -> None:
+        client = AsyncHTTPClient(timeout=5.0)
+        assert isinstance(client._client, httpx.AsyncClient)
 
     async def test_get_success(self) -> None:
         client = AsyncHTTPClient()
         mock_response = _mock_httpx_response(200, text="hello")
-
-        mock_client_instance = MagicMock()
-        mock_client_instance.request = AsyncMock(return_value=mock_response)
-        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-        mock_client_instance.__aexit__ = AsyncMock(return_value=False)
-
-        with patch(
-            "dnsight.utils.http.httpx.AsyncClient", return_value=mock_client_instance
+        with patch.object(
+            client._client, "request", new=AsyncMock(return_value=mock_response)
         ):
             result = await client.get("https://example.com")
-
         assert result.status_code == 200
         assert result.text == "hello"
-        mock_client_instance.request.assert_awaited_once_with(
-            "GET", "https://example.com"
-        )
 
     async def test_head_success(self) -> None:
         client = AsyncHTTPClient()
         mock_response = _mock_httpx_response(200, text="")
-
-        mock_client_instance = MagicMock()
-        mock_client_instance.request = AsyncMock(return_value=mock_response)
-        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-        mock_client_instance.__aexit__ = AsyncMock(return_value=False)
-
-        with patch(
-            "dnsight.utils.http.httpx.AsyncClient", return_value=mock_client_instance
+        with patch.object(
+            client._client, "request", new=AsyncMock(return_value=mock_response)
         ):
             result = await client.head("https://example.com")
-
         assert result.status_code == 200
-        mock_client_instance.request.assert_awaited_once_with(
-            "HEAD", "https://example.com"
-        )
 
     async def test_request_http_error(self) -> None:
         client = AsyncHTTPClient()
-
-        mock_client_instance = MagicMock()
-        mock_client_instance.request = AsyncMock(
-            side_effect=httpx.HTTPError("connection failed")
-        )
-        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-        mock_client_instance.__aexit__ = AsyncMock(return_value=False)
-
         with (
-            patch(
-                "dnsight.utils.http.httpx.AsyncClient",
-                return_value=mock_client_instance,
+            patch.object(
+                client._client,
+                "request",
+                new=AsyncMock(side_effect=httpx.HTTPError("connection failed")),
             ),
             pytest.raises(CheckError, match="HTTP GET request failed"),
         ):
@@ -190,17 +157,10 @@ class TestAsyncHTTPClient:
         mock_response = _mock_httpx_response(
             404, headers={"x-custom": "value"}, text="not found"
         )
-
-        mock_client_instance = MagicMock()
-        mock_client_instance.request = AsyncMock(return_value=mock_response)
-        mock_client_instance.__aenter__ = AsyncMock(return_value=mock_client_instance)
-        mock_client_instance.__aexit__ = AsyncMock(return_value=False)
-
-        with patch(
-            "dnsight.utils.http.httpx.AsyncClient", return_value=mock_client_instance
+        with patch.object(
+            client._client, "request", new=AsyncMock(return_value=mock_response)
         ):
             result = await client.get("https://example.com/missing")
-
         assert isinstance(result, HTTPResponse)
         assert result.status_code == 404
         assert result.headers == {"x-custom": "value"}

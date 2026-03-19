@@ -256,6 +256,17 @@ class TestDomainResult:
         dr = self._make_domain_result()
         assert dr.partial is False
 
+    def test_root_empty_raises(self) -> None:
+        dr = DomainResult(
+            domain="example.com",
+            timestamp=datetime(2025, 1, 1, tzinfo=UTC),
+            config_version=1,
+            zones=[],
+            partial=False,
+        )
+        with pytest.raises(ValueError, match="no zones"):
+            _ = dr.root
+
 
 # ---------------------------------------------------------------------------
 # GeneratedRecord

@@ -13,7 +13,10 @@ _ALLOWED_SUFFIXES = frozenset({".yaml", ".yml"})
 
 
 def config_manager_from_file(path: Path | str) -> ConfigManager:
-    resolved = Path(path).resolve(strict=True)
+    try:
+        resolved = Path(path).resolve(strict=True)
+    except FileNotFoundError as exc:
+        raise ConfigError(f"Config file not found: {path}") from exc
     if resolved.suffix not in _ALLOWED_SUFFIXES:
         raise ConfigError(
             f"Config file must be YAML ({', '.join(sorted(_ALLOWED_SUFFIXES))}), "
@@ -28,6 +31,4 @@ def config_manager_from_file(path: Path | str) -> ConfigManager:
         raise ConfigError(f"Invalid version: {data['version']!r}") from None
     if version not in VERSION_PARSERS:
         raise ConfigError(f"Unknown config version: {version}")
-    config = VERSION_PARSERS[version](data)
-    # Check if config has "*" rule with no exclude
-    return config
+    return VERSION_PARSERS[version](data)

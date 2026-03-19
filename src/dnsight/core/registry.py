@@ -39,6 +39,8 @@ def register(cls: type[Any]) -> type[Any]:
     Returns:
         The same class, unmodified.
     """
+    if cls.name in _CHECKS:
+        raise RuntimeError(f"Check {cls.name!r} is already registered")
     _CHECKS[cls.name] = CheckDefinition(
         name=cls.name, cls=cls, capabilities=cls.capabilities
     )

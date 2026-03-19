@@ -174,14 +174,15 @@ class DomainResult(BaseModel):
     @property
     def root(self) -> ZoneResult:
         """Root zone result (zones[0])."""
+        if not self.zones:
+            raise ValueError("DomainResult has no zones")
         return self.zones[0]
 
     def _collect_zone_issues(self, z: ZoneResult) -> list[tuple[str, Issue]]:
         """Collect ``(zone_fqdn, issue)`` pairs for a zone and its children."""
-        out: list[tuple[str, Issue]] = []
-        for c in z._check_results():
-            for issue in c.issues:
-                out.append((z.zone, issue))
+        out: list[tuple[str, Issue]] = [
+            (z.zone, issue) for c in z.results.values() for issue in c.issues
+        ]
         for child in z.children:
             out.extend(self._collect_zone_issues(child))
         return out

@@ -29,8 +29,9 @@ class Pattern:
     def matches(pattern: str, target: str) -> bool:
         """True if target matches pattern (or any |-separated alternative). * = one label/segment."""
         t = target.strip().lower()
-        for alt in (_s for s in pattern.split("|") if (_s := s.strip())):
-            if Pattern._match_one(alt, t):
+        for s in pattern.split("|"):
+            alt = s.strip()
+            if alt and Pattern._match_one(alt, t):
                 return True
         return False
 

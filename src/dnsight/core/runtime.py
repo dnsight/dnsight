@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from dnsight.core.concurrency import ConcurrencyManager
+from dnsight.core.concurrency import ConcurrencyLimiter
 from dnsight.core.config import ResolvedConfig
 from dnsight.core.throttle import ThrottleManager
 
@@ -36,4 +36,4 @@ class Runtime:
 
     config: ResolvedConfig
     throttle: ThrottleManager
-    concurrency: ConcurrencyManager
+    concurrency: ConcurrencyLimiter

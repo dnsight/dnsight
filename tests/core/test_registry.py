@@ -31,16 +31,15 @@ class TestRegister:
         result = register(_FakeCheck)
         assert result is _FakeCheck
 
-    def test_register_overwrites(self) -> None:
+    def test_register_duplicate_raises(self) -> None:
         register(_FakeCheck)
 
         class _FakeCheck2:
             name = "fake"
             capabilities = frozenset({Capability.GENERATE})
 
-        register(_FakeCheck2)
-        defn = get("fake")
-        assert defn.cls is _FakeCheck2
+        with pytest.raises(RuntimeError, match="already registered"):
+            register(_FakeCheck2)
 
 
 class TestGet:
