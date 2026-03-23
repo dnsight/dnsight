@@ -1,9 +1,11 @@
 """Base classes for dnsight checks.
 
 ``BaseCheckData`` — frozen Pydantic base for all parsed check data.
-``GenerateParams`` — frozen Pydantic base for all generation parameter types.
-``BaseCheck[CheckDataT]`` — ABC with capability-gated ``get``, ``check``,
-and ``generate`` methods plus throttle support.
+``BaseGenerateParams`` — frozen Pydantic base for all generation parameter types.
+``BaseCheck[CheckDataT, GenerateParamsT]`` — ABC with capability-gated ``get``,
+``check``, and ``generate`` methods plus throttle support. Checks that only
+implement CHECK (no GENERATE) still use a second type parameter, typically
+``BaseGenerateParams``, so the class signature stays uniform—see ``DKIMCheck``.
 """
 
 from __future__ import annotations
@@ -51,6 +53,11 @@ class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):
     Subclasses declare ``name`` and ``capabilities`` as class variables,
     then implement the ``_get`` and ``_check`` abstract methods (and
     optionally ``_generate``).
+
+    **Type parameters:** ``GenerateParamsT`` is the generation-params type for
+    ``generate()`` / ``_generate``. CHECK-only checks use ``BaseGenerateParams``
+    (or another concrete placeholder) as the second parameter so the generic
+    matches subclasses that do declare GENERATE.
 
     The public methods ``get()``, ``check()``, and ``generate()`` handle
     capability gating and throttle before delegating to the private

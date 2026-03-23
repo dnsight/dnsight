@@ -72,6 +72,7 @@ cli/  →  sdk.py  →  orchestrator.py  →  checks/  →  core/
 - **I/O singletons**: `get_resolver()` / `set_resolver()` and `get_http_client()` / `set_http_client()`. Tests inject fakes via `set_*`. Never use real DNS/HTTP in tests.
 - **Throttle**: `ThrottleManager.child()` builds parent-chain hierarchy. `wait()` traverses it.
 - **Capabilities**: `CHECK`, `GENERATE`. `BaseCheck` gates dispatch; raises `CapabilityError` for unsupported actions.
+- **Exceptions (SDK)**: `CapabilityError` and config validation errors belong to the orchestrator/config layer. Check code surfaces DNS/HTTP failures via `CheckError` from utils and partial or completed `CheckResult` with `error`/`issues` as appropriate—not raw resolver exceptions.
 - **No caching**: One audit = one run. Pure CPU helpers may use `@lru_cache`; never on DNS/HTTP.
 
 ---

@@ -1,4 +1,9 @@
-"""HTTP security headers check: check class and public API."""
+"""HTTP security headers check: check class and public API.
+
+``HeadersData`` is the full probe result (URLs fetched, raw headers, optional
+fetch error). ``HeaderResult`` is the status of a single evaluated token (e.g.
+HSTS present/missing) within that probe.
+"""
 
 from __future__ import annotations
 

@@ -5,10 +5,16 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from dnsight.checks.dmarc.models import DMARCData, DMARCIssueId, DMARCRecommendationId
+from dnsight.checks.dmarc.models import (
+    DMARCData,
+    DMARCIssueId,
+    DMARCRecommendationId,
+    issue_descriptor,
+    recommendation_descriptor,
+)
 from dnsight.core.config.blocks import Config, DmarcConfig
 from dnsight.core.models import CheckResult, Issue, Recommendation
-from dnsight.core.types import Severity, Status
+from dnsight.core.types import Status
 
 
 __all__ = [
@@ -135,6 +141,7 @@ def normalise_config(config: Config | DmarcConfig | None) -> tuple[DmarcConfig, 
 
 def result_missing_dns() -> CheckResult[DMARCData]:
     """CheckResult when DNS lookup fails (no _dmarc TXT)."""
+    d = issue_descriptor(DMARCIssueId.POLICY_MISSING)
     return CheckResult(
         status=Status.COMPLETED,
         data=None,
@@ -142,7 +149,7 @@ def result_missing_dns() -> CheckResult[DMARCData]:
         issues=[
             Issue(
                 id=DMARCIssueId.POLICY_MISSING,
-                severity=Severity.CRITICAL,
+                severity=d.severity,
                 title="DMARC record missing",
                 description="No _dmarc TXT record found.",
                 remediation="Publish a DMARC TXT record at _dmarc.<domain>.",
@@ -178,10 +185,11 @@ def process_raw_records(raw_list: list[str]) -> tuple[str, list[Issue]]:
     if not dmarc_records and raw_list:
         dmarc_records = [(raw_list[0] or "").strip()]
     if len(dmarc_records) > 1:
+        md = issue_descriptor(DMARCIssueId.MULTIPLE_RECORDS)
         issues.append(
             Issue(
                 id=DMARCIssueId.MULTIPLE_RECORDS,
-                severity=Severity.HIGH,
+                severity=md.severity,
                 title="Multiple DMARC records",
                 description="More than one TXT record starts with v=DMARC1; only one is valid.",
                 remediation="Publish a single DMARC TXT record at _dmarc.<domain>.",
@@ -189,10 +197,11 @@ def process_raw_records(raw_list: list[str]) -> tuple[str, list[Issue]]:
         )
     record = dmarc_records[0] if dmarc_records else ""
     if not record or not record.lower().startswith(DMARC1_PREFIX):
+        pm = issue_descriptor(DMARCIssueId.POLICY_MISSING)
         issues.append(
             Issue(
                 id=DMARCIssueId.POLICY_MISSING,
-                severity=Severity.CRITICAL,
+                severity=pm.severity,
                 title="DMARC record missing or invalid",
                 description="No valid DMARC record (v=DMARC1) found.",
                 remediation="Publish a DMARC TXT record at _dmarc.<domain>.",
@@ -215,10 +224,11 @@ def rule_policy_strength(
     min_strength = _policy_strength(dmarc_config.policy)
     actual_strength = _policy_strength(data.policy)
     if actual_strength < min_strength:
+        pw = issue_descriptor(DMARCIssueId.POLICY_WEAK)
         issues.append(
             Issue(
                 id=DMARCIssueId.POLICY_WEAK,
-                severity=Severity.HIGH,
+                severity=pw.severity,
                 title="DMARC policy weaker than required",
                 description=f"Required at least {dmarc_config.policy}; found {data.policy}.",
                 remediation=f"Set p={dmarc_config.policy} or stronger in your DMARC record.",
@@ -226,10 +236,11 @@ def rule_policy_strength(
         )
     target = (dmarc_config.target_policy or "").strip().lower() or None
     if target and _policy_strength(data.policy) < _policy_strength(target):
+        rej = recommendation_descriptor(DMARCRecommendationId.ENABLE_REJECT)
         if strict or target == "reject":
             recommendations.append(
                 Recommendation(
-                    id=DMARCRecommendationId.ENABLE_REJECT,
+                    id=rej.id,
                     title="Use p=reject",
                     description="Set DMARC policy to reject for strongest protection.",
                 )
@@ -237,7 +248,7 @@ def rule_policy_strength(
         else:
             recommendations.append(
                 Recommendation(
-                    id=DMARCRecommendationId.ENABLE_REJECT,
+                    id=rej.id,
                     title=f"Consider p={target}",
                     description=f"Move to p={target} to meet your target policy.",
                 )
@@ -258,10 +269,11 @@ def rule_subdomain_policy(
     sp_min = _policy_strength(dmarc_config.subdomain_policy_minimum)
     sp_actual = _policy_strength(data.subdomain_policy or "none")
     if sp_actual < sp_min:
+        sp = issue_descriptor(DMARCIssueId.SUBDOMAIN_POLICY_WEAK)
         issues.append(
             Issue(
                 id=DMARCIssueId.SUBDOMAIN_POLICY_WEAK,
-                severity=Severity.MEDIUM,
+                severity=sp.severity,
                 title="Subdomain policy weaker than required",
                 description=f"sp must be at least {dmarc_config.subdomain_policy_minimum}; found {data.subdomain_policy or 'none'}.",
                 remediation=f"Set sp={dmarc_config.subdomain_policy_minimum} or stronger.",
@@ -280,10 +292,11 @@ def rule_rua(
         expected = _reporting_uri_frozenset(dmarc_config.expected_rua)
         actual = _reporting_uri_frozenset(data.rua)
         if expected != actual:
+            ru = issue_descriptor(DMARCIssueId.RUA_MISMATCH)
             issues.append(
                 Issue(
-                    id=DMARCIssueId.RUA_MISMATCH.value,
-                    severity=Severity.MEDIUM,
+                    id=DMARCIssueId.RUA_MISMATCH,
+                    severity=ru.severity,
                     title="RUA URIs do not match configuration",
                     description=(
                         f"Expected rua= {sorted(expected)!r}; "
@@ -295,27 +308,30 @@ def rule_rua(
             return issues, recommendations
 
     if dmarc_config.rua_required and not data.rua:
+        rm = issue_descriptor(DMARCIssueId.RUA_MISSING)
         issues.append(
             Issue(
                 id=DMARCIssueId.RUA_MISSING,
-                severity=Severity.MEDIUM,
+                severity=rm.severity,
                 title="RUA missing",
                 description="Aggregate reporting (rua) is required but not set.",
                 remediation="Add at least one rua=mailto:... in your DMARC record.",
             )
         )
         if not strict:
+            add_rua = recommendation_descriptor(DMARCRecommendationId.ADD_RUA)
             recommendations.append(
                 Recommendation(
-                    id=DMARCRecommendationId.ADD_RUA,
+                    id=add_rua.id,
                     title="Add RUA",
                     description="Add rua=mailto: to receive aggregate reports.",
                 )
             )
     if strict and not data.rua:
+        add_rua_s = recommendation_descriptor(DMARCRecommendationId.ADD_RUA)
         recommendations.append(
             Recommendation(
-                id=DMARCRecommendationId.ADD_RUA,
+                id=add_rua_s.id,
                 title="Add RUA",
                 description="Add rua=mailto: to receive aggregate reports.",
             )
@@ -333,10 +349,11 @@ def rule_ruf(
         expected = _reporting_uri_frozenset(dmarc_config.expected_ruf)
         actual = _reporting_uri_frozenset(data.ruf)
         if expected != actual:
+            rf = issue_descriptor(DMARCIssueId.RUF_MISMATCH)
             issues.append(
                 Issue(
-                    id=DMARCIssueId.RUF_MISMATCH.value,
-                    severity=Severity.MEDIUM,
+                    id=DMARCIssueId.RUF_MISMATCH,
+                    severity=rf.severity,
                     title="RUF URIs do not match configuration",
                     description=(
                         f"Expected ruf= {sorted(expected)!r}; "
@@ -348,19 +365,21 @@ def rule_ruf(
             return issues, recommendations
 
     if dmarc_config.ruf_required and not data.ruf:
+        rfu = issue_descriptor(DMARCIssueId.RUF_MISSING)
         issues.append(
             Issue(
                 id=DMARCIssueId.RUF_MISSING,
-                severity=Severity.LOW,
+                severity=rfu.severity,
                 title="RUF missing",
                 description="Forensic reporting (ruf) is required but not set.",
                 remediation="Add at least one ruf=mailto:... in your DMARC record.",
             )
         )
     if (strict or dmarc_config.ruf_required) and not data.ruf:
+        add_ruf = recommendation_descriptor(DMARCRecommendationId.ADD_RUF)
         recommendations.append(
             Recommendation(
-                id=DMARCRecommendationId.ADD_RUF,
+                id=add_ruf.id,
                 title="Add RUF",
                 description="Add ruf=mailto: for forensic reporting.",
             )
@@ -375,29 +394,32 @@ def rule_pct(
     issues: list[Issue] = []
     recommendations: list[Recommendation] = []
     if data.percentage < dmarc_config.minimum_pct:
+        pn = issue_descriptor(DMARCIssueId.PCT_NOT_MIN)
         issues.append(
             Issue(
                 id=DMARCIssueId.PCT_NOT_MIN,
-                severity=Severity.MEDIUM,
+                severity=pn.severity,
                 title="DMARC pct below minimum",
                 description=f"pct must be at least {dmarc_config.minimum_pct}; found {data.percentage}.",
                 remediation=f"Set pct={dmarc_config.minimum_pct} in your DMARC record.",
             )
         )
     elif data.percentage != 100 and (strict or dmarc_config.minimum_pct == 100):
+        p100 = issue_descriptor(DMARCIssueId.PCT_NOT_100)
         issues.append(
             Issue(
                 id=DMARCIssueId.PCT_NOT_100,
-                severity=Severity.MEDIUM,
+                severity=p100.severity,
                 title="DMARC pct is not 100",
                 description=f"Only {data.percentage}% of messages are subject to policy.",
                 remediation="Set pct=100 in your DMARC record.",
             )
         )
     if data.percentage < 100 and (strict or dmarc_config.minimum_pct == 100):
+        set_pct = recommendation_descriptor(DMARCRecommendationId.SET_PCT_100)
         recommendations.append(
             Recommendation(
-                id=DMARCRecommendationId.SET_PCT_100,
+                id=set_pct.id,
                 title="Set pct=100",
                 description="Apply policy to 100% of messages.",
             )
@@ -415,18 +437,20 @@ def rule_alignment(
         return issues, recommendations
     if data.alignment_dkim != "r" and data.alignment_spf != "r":
         return issues, recommendations  # both strict, nothing to add
+    al = issue_descriptor(DMARCIssueId.ALIGNMENT_RELAXED)
     issues.append(
         Issue(
             id=DMARCIssueId.ALIGNMENT_RELAXED,
-            severity=Severity.LOW,
+            severity=al.severity,
             title="Relaxed alignment",
             description="adkim and/or aspf are relaxed (r); strict (s) is stronger.",
             remediation="Set adkim=s and aspf=s for strict alignment.",
         )
     )
+    st = recommendation_descriptor(DMARCRecommendationId.STRICT_ALIGNMENT)
     recommendations.append(
         Recommendation(
-            id=DMARCRecommendationId.STRICT_ALIGNMENT,
+            id=st.id,
             title="Use strict alignment",
             description="Set adkim=s and aspf=s for stronger alignment checks.",
         )

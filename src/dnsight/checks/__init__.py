@@ -1,4 +1,10 @@
-"""Check implementations: DMARC, SPF, ..."""
+"""Check implementations: DMARC, SPF, ...
+
+The package root re-exports check entry points and a few **prefixed** descriptor
+helpers (e.g. ``headers_issue_descriptor``, ``dnssec_issue_descriptor``). Import
+per-check ``issue_descriptor`` from ``dnsight.checks.<name>`` — the name is
+reused in each submodule and is not re-exported without a prefix here.
+"""
 
 from dnsight.checks.caa import (
     CAACheck,
@@ -52,8 +58,8 @@ from dnsight.checks.headers import (
     check_headers,
     generate_headers,
     get_headers,
-    issue_descriptor,
 )
+from dnsight.checks.headers import issue_descriptor as headers_issue_descriptor
 from dnsight.checks.mx import (
     MXCheck,
     MXData,
@@ -108,7 +114,7 @@ __all__ = [
     "check_headers",
     "generate_headers",
     "get_headers",
-    "issue_descriptor",
+    "headers_issue_descriptor",
     # MX
     "MXCheck",
     "MXData",

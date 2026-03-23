@@ -19,7 +19,14 @@ from dnsight.core.types import (
 )
 
 
-__all__ = ["DMARCData", "DMARCGenerateParams", "DMARCIssueId", "DMARCRecommendationId"]
+__all__ = [
+    "DMARCData",
+    "DMARCGenerateParams",
+    "DMARCIssueId",
+    "DMARCRecommendationId",
+    "issue_descriptor",
+    "recommendation_descriptor",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -56,9 +63,7 @@ class DMARCRecommendationId(RecommendationId):
 
 
 # ---------------------------------------------------------------------------
-# Descriptor maps — severity is the source of truth here
-# TODO: implement later — decide if needed for serializers, severity lookup, etc.
-# Currently unused; rules construct Issue/Recommendation directly.
+# Descriptor maps — severity (issues) and priority (recommendations) for lookups
 # ---------------------------------------------------------------------------
 
 _DMARC_ISSUE_DESCRIPTORS: dict[DMARCIssueId, IssueDescriptor] = {
@@ -114,6 +119,18 @@ _DMARC_REC_DESCRIPTORS: dict[DMARCRecommendationId, RecommendationDescriptor] = 
         DMARCRecommendationId.STRICT_ALIGNMENT
     ),
 }
+
+
+def issue_descriptor(member: DMARCIssueId) -> IssueDescriptor:
+    """Return the descriptor for a DMARC issue enum member."""
+    return _DMARC_ISSUE_DESCRIPTORS[member]
+
+
+def recommendation_descriptor(
+    member: DMARCRecommendationId,
+) -> RecommendationDescriptor:
+    """Return the descriptor for a DMARC recommendation enum member."""
+    return _DMARC_REC_DESCRIPTORS[member]
 
 
 # ---------------------------------------------------------------------------

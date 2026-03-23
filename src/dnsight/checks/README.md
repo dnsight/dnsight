@@ -6,6 +6,8 @@ This package contains dnsight's check implementations. Each check fetches data (
 
 Each check is a **package** under `checks/<name>/` (e.g. `checks/dmarc/`). The check class and its public API always live in **`checks/<name>/__init__.py`** so that opening the check shows the check first.
 
+**Per-check flow docs** — Many packages include a **`README.md`** (probe order, validation sequence, optional Mermaid). Start there for SPF, CAA, DNSSEC, DMARC, and headers.
+
 **Optional modules** (add only when they improve readability):
 
 - **`models.py`** — Issue and recommendation ID enums, descriptor maps, and the check’s data/params types (`*Data`, `*GenerateParams`). Use when IDs and data would clutter `__init__.py`. Typically ~100–200 lines for a complex check; smaller for simple ones.
@@ -95,6 +97,12 @@ Each check exposes three distinct entry points with different intended consumers
 - **Instance method via BaseCheck** (`DMARCCheck().check(domain, throttler=t)`) — orchestrator only; capability-gated and throttle-aware.
 
 Module-level functions are the **primary SDK surface** and are re-exported at `dnsight.checks`. The class statics are aliases to the same implementations. Instance methods are only called by the orchestrator.
+
+## Parsers and descriptors
+
+- **Parse helpers** — When a check exposes a string parser for SDK use (e.g. `parse_dmarc_record`, `parse_spf_record`), list it in that check package’s `__all__` in `checks/<name>/__init__.py` and mirror it as a static on the check class when other checks do the same.
+- **Barrel (`dnsight.checks`)** — Re-exports only **prefixed** descriptor helpers at the package root (`headers_issue_descriptor`, `dnssec_issue_descriptor`, `dnssec_recommendation_descriptor`) so names are unambiguous.
+- **Per-check modules** — Each check’s `models.py` defines `issue_descriptor` (and optionally `recommendation_descriptor`) for that check’s IDs. Import from `dnsight.checks.<name>.models`, or from `dnsight.checks.<name>` when that package lists the helper in its `__all__` (e.g. headers). **Do not** star-import multiple check packages expecting distinct `issue_descriptor` names — the same identifier is reused per package.
 
 ## Reference implementation
 

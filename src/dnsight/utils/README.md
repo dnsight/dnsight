@@ -38,7 +38,7 @@ This keeps checks testable and allows custom backends (e.g. logging, rate limiti
 | `resolve_ds(name)`   | `list[tuple[int, int, int, bytes]]`      | DS records            |
 | `resolve_dnskey(name)` | `list[dict[str, Any]]`                 | DNSKEY records        |
 
-All DNS failures are translated to `CheckError` so checks see a uniform exception type.
+All DNS failures are translated to `CheckError` so checks see a uniform exception type. Checks catch these (and similar HTTP failures), map recoverable cases into `CheckResult` with `status`/`error`/`issues` as appropriate, and only let unexpected failures propagate—see each check’s `_check` implementation.
 
 ## HTTP client — available methods
 
@@ -47,7 +47,7 @@ All DNS failures are translated to `CheckError` so checks see a uniform exceptio
 - **`get(url, **kwargs)`** → `HTTPResponse`
 - **`head(url, **kwargs)`** → `HTTPResponse`
 
-`HTTPResponse` is a frozen Pydantic model with `status_code`, `headers` (dict), and `text`. Transport and protocol errors are translated to `CheckError`.
+`HTTPResponse` is a frozen Pydantic model with `status_code`, `headers` (dict), and `text`. Transport and protocol errors are translated to `CheckError`. As with DNS, header checks translate failures into `CheckResult` fields instead of leaking raw transport errors to callers.
 
 ## FakeDNSResolver
 

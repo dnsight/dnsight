@@ -11,6 +11,10 @@ Defined in [`mergeable.py`](mergeable.py). Base for all config blocks. All block
 
 Merge is copy-then-merge: the receiver is not modified. Use the returned instance.
 
+## Schema and check data
+
+Check-specific Pydantic types in `core/schema/` (`*Schema` helpers and `Annotated` aliases) should stay in sync with each check’s `*Data` model and config block. When you change one, update the related types in the other two places so validation and serialisation do not drift.
+
 ## Config blocks
 
 Defined in [`blocks.py`](blocks.py). All extend `MergeableConfig` and use defaults from [`defaults.py`](defaults.py).

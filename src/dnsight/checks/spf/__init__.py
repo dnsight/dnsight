@@ -41,6 +41,7 @@ __all__ = [
     "flatten_spf",
     "generate_spf",
     "get_spf",
+    "parse_spf_record",
 ]
 
 
@@ -50,6 +51,14 @@ class SPFCheck(BaseCheck[SPFData, SPFGenerateParams]):
 
     name = "spf"
     capabilities = frozenset({Capability.CHECK, Capability.GENERATE})
+
+    @staticmethod
+    def parse_spf_record(raw: str) -> tuple[list[str], str, list[str]]:
+        """Parse an SPF TXT string into tokens, disposition, and includes.
+
+        See ``dnsight.checks.spf.rules.parse_spf_record``.
+        """
+        return parse_spf_record(raw)
 
     @staticmethod
     async def get_spf(

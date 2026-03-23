@@ -1,4 +1,10 @@
-"""Schema types for config and check data — shared validation, single import."""
+"""Schema types for config and check data — shared validation, single import.
+
+When you change a check's ``FooData`` model, its ``FooConfig`` block in
+``core/config/blocks.py``, or default field semantics, review the matching
+``FooSchema`` in ``core/schema/`` (and vice versa) so annotated field types stay
+aligned across config, parsing, and check output.
+"""
 
 from __future__ import annotations
 

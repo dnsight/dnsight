@@ -10,6 +10,7 @@ from dnsight.checks import (
     check_dmarc,
     generate_dmarc,
     get_dmarc,
+    headers_issue_descriptor,
 )
 
 
@@ -30,3 +31,6 @@ class TestChecksReExports:
         assert callable(get_dmarc)
         assert callable(check_dmarc)
         assert callable(generate_dmarc)
+
+    def test_headers_issue_descriptor_reexported(self) -> None:
+        assert callable(headers_issue_descriptor)
