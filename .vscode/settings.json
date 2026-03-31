@@ -20,6 +20,8 @@
     "pypi",
     "pytest",
     "pyyaml",
+    "serialiser",
+    "serialisers",
     "taplo",
     "testpaths",
     "typer",

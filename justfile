@@ -1,4 +1,8 @@
 # Default recipe — lists all available commands
+
+FOO := "v1"
+
+
 default:
     @just --list
 

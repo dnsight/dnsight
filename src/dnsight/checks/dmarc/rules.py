@@ -257,9 +257,7 @@ def rule_policy_strength(
 
 
 def rule_subdomain_policy(
-    data: DMARCData,
-    dmarc_config: DmarcConfig,
-    strict: bool,  # pyright: ignore[reportUnusedParameter]
+    data: DMARCData, dmarc_config: DmarcConfig, _strict: bool
 ) -> tuple[list[Issue], list[Recommendation]]:
     """Check subdomain policy meets minimum."""
     issues: list[Issue] = []
