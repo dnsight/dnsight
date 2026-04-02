@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Sequence
 
 from dnsight.core.models import CheckResultAny, DomainResult, ZoneResult
 from dnsight.core.types import Severity
 from dnsight.serialisers._data_summary import data_summary_lines
 from dnsight.serialisers._zone import iter_flat_zones
-from dnsight.serialisers.base import SerialiserProtocol
+from dnsight.serialisers.base import BaseDomainSerialiser, SerialiserOptions
 
 
 __all__ = ["MarkdownSerialiser"]
@@ -33,7 +34,7 @@ def _issue_cell(cr: CheckResultAny) -> str:
     return ", ".join(parts) if parts else _md_cell(str(len(cr.issues)))
 
 
-def _zone_section(zone: ZoneResult) -> list[str]:
+def _zone_section(zone: ZoneResult, *, options: SerialiserOptions) -> list[str]:
     out: list[str] = [
         f"\n## `{_md_cell(zone.zone)}`\n\n",
         "| Check | Status | Issues |\n",
@@ -46,7 +47,9 @@ def _zone_section(zone: ZoneResult) -> list[str]:
     if not zone.results:
         out.append("| — | — | — |\n")
     for name, cr in sorted(zone.results.items()):
-        summary = data_summary_lines(cr.data)
+        summary = data_summary_lines(
+            cr.data, flatten_detail=options.spf_flatten_detail and name == "spf"
+        )
         if not summary:
             continue
         out.append(f"\n**{_md_cell(name)}** (data)\n\n")
@@ -55,15 +58,22 @@ def _zone_section(zone: ZoneResult) -> list[str]:
     return out
 
 
-class MarkdownSerialiser(SerialiserProtocol):
-    """Serialise :class:`~dnsight.core.models.DomainResult` to GitHub-friendly Markdown."""
+def _single_domain_markdown(result: DomainResult, *, options: SerialiserOptions) -> str:
+    """Markdown body for one :class:`~dnsight.core.models.DomainResult`."""
+    lines: list[str] = [
+        f"# Audit: {_md_cell(result.domain)}\n",
+        f"**Partial:** {'yes' if result.partial else 'no'}\n",
+    ]
+    for zone in iter_flat_zones(result):
+        lines.extend(_zone_section(zone, options=options))
+    return "".join(lines)
 
-    def serialise(self, result: DomainResult) -> str:
-        """Return the full formatted output for *result*."""
-        lines: list[str] = [
-            f"# Audit: {_md_cell(result.domain)}\n",
-            f"**Partial:** {'yes' if result.partial else 'no'}\n",
-        ]
-        for zone in iter_flat_zones(result):
-            lines.extend(_zone_section(zone))
-        return "".join(lines)
+
+class MarkdownSerialiser(BaseDomainSerialiser):
+    """Serialise one or more :class:`~dnsight.core.models.DomainResult` to GitHub-friendly Markdown."""
+
+    def _serialise_batch(
+        self, results: Sequence[DomainResult], *, options: SerialiserOptions
+    ) -> str:
+        sep = "\n\n---\n\n"
+        return sep.join(_single_domain_markdown(r, options=options) for r in results)

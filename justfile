@@ -10,7 +10,7 @@ default:
 
 # Install development dependencies
 install:
-    uv sync
+    uv sync --all-groups
     uv pip install -e .
 
 # Install from lockfile only (CI)

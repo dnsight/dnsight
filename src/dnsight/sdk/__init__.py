@@ -44,6 +44,17 @@ from dnsight.sdk.run import (
     run_targets,
     run_targets_sync,
 )
+from dnsight.sdk.types import (
+    BaseGenerateParams,
+    CaaGenerateParams,
+    CspGenerateParams,
+    DMARCGenerateParams,
+    HeadersGenerateParams,
+    HstsGenerateParams,
+    MXGenerateParams,
+    MXGenerateTarget,
+    SPFGenerateParams,
+)
 
 
 __all__ = [
@@ -78,4 +89,13 @@ __all__ = [
     "run_domain_sync",
     "run_targets",
     "run_targets_sync",
+    "BaseGenerateParams",
+    "CaaGenerateParams",
+    "CspGenerateParams",
+    "DMARCGenerateParams",
+    "HeadersGenerateParams",
+    "HstsGenerateParams",
+    "MXGenerateParams",
+    "MXGenerateTarget",
+    "SPFGenerateParams",
 ]

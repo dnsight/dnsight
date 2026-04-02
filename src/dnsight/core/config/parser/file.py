@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from pathlib import Path
+from typing import Any
 
 from yaml import safe_load
 
@@ -16,6 +17,7 @@ from dnsight.core.registry import all_checks
 __all__ = [
     "config_manager_from_discovered",
     "config_manager_from_file",
+    "config_manager_from_mapping",
     "default_config_manager",
     "discover_config_path",
 ]
@@ -93,6 +95,22 @@ def config_manager_from_file(path: Path | str) -> ConfigManager:
     data = safe_load(resolved.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or "version" not in data:
         raise ConfigError("Config file must contain a 'version' key")
+    try:
+        version = int(data["version"])
+    except (TypeError, ValueError):
+        raise ConfigError(f"Invalid version: {data['version']!r}") from None
+    if version not in VERSION_PARSERS:
+        raise ConfigError(f"Unknown config version: {version}")
+    return VERSION_PARSERS[version](data)
+
+
+def config_manager_from_mapping(data: Any) -> ConfigManager:
+    """Build a :class:`ConfigManager` from a decoded YAML mapping.
+    Same validation and version dispatch as :func:`config_manager_from_file`, for
+    stdin or in-memory documents after :func:`yaml.safe_load`.
+    """
+    if not isinstance(data, dict) or "version" not in data:
+        raise ConfigError("Config must be a mapping with a 'version' key")
     try:
         version = int(data["version"])
     except (TypeError, ValueError):

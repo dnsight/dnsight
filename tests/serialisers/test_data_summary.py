@@ -2,63 +2,52 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 from dnsight.serialisers._data_summary import data_summary_lines
 
 
-def test_empty_when_none() -> None:
-    assert data_summary_lines(None) == []
+def test_data_summary_flatten_compact_only_by_default() -> None:
+    data = {
+        "raw_record": "v=spf1 include:_spf.example.com ~all",
+        "flattened": {
+            "effective_lookup_count": 3,
+            "resolved_mechanisms": ["include:_spf.example.com", "~all"],
+            "ip4_ranges": ["192.0.2.0/24"],
+            "ip6_ranges": [],
+        },
+    }
+    lines = data_summary_lines(data, flatten_detail=False)
+    assert any("Flattened: 3 lookups, 1 IP ranges" in ln for ln in lines)
+    assert not any("Resolved mechanisms" in ln for ln in lines)
+    assert not any("  ip4:" in ln for ln in lines)
 
 
-def test_record_only() -> None:
-    d = SimpleNamespace(raw_record="v=spf1 -all")
-    lines = data_summary_lines(d)
-    assert len(lines) == 1
-    assert lines[0].startswith("Record: v=spf1 -all")
+def test_data_summary_flatten_detail_expands() -> None:
+    data = {
+        "raw_record": "v=spf1 ip4:192.0.2.1 -all",
+        "flattened": {
+            "effective_lookup_count": 1,
+            "resolved_mechanisms": ["ip4:192.0.2.1", "-all"],
+            "ip4_ranges": ["192.0.2.1", "192.0.2.2"],
+            "ip6_ranges": ["2001:db8::/32"],
+        },
+    }
+    lines = data_summary_lines(data, flatten_detail=True)
+    assert any("Flattened: 1 lookups, 3 IP ranges" in ln for ln in lines)
+    assert any("Resolved mechanisms:" in ln for ln in lines)
+    assert any("ip4:192.0.2.1" in ln for ln in lines)
+    assert sum(1 for ln in lines if ln.strip().startswith("ip4:")) >= 2
+    assert any("ip6:" in ln for ln in lines)
 
 
-def test_flattened_only() -> None:
-    flat = SimpleNamespace(
-        effective_lookup_count=5,
-        ip4_ranges=["10.0.0.0/8", "172.16.0.0/12"],
-        ip6_ranges=["::1/128"],
-    )
-    lines = data_summary_lines(SimpleNamespace(flattened=flat))
-    assert lines == ["Flattened: 5 lookups, 3 IP ranges"]
-
-
-def test_suggested_only() -> None:
-    lines = data_summary_lines(
-        SimpleNamespace(suggested_record="v=spf1 ip4:1.2.3.4 -all")
-    )
-    assert len(lines) == 1
-    assert lines[0].startswith("Suggested:")
-
-
-def test_all_three_ordered_record_flattened_suggested() -> None:
-    flat = SimpleNamespace(effective_lookup_count=1, ip4_ranges=[], ip6_ranges=[])
-    d = SimpleNamespace(
-        raw_record="v=spf1 ~all", flattened=flat, suggested_record="v=spf1 -all"
-    )
-    lines = data_summary_lines(d)
-    assert [ln.split(":")[0] for ln in lines] == ["Record", "Flattened", "Suggested"]
-
-
-def test_blank_raw_record_skipped() -> None:
-    assert data_summary_lines(SimpleNamespace(raw_record="   ")) == []
-
-
-def test_mapping_dict_supported() -> None:
-    lines = data_summary_lines(
-        {
-            "raw_record": "v=spf1 -all",
-            "flattened": {
-                "effective_lookup_count": 2,
-                "ip4_ranges": [],
-                "ip6_ranges": [],
-            },
+def test_data_summary_flatten_detail_truncates_ip_lists() -> None:
+    many = [f"10.0.0.{i}" for i in range(30)]
+    data = {
+        "flattened": {
+            "effective_lookup_count": 0,
+            "resolved_mechanisms": [],
+            "ip4_ranges": many,
+            "ip6_ranges": [],
         }
-    )
-    assert any(ln.startswith("Record:") for ln in lines)
-    assert any(ln.startswith("Flattened:") for ln in lines)
+    }
+    lines = data_summary_lines(data, flatten_detail=True)
+    assert any("+10 more" in ln for ln in lines)

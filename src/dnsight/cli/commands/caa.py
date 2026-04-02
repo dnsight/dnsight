@@ -1,0 +1,202 @@
+"""``dnsight caa`` — CAA check and record generation."""
+
+from __future__ import annotations
+
+import typer
+
+from dnsight.cli._parse import parse_csv_option
+from dnsight.cli.commands._check_base import (
+    effective_cli_config_path,
+    make_check_typer,
+    resolve_target_domain_strings,
+    run_check_sequence,
+)
+from dnsight.cli.helpers import CheckCommandConfigPath, DomainsArg
+from dnsight.cli.output import emit_generated_record
+from dnsight.core.config import CaaConfig, Config
+from dnsight.sdk import CaaGenerateParams, generate_caa
+
+
+__all__ = ["register_caa"]
+
+
+def _build_caa_overlay(
+    *,
+    require_caa: bool | None,
+    required_issuers: str | None,
+    check_issuewild: bool | None,
+    restrict_wildcard_issuance: bool | None,
+    cross_reference_crt_sh: bool | None,
+    names: str | None,
+    enumerate_names: bool | None,
+    max_enumeration_depth: int | None,
+    max_names: int | None,
+    include_www: bool | None,
+    include_mx_targets: bool | None,
+    include_srv_targets: bool | None,
+    enumerate_dname: bool | None,
+    reporting_email: str | None,
+) -> Config | None:
+    kwargs: dict[str, object] = {}
+    if require_caa is not None:
+        kwargs["require_caa"] = require_caa
+    ri = parse_csv_option(required_issuers)
+    if ri is not None:
+        kwargs["required_issuers"] = ri
+    if check_issuewild is not None:
+        kwargs["check_issuewild"] = check_issuewild
+    if restrict_wildcard_issuance is not None:
+        kwargs["restrict_wildcard_issuance"] = restrict_wildcard_issuance
+    if cross_reference_crt_sh is not None:
+        kwargs["cross_reference_crt_sh"] = cross_reference_crt_sh
+    n = parse_csv_option(names)
+    if n is not None:
+        kwargs["names"] = n
+    if enumerate_names is not None:
+        kwargs["enumerate_names"] = enumerate_names
+    if max_enumeration_depth is not None:
+        kwargs["max_enumeration_depth"] = max_enumeration_depth
+    if max_names is not None:
+        kwargs["max_names"] = max_names
+    if include_www is not None:
+        kwargs["include_www"] = include_www
+    if include_mx_targets is not None:
+        kwargs["include_mx_targets"] = include_mx_targets
+    if include_srv_targets is not None:
+        kwargs["include_srv_targets"] = include_srv_targets
+    if enumerate_dname is not None:
+        kwargs["enumerate_dname"] = enumerate_dname
+    if reporting_email is not None:
+        kwargs["reporting_email"] = reporting_email
+    if not kwargs:
+        return None
+    return Config(
+        caa=CaaConfig.model_construct(**kwargs)  # type: ignore[arg-type]
+    )
+
+
+def register_caa(app: typer.Typer) -> None:
+    t = make_check_typer(
+        "caa", help_text="CAA inventory and policy check; generate CAA lines."
+    )
+
+    @t.callback(invoke_without_command=True)
+    def caa_run(
+        ctx: typer.Context,
+        domains: DomainsArg = None,
+        *,
+        config_path: CheckCommandConfigPath = None,
+        require_caa: bool | None = typer.Option(
+            None,
+            "--require-caa/--no-require-caa",
+            help="Require effective CAA with issue tags.",
+        ),
+        required_issuers: str | None = typer.Option(
+            None,
+            "--required-issuers",
+            help="Comma-separated CA issuer domains required in issue tags.",
+        ),
+        check_issuewild: bool | None = typer.Option(
+            None,
+            "--check-issuewild/--no-check-issuewild",
+            help="Validate issuewild vs issue consistency.",
+        ),
+        restrict_wildcard_issuance: bool | None = typer.Option(
+            None,
+            "--restrict-wildcard-issuance/--no-restrict-wildcard-issuance",
+            help="Wildcard issuance must be restricted via issuewild.",
+        ),
+        cross_reference_crt_sh: bool | None = typer.Option(
+            None,
+            "--cross-reference-crt-sh/--no-cross-reference-crt-sh",
+            help="Query crt.sh and compare issuers to CAA.",
+        ),
+        names: str | None = typer.Option(
+            None,
+            "--names",
+            help="Comma-separated extra hostnames (under zone) to check.",
+        ),
+        enumerate_names: bool | None = typer.Option(
+            None,
+            "--enumerate-names/--no-enumerate-names",
+            help="Discover names via DNS walk.",
+        ),
+        max_enumeration_depth: int | None = typer.Option(
+            None, "--max-enumeration-depth", help="Max CNAME/DNAME depth.", min=0
+        ),
+        max_names: int | None = typer.Option(
+            None, "--max-names", help="Max distinct names to enumerate.", min=0
+        ),
+        include_www: bool | None = typer.Option(
+            None, "--include-www/--no-include-www", help="Seed www.<zone>."
+        ),
+        include_mx_targets: bool | None = typer.Option(
+            None,
+            "--include-mx-targets/--no-include-mx-targets",
+            help="Include MX exchange hostnames in discovery.",
+        ),
+        include_srv_targets: bool | None = typer.Option(
+            None,
+            "--include-srv-targets/--no-include-srv-targets",
+            help="Include SRV targets in discovery.",
+        ),
+        enumerate_dname: bool | None = typer.Option(
+            None,
+            "--enumerate-dname/--no-enumerate-dname",
+            help="Follow DNAME during walk.",
+        ),
+        reporting_email: str | None = typer.Option(
+            None,
+            "--reporting-email",
+            help="Email for iodef mailto in GENERATE (optional).",
+        ),
+    ) -> None:
+        if ctx.invoked_subcommand is not None:
+            return
+        path = effective_cli_config_path(ctx, config_path)
+        targets = resolve_target_domain_strings(ctx, domains, path)
+        overlay = _build_caa_overlay(
+            require_caa=require_caa,
+            required_issuers=required_issuers,
+            check_issuewild=check_issuewild,
+            restrict_wildcard_issuance=restrict_wildcard_issuance,
+            cross_reference_crt_sh=cross_reference_crt_sh,
+            names=names,
+            enumerate_names=enumerate_names,
+            max_enumeration_depth=max_enumeration_depth,
+            max_names=max_names,
+            include_www=include_www,
+            include_mx_targets=include_mx_targets,
+            include_srv_targets=include_srv_targets,
+            enumerate_dname=enumerate_dname,
+            reporting_email=reporting_email,
+        )
+        run_check_sequence(
+            ctx, "caa", targets, config_path=path, program_config=overlay
+        )
+
+    @t.command("generate", help="Print suggested CAA records.")
+    def generate_cmd(
+        *,
+        issuers: str | None = typer.Option(
+            None, "--issuers", help="Comma-separated CA domains for 0 issue lines."
+        ),
+        emit_issuewild: bool = typer.Option(
+            False,
+            "--emit-issuewild/--no-emit-issuewild",
+            help="Emit issuewild lines matching issuers.",
+        ),
+        iodef_mailto: str | None = typer.Option(
+            None, "--iodef-mailto", help="mailto address for 0 iodef line (optional)."
+        ),
+    ) -> None:
+        params = CaaGenerateParams(
+            issuers=list(parse_csv_option(issuers) or []),
+            emit_issuewild=emit_issuewild,
+            iodef_mailto=iodef_mailto,
+        )
+        record = generate_caa(params=params)
+        emit_generated_record(record)
+        raise typer.Exit(0)
+
+    app.add_typer(t, name="caa")

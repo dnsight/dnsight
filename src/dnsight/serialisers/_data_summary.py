@@ -12,6 +12,8 @@ from collections.abc import Mapping
 
 _RECORD_MAX = 240
 _SUGGESTED_MAX = 240
+_MECH_MAX_LINE = 400
+_IP_LIST_CAP = 20
 
 
 def _get_field(obj: object, name: str) -> object | None:
@@ -28,11 +30,26 @@ def _truncate_one_line(text: str, max_len: int) -> str:
     return f"{single[: max_len - 1]}…"
 
 
+def _format_str_list(items: list[object], *, cap: int, label: str) -> list[str]:
+    strs = [str(x) for x in items if isinstance(x, str) and x.strip()]
+    if not strs:
+        return []
+    out: list[str] = []
+    shown = strs[:cap]
+    for s in shown:
+        out.append(f"  {label}: {s}")
+    extra = len(strs) - len(shown)
+    if extra > 0:
+        out.append(f"  … +{extra} more {label}")
+    return out
+
+
 def data_summary_lines(
     data: object | None,
     *,
     record_max: int = _RECORD_MAX,
     suggested_max: int = _SUGGESTED_MAX,
+    flatten_detail: bool = False,
 ) -> list[str]:
     """Return short lines describing *data* when it looks like SPF/DMARC-style models.
 
@@ -40,6 +57,8 @@ def data_summary_lines(
         data: Check result payload; may be ``None``.
         record_max: Max length for record line body.
         suggested_max: Max length for suggested line body.
+        flatten_detail: If true, expand ``flattened`` with mechanisms and IP lists
+            (capped); SPF-only callers should set this from CLI ``--flatten``.
 
     Returns:
         Zero or more lines (no leading/trailing empties).
@@ -64,6 +83,21 @@ def data_summary_lines(
             if isinstance(ip6, list):
                 n_ip += len(ip6)
             lines.append(f"Flattened: {n_lookups} lookups, {n_ip} IP ranges")
+            if flatten_detail:
+                mechs = _get_field(flat, "resolved_mechanisms")
+                if isinstance(mechs, list) and mechs:
+                    joined = ", ".join(str(m) for m in mechs if m is not None)
+                    lines.append(
+                        f"Resolved mechanisms: {_truncate_one_line(joined, _MECH_MAX_LINE)}"
+                    )
+                if isinstance(ip4, list) and ip4:
+                    lines.extend(
+                        _format_str_list(list(ip4), cap=_IP_LIST_CAP, label="ip4")
+                    )
+                if isinstance(ip6, list) and ip6:
+                    lines.extend(
+                        _format_str_list(list(ip6), cap=_IP_LIST_CAP, label="ip6")
+                    )
 
     suggested = _get_field(data, "suggested_record")
     if isinstance(suggested, str) and suggested.strip():

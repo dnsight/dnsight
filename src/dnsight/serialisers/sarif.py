@@ -1,7 +1,8 @@
-"""SARIF 2.1.0 serialisation for :class:`~dnsight.core.models.DomainResult`."""
+"""SARIF 2.1.0 serialisation for :class:`~dnsight.core.models.DomainResult` (single or batch)."""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import json
 from typing import Any
 
@@ -9,7 +10,7 @@ from dnsight import __version__
 from dnsight.core.models import DomainResult
 from dnsight.core.types import Severity
 from dnsight.serialisers._zone import iter_flat_zones
-from dnsight.serialisers.base import SerialiserProtocol
+from dnsight.serialisers.base import BaseDomainSerialiser, SerialiserOptions
 
 
 __all__ = ["SarifSerialiser"]
@@ -72,36 +73,42 @@ def _recommendation_results(result: DomainResult) -> list[dict[str, Any]]:
     ]
 
 
-def _sarif_document(result: DomainResult) -> dict[str, Any]:
+def _sarif_run(result: DomainResult) -> dict[str, Any]:
+    """One SARIF run for a single domain audit."""
     return {
-        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
-        "version": "2.1.0",
-        "runs": [
-            {
-                "tool": {
-                    "driver": {
-                        "name": "dnsight",
-                        "version": __version__,
-                        "informationUri": "https://github.com/dnsight/dnsight",
-                    }
-                },
-                "invocations": [{"executionSuccessful": not result.partial}],
-                "results": _issue_results(result)
-                + _failed_check_results(result)
-                + _recommendation_results(result),
-                "properties": {
-                    "domain": result.domain,
-                    "timestamp": result.timestamp.isoformat(),
-                    "configVersion": result.config_version,
-                },
+        "tool": {
+            "driver": {
+                "name": "dnsight",
+                "version": __version__,
+                "informationUri": "https://github.com/dnsight/dnsight",
             }
-        ],
+        },
+        "invocations": [{"executionSuccessful": not result.partial}],
+        "results": _issue_results(result)
+        + _failed_check_results(result)
+        + _recommendation_results(result),
+        "properties": {
+            "domain": result.domain,
+            "timestamp": result.timestamp.isoformat(),
+            "configVersion": result.config_version,
+        },
     }
 
 
-class SarifSerialiser(SerialiserProtocol):
-    """Serialise a :class:`~dnsight.core.models.DomainResult` as SARIF 2.1.0."""
+def _sarif_log(results: Sequence[DomainResult]) -> dict[str, Any]:
+    """Full SARIF document: one run per :class:`~dnsight.core.models.DomainResult`."""
+    return {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [_sarif_run(r) for r in results],
+    }
 
-    def serialise(self, result: DomainResult) -> str:
-        """Return the full formatted output for *result*."""
-        return json.dumps(_sarif_document(result), indent=2)
+
+class SarifSerialiser(BaseDomainSerialiser):
+    """Serialise one or more :class:`~dnsight.core.models.DomainResult` as SARIF 2.1.0."""
+
+    def _serialise_batch(
+        self, results: Sequence[DomainResult], *, options: SerialiserOptions
+    ) -> str:
+        _ = options
+        return json.dumps(_sarif_log(results), indent=2)

@@ -1,8 +1,8 @@
-"""Tests for :func:`~dnsight.serialisers.write_serialiser`."""
+"""Tests for :func:`~dnsight.serialisers.writer.write_serialiser`."""
 
 from __future__ import annotations
 
-from dnsight.serialisers.base import write_serialiser
+from dnsight.serialisers import write_serialiser
 from dnsight.serialisers.json import JsonSerialiser
 
 

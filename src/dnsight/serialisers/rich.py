@@ -1,9 +1,12 @@
-"""Rich console serialisation for :class:`~dnsight.core.models.DomainResult`."""
+"""Rich console serialisation for :class:`~dnsight.core.models.DomainResult` (single or batch)."""
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from rich.console import Console, Group, RenderableType
 from rich.panel import Panel
+from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
 
@@ -11,7 +14,7 @@ from dnsight.core.models import CheckResultAny, DomainResult
 from dnsight.core.types import Severity, Status
 from dnsight.serialisers._data_summary import data_summary_lines
 from dnsight.serialisers._zone import iter_flat_zones
-from dnsight.serialisers.base import SerialiserProtocol
+from dnsight.serialisers.base import BaseDomainSerialiser, SerialiserOptions
 
 
 __all__ = ["RichSerialiser"]
@@ -47,7 +50,7 @@ def _status_style(status: Status) -> str:
     }[str(status.value)]
 
 
-def _check_panel(check_name: str, cr: CheckResultAny) -> Panel:
+def _check_panel(check_name: str, cr: CheckResultAny, *, flatten_detail: bool) -> Panel:
     lines: list[RenderableType] = [
         Text.assemble("Status: ", (str(cr.status.value), _status_style(cr.status)))
     ]
@@ -55,7 +58,7 @@ def _check_panel(check_name: str, cr: CheckResultAny) -> Panel:
         lines.append(Text(f"Error: {_truncate(cr.error, 500)}", style="bold red"))
     if cr.raw and cr.status is not Status.SKIPPED:
         lines.append(Text(f"Raw: {_truncate(cr.raw)}", style="dim"))
-    for summary_line in data_summary_lines(cr.data):
+    for summary_line in data_summary_lines(cr.data, flatten_detail=flatten_detail):
         lines.append(Text(summary_line, style="dim"))
     for issue in cr.issues:
         lines.append(
@@ -72,7 +75,9 @@ def _check_panel(check_name: str, cr: CheckResultAny) -> Panel:
     return Panel(Group(*lines), title=f"[bold]{check_name}[/bold]", border_style="blue")
 
 
-def _render_audit(result: DomainResult, console: Console) -> None:
+def _render_audit(
+    result: DomainResult, console: Console, *, options: SerialiserOptions
+) -> None:
     header = Table.grid(padding=(0, 2))
     header.add_column(style="bold")
     header.add_column()
@@ -90,21 +95,34 @@ def _render_audit(result: DomainResult, console: Console) -> None:
             console.print(Text("  (no checks in this zone)", style="dim"))
             continue
         for name, cr in sorted(zone.results.items()):
-            console.print(_check_panel(name, cr))
+            fd = options.spf_flatten_detail and name == "spf"
+            console.print(_check_panel(name, cr, flatten_detail=fd))
 
 
-class RichSerialiser(SerialiserProtocol):
-    """Render :class:`~dnsight.core.models.DomainResult` with Rich (ANSI string or live console)."""
+class RichSerialiser(BaseDomainSerialiser):
+    """Render one or more :class:`~dnsight.core.models.DomainResult` with Rich."""
 
-    def serialise(self, result: DomainResult) -> str:
-        """Return captured Rich output as a string (includes ANSI when terminal colours apply)."""
+    def _serialise_batch(
+        self, results: Sequence[DomainResult], *, options: SerialiserOptions
+    ) -> str:
+        """Return captured Rich output (ANSI when colours apply)."""
         console = Console(force_terminal=True, width=120)
         with console.capture() as capture:
-            _render_audit(result, console)
+            for i, r in enumerate(results):
+                if i:
+                    console.print()
+                    console.print(Rule(style="dim"))
+                    console.print()
+                _render_audit(r, console, options=options)
         return capture.get()
 
     def serialise_live(
-        self, result: DomainResult, console: Console | None = None
+        self,
+        result: DomainResult,
+        console: Console | None = None,
+        *,
+        options: SerialiserOptions | None = None,
     ) -> None:
-        """Print the audit to *console* (default: Rich :class:`~rich.console.Console` for stdout)."""
-        _render_audit(result, console or Console())
+        """Print one domain audit to *console* (default: Rich stdout)."""
+        opts = options or SerialiserOptions()
+        _render_audit(result, console or Console(), options=opts)
