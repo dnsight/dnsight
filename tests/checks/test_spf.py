@@ -135,3 +135,33 @@ def test_generate_spf() -> None:
     )
     assert "v=spf1" in gr.value
     assert "-all" in gr.value
+
+
+def test_parse_spf_record_static_delegates_to_rules() -> None:
+    tokens, disp, includes = SPFCheck.parse_spf_record(
+        "v=spf1 include:_spf.example.com -all"
+    )
+    assert disp == "-all"
+    assert any("include" in t for t in tokens)
+
+
+@pytest.mark.asyncio
+async def test_get_spf_non_spf_txt_returns_empty_shape() -> None:
+    """Apex TXT exists but no v=spf1 → empty :class:`SPFData` (no CheckError)."""
+    set_resolver(FakeDNSResolver({"example.com/TXT": ["google-site-verification=abc"]}))
+    data = await get_spf("example.com")
+    assert data.raw_record == ""
+    assert data.flattened is None
+
+
+@pytest.mark.asyncio
+async def test_check_spf_multiple_vspf_txt_records() -> None:
+    set_resolver(
+        FakeDNSResolver(
+            {"example.com/TXT": ["v=spf1 include:_spf.example.com ~all", "v=spf1 -all"]}
+        )
+    )
+    r = await check_spf("example.com")
+    assert r.status == Status.COMPLETED
+    assert r.data is not None
+    assert any(i.id == SPFIssueId.MULTIPLE_RECORDS.value for i in r.issues)

@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import runpy
+import sys
+from unittest.mock import patch
 
 import pytest
 from typer.main import get_command
@@ -98,3 +101,11 @@ def test_mkdocs_nav_hook_requires_cli_nav_slot(tmp_path) -> None:
     config = {"docs_dir": str(docs), "nav": [{"Home": "index.md"}]}
     with pytest.raises(RuntimeError, match="CLI"):
         on_config(config)
+
+
+def test_docgen_main_module_invokes_generate_main() -> None:
+    """PEP 338 ``python -m tools.docgen`` entry calls :func:`tools.docgen.generate.main`."""
+    with patch("tools.docgen.generate.main") as mock_main:
+        sys.modules.pop("tools.docgen.__main__", None)
+        runpy.run_module("tools.docgen.__main__", run_name="__main__")
+    mock_main.assert_called_once()

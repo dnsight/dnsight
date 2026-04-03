@@ -16,6 +16,7 @@ from dnsight.checks.spf import SPFGenerateParams
 from dnsight.core.config import Config, ConfigManager, DmarcConfig, TargetChecks
 from dnsight.core.config.targets import Target, TargetConfig
 from dnsight.core.exceptions import CapabilityError
+from dnsight.core.models import ZoneResult
 from dnsight.core.types import RecordType
 from dnsight.sdk import (
     check_dmarc,
@@ -26,9 +27,13 @@ from dnsight.sdk import (
     generate_headers,
     generate_mx,
     generate_spf,
+    run_batch,
     run_batch_sync,
     run_check_sync,
+    run_domain_stream,
+    run_domain_stream_sync,
     run_domain_sync,
+    run_targets,
     run_targets_sync,
 )
 from dnsight.utils.dns import FakeDNSResolver, reset_resolver, set_resolver
@@ -227,3 +232,35 @@ class TestSdkTargets:
         m = _mgr_dmarc_only()
         with pytest.warns(DeprecationWarning, match="run_targets_sync"):
             assert run_batch_sync(mgr=m) == []
+
+    @pytest.mark.asyncio
+    async def test_run_targets_async_empty_manifest(self) -> None:
+        mgr = _mgr_dmarc_only()
+        assert await run_targets(mgr=mgr) == []
+
+    @pytest.mark.asyncio
+    async def test_run_batch_deprecated_async(self) -> None:
+        m = _mgr_dmarc_only()
+        with pytest.warns(DeprecationWarning, match="run_targets"):
+            assert await run_batch(mgr=m) == []
+
+
+class TestSdkDomainStream:
+    def test_run_domain_stream_sync_collects_root_zone(self) -> None:
+        txt = "v=DMARC1; p=reject; pct=100; rua=mailto:a@example.com; adkim=r; aspf=r"
+        set_resolver(FakeDNSResolver(records={"_dmarc.example.com/TXT": [txt]}))
+        mgr = _mgr_dmarc_only()
+        zones = run_domain_stream_sync("example.com", mgr=mgr)
+        assert len(zones) >= 1
+        assert zones[0].zone == "example.com"
+
+    @pytest.mark.asyncio
+    async def test_run_domain_stream_async_yields_root_zone(self) -> None:
+        txt = "v=DMARC1; p=reject; pct=100; rua=mailto:a@example.com; adkim=r; aspf=r"
+        set_resolver(FakeDNSResolver(records={"_dmarc.example.com/TXT": [txt]}))
+        mgr = _mgr_dmarc_only()
+        collected: list[ZoneResult] = []
+        async for z in run_domain_stream("example.com", mgr=mgr):
+            collected.append(z)
+        assert len(collected) >= 1
+        assert collected[0].zone == "example.com"

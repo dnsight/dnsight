@@ -1,9 +1,10 @@
-"""Check implementations: DMARC, SPF, ...
+"""Check implementations: CAA, DKIM, DMARC, DNSSEC, headers, MX, and SPF.
 
-The package root re-exports check entry points and a few **prefixed** descriptor
-helpers (e.g. ``headers_issue_descriptor``, ``dnssec_issue_descriptor``). Import
-per-check ``issue_descriptor`` from ``dnsight.checks.<name>`` — the name is
-reused in each submodule and is not re-exported without a prefix here.
+The package root re-exports check classes, ``get_*`` / ``check_*`` / ``generate_*``
+entry points, and a few **prefixed** descriptor helpers (e.g.
+``headers_issue_descriptor``, ``dnssec_issue_descriptor``). Import per-check
+``issue_descriptor`` from ``dnsight.checks.<name>`` — the name is reused in each
+submodule and is not re-exported without a prefix here.
 """
 
 from dnsight.checks.caa import (

@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from hypothesis import given
+from hypothesis import strategies as st
+
 from dnsight.core.config.blocks import Config, DmarcConfig, ThrottleConfig
 
 
@@ -71,3 +74,19 @@ class TestResolve:
         partial = DmarcConfig(policy="quarantine")
         resolved = DmarcConfig.resolve(config=base, partial=partial, policy="reject")
         assert resolved.policy == "reject"
+
+
+@given(
+    base_policy=st.sampled_from(["none", "quarantine", "reject"]),
+    overlay_policy=st.sampled_from(["none", "quarantine", "reject"]),
+)
+def test_dmarc_merge_partial_only_overrides_listed_fields(
+    base_policy: str, overlay_policy: str
+) -> None:
+    """Explicit ``model_fields_set`` on partial controls merge; other fields stay."""
+    base = DmarcConfig(policy=base_policy, rua_required=True)  # type: ignore[arg-type]
+    partial = DmarcConfig.model_construct(policy=overlay_policy)
+    partial.__pydantic_fields_set__ = {"policy"}
+    merged = base.merge(partial)
+    assert merged.policy == overlay_policy
+    assert merged.rua_required is True

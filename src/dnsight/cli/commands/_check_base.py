@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import click
+from click.parser import _OptionParser
 import typer
+from typer.core import TyperGroup
 
 from dnsight.cli.helpers import (
     cli_exit_fatal,
@@ -20,12 +23,96 @@ from dnsight.sdk.run import run_check_sync
 from dnsight.serialisers import SerialiserOptions
 
 
+def _make_options_only_parser(
+    command: click.Command, ctx: click.Context
+) -> _OptionParser:
+    """Parser with the same options as *command*, but no positional arguments."""
+    from click.core import Option
+
+    p = _OptionParser(ctx)
+    for param in command.get_params(ctx):
+        if isinstance(param, Option):
+            param.add_to_parser(p, ctx)
+    return p
+
+
+def _find_subcommand_split_index(
+    command: click.Command,
+    ctx: click.Context,
+    args: list[str],
+    cmd_names: frozenset[str],
+) -> int | None:
+    """Return *args* index of a registered subcommand, after group-only options."""
+    from click.exceptions import UsageError
+
+    for split in range(len(args) + 1):
+        pre, post = args[:split], args[split:]
+        if not post or post[0] not in cmd_names:
+            continue
+        parser = _make_options_only_parser(command, ctx)
+        try:
+            _opts, largs, _order = parser.parse_args(list(pre))
+        except UsageError:
+            continue
+        if largs:
+            continue
+        return split
+    return None
+
+
+class _SubcommandsBeforeVariadicGroup(TyperGroup):
+    """Resolve subcommands before variadic callback arguments.
+
+    Click parses the group callback's variadic :class:`~click.Argument` in the
+    same pass as options, so tokens such as ``generate`` are consumed as domains
+    and never reach :attr:`click.Context.invoked_subcommand`. We split argv when
+    the first positional (after options) matches a registered subcommand name.
+    """
+
+    def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
+        from click.core import Command, Option
+        from click.exceptions import NoArgsIsHelpError
+
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            raise NoArgsIsHelpError(ctx)
+
+        cmd_names = frozenset(self.list_commands(ctx))
+        if ctx.resilient_parsing or not cmd_names:
+            return super().parse_args(ctx, args)
+
+        split = _find_subcommand_split_index(self, ctx, args, cmd_names)
+        if split is None:
+            return super().parse_args(ctx, args)
+
+        pre, post = args[:split], args[split:]
+        saved = self.params
+        saved_naih = self.no_args_is_help
+        try:
+            self.params = [p for p in saved if isinstance(p, Option)]
+            if not pre:
+                # ``Command.parse_args([], ...)`` would raise *NoArgsIsHelpError* while
+                # ``no_args_is_help`` is true even though a subcommand follows in *post*.
+                self.no_args_is_help = False
+            Command.parse_args(self, ctx, list(pre))
+        finally:
+            self.no_args_is_help = saved_naih
+            self.params = saved
+
+        if self.chain:
+            ctx._protected_args = post
+            ctx.args = []
+        else:
+            ctx._protected_args, ctx.args = post[:1], post[1:]
+        return ctx.args
+
+
 def make_check_typer(check_name: str, *, help_text: str | None = None) -> typer.Typer:
     """Return the sub-app mounted at ``dnsight <check_name> ...``."""
     return typer.Typer(
         name=check_name,
         help=help_text or f"Run the {check_name} check.",
         no_args_is_help=True,
+        cls=_SubcommandsBeforeVariadicGroup,
     )
 
 

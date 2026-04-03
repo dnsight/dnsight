@@ -79,12 +79,14 @@ def register_audit(app: typer.Typer) -> None:
         state = get_cli_state(ctx)
         check_list, exclude_list = checks_and_exclude_options(checks, exclude)
         domain_list = domains_from_argument(domains)
+        cfg_path = config_path_for_sdk(state)
 
         try:
             results = (
                 [
                     run_domain_sync(
                         domain,
+                        config_path=cfg_path,
                         checks=check_list,
                         exclude=exclude_list,
                         recursive=recursive,
@@ -94,7 +96,7 @@ def register_audit(app: typer.Typer) -> None:
                 ]
                 if domain_list
                 else run_targets_sync(
-                    config_path=config_path_for_sdk(state),
+                    config_path=cfg_path,
                     checks=check_list,
                     exclude=exclude_list,
                     recursive=recursive,

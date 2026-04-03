@@ -21,6 +21,7 @@ env/
 ENV/
 
 ### Tests / coverage
+.hypothesis/
 .pytest_cache/
 .coverage
 .coverage.*
