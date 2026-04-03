@@ -46,6 +46,7 @@ dependencies = [
 "Repository" = "https://github.com/dnsight/dnsight"
 "Issues" = "https://github.com/dnsight/dnsight/issues"
 "Changelog" = "https://github.com/dnsight/dnsight/blob/main/CHANGELOG.md"
+"Documentation" = "https://dnsight.github.io/dnsight/"
 
 
 [project.scripts]
@@ -86,6 +87,13 @@ dev = [
   "towncrier>=24.7.0,<26.0.0",
 ]
 
+docs = [
+  "mkdocs>=1.6.0,<2.0.0",
+  "mkdocs-material>=9.5.0,<10.0.0",
+  "mkdocstrings[python]>=0.27.0,<1.0.0",
+  "pymdown-extensions>=10.0.0,<11.0.0",
+]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 88
@@ -102,7 +110,7 @@ skip-magic-trailing-comma = true
 docstring-code-format = true
 
 [tool.ruff.lint.isort]
-known-first-party = ["dnsight"]
+known-first-party = ["dnsight", "tools"]
 lines-after-imports = 2
 section-order = [
   "future",
@@ -119,14 +127,15 @@ strict = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+pythonpath = ["."]
 markers = [
   "registry_builtins: keep built-in check registrations (skip registry isolation)",
 ]
 testpaths = ["tests"]
-addopts = "--cov=src/dnsight --cov-report=term-missing --cov-report=xml --junitxml=junit.xml -o junit_family=legacy"
+addopts = "--cov=src/dnsight --cov=tools --cov-report=term-missing --cov-report=xml --junitxml=junit.xml -o junit_family=legacy"
 
 [tool.coverage.run]
-source = ["src/dnsight"]
+source = ["src/dnsight", "tools"]
 omit = ["*/tests/**"]
 
 [tool.towncrier]

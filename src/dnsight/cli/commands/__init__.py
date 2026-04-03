@@ -10,6 +10,7 @@ from dnsight.cli.commands.config import register_config
 from dnsight.cli.commands.dkim import register_dkim
 from dnsight.cli.commands.dmarc import register_dmarc
 from dnsight.cli.commands.dnssec import register_dnssec
+from dnsight.cli.commands.docs_cmd import register_docs
 from dnsight.cli.commands.headers import register_headers
 from dnsight.cli.commands.mx import register_mx
 from dnsight.cli.commands.spf import register_spf
@@ -22,6 +23,7 @@ __all__ = ["register_commands", "version_cmd"]
 def register_commands(app: typer.Typer) -> None:
     """Attach all per-check command groups in stable order."""
     register_version(app)
+    register_docs(app)
     register_audit(app)
     register_config(app)
     # Checks
