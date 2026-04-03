@@ -5,10 +5,11 @@ alwaysApply: true
 ---
 # dnsight — Cursor rules
 
-Full standards, layout, quality bar, and config: see **AGENTS.md**.
+**AGENTS.md** — full standards, layout, quality bar, and SDK/config behaviour. **CONTRIBUTING.md** — human contributor workflow.
 
-- Use `from __future__ import annotations` at the top of every Python module in `src/`.
-- Adding a check: see AGENTS.md and `.plan/v2/reference/checks-reference.md`.
+Long-form reference under `docs/` is **forthcoming**; until then use AGENTS.md, code under `core/config/` and `core/schema/`, and tests.
+
+- Adding a check: **AGENTS.md** (architecture, registry, config slice, tests with fakes) and **CONTRIBUTING.md** (PR expectations).
 
 ---
 

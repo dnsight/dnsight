@@ -1,3 +1,5 @@
+"""Load dnsight YAML from disk, map, or defaults into :class:`ConfigManager`."""
+
 from __future__ import annotations
 
 from collections import OrderedDict

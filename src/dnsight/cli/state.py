@@ -11,6 +11,9 @@ import typer
 from dnsight.core.types import OutputFormat
 
 
+__all__ = ["GlobalState", "get_cli_state"]
+
+
 @dataclass(frozen=True)
 class GlobalState:
     """Options from the root ``dnsight`` callback, available to subcommands."""

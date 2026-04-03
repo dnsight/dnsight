@@ -40,6 +40,9 @@ from dnsight.utils.dnssec_support import (
 )
 
 
+__all__: list[str] = []
+
+
 def _apex_name(domain: str) -> str:
     return domain.strip().rstrip(".")
 

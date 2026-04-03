@@ -34,6 +34,8 @@ if TYPE_CHECKING:
     from dnsight.utils.dns import DNSResolver
     from dnsight.utils.http import HTTPClient
 
+__all__: list[str] = []
+
 _TAG_RE = re.compile(r"^[a-zA-Z0-9-]{1,255}$")
 _SRV_PROBE_NAMES: tuple[str, ...] = (
     "_smtp._tcp",

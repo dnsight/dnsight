@@ -7,27 +7,75 @@
 | **Meta** | [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) |
 | **Stack** | [![uv](https://img.shields.io/badge/uv-black?logo=uv)](https://docs.astral.sh/uv/) [![Ruff](https://img.shields.io/badge/ruff-black?logo=ruff)](https://docs.astral.sh/ruff/) [![just](https://img.shields.io/badge/just-black?logo=just)](https://just.systems/) [![SonarCloud](https://img.shields.io/badge/SonarCloud-126ED3?logo=sonarcloud)](https://sonarcloud.io) [![Aikido](https://img.shields.io/badge/Aikido%20Security-645DD7)](https://aikido.dev/) |
 
-> DNS, email, and web security and cleanliness SDK and CLI.
+**dnsight** is a Python SDK and CLI for auditing DNS, email authentication (SPF, DKIM, DMARC), and related signals. Use it from the shell or import it in your own tooling.
 
-## Installation
+**Python:** supports **3.11+**. If you’re working on the project or want to match what maintainers run day to day, use **3.14** (that’s also what our default CI setup targets). We test against 3.11 through 3.14.
+
+## Install
+
+Same package gives you both the **`dnsight`** command and the importable API. Install however you like:
 
 ```bash
-# CLI
-pipx install dnsight
-
-# SDK only
 pip install dnsight
-
-# With uv
-uv add dnsight
+uv add dnsight                    # in a project
+uv tool install dnsight             # standalone tool env
+pipx install dnsight              # optional: isolated CLI app
 ```
 
-## Usage
+## Quickstart (CLI)
 
 ```bash
 dnsight --help
-dnsight --version
+dnsight audit example.com
+dnsight config example > dnsight.yaml
+dnsight dmarc generate
 ```
+
+Global flags (e.g. output format) are on the root command—try `dnsight --help` for options like `--quiet` and `--format`.
+
+## Commands
+
+Besides **`audit`** and **`config`**, there’s a group per check: **`caa`**, **`dkim`**, **`dmarc`**, **`dnssec`**, **`headers`**, **`mx`**, **`spf`**. Pass domains (or rely on manifest mode from config) to run the check; some groups add a **`generate`** subcommand for record output. See `dnsight --help` and `dnsight <cmd> --help` for the exact shape.
+
+## Output formats
+
+`-f` / `--format` accepts **rich** (default), **json**, **sarif**, or **markdown**. Use `-o` / `--output` to write to a file instead of stdout.
+
+## Shell completion
+
+Typer can emit completion scripts: `dnsight --install-completion` (and `--show-completion` if you just want to inspect). If you’re hacking on the repo, `tools/dnsight-completion.zsh` is a tiny helper for zsh.
+
+## SDK
+
+```python
+from dnsight import run_check_sync, run_domain_sync
+
+audit = run_domain_sync("example.com")
+print(audit.critical_count, audit.partial)
+
+dmarc = run_check_sync("dmarc", "example.com")
+print(dmarc.passed, len(dmarc.issues))
+```
+
+## Hacking on dnsight
+
+You’ll want **[uv](https://docs.astral.sh/uv/)** (we expect at least **0.10.7**) and **[just](https://just.systems/)**. **Python 3.14** is the comfortable default for local work.
+
+```bash
+just install       # editable install + dev deps
+just pre-install   # pre-commit hooks
+just check && just test
+```
+
+Ruff, mypy, and friends come from the dev dependency group—you don’t need to install them globally. Process and expectations: [CONTRIBUTING.md](CONTRIBUTING.md). Architecture notes for agents and contributors: [AGENTS.md](AGENTS.md).
+
+## Documentation
+
+Longer reference (config in depth, CLI details, API docs) will live under **`docs/`** when we publish it; this README will link there. Until then, the sources of truth are this file, **AGENTS.md**, and the code.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Security: [SECURITY.md](SECURITY.md).
 
 ## License
 

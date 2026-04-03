@@ -1,7 +1,10 @@
 # dnsight — Agent Briefing
 
 Briefing for AI agents (Claude, Cursor, etc.) working on this repo.
-Deep design specs live in `.plan/` — read relevant docs there before making non-trivial changes.
+
+**Human contributors:** see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Long-form reference (config schema, per-check normative behaviour) will live under `docs/` (forthcoming). Until then, use **this file**, **module docstrings**, implementation under `src/dnsight/core/config/` and `src/dnsight/core/schema/`, and **tests** as ground truth.
 
 ---
 
@@ -71,6 +74,8 @@ cli/  →  sdk/  →  orchestrator.py  →  checks/  →  core/
 - `checks/` never imports from each other or from orchestrator
 - `cli/` imports from `dnsight.sdk` and `core/` only — never directly from `checks/`
 
+**Examples:** Good: `from dnsight.sdk import run_check_sync` in `cli/`. Bad: `from dnsight.checks.dmarc import ...` in `cli/` — use the SDK (or orchestrator patterns), not check packages directly.
+
 ### SDK and CLI (same conceptual API)
 
 - **Orchestrator** implements execution only (registry strings, `ConfigManager`, `Runtime`, trees, batch). **SDK** resolves config via `config_manager()` / `resolve_run_manager()` then calls orchestrator; it does not embed check-specific orchestration logic.
@@ -92,7 +97,7 @@ Applies to `run_check` / `run_check_sync` and typed aliases that forward program
 
 **Check aliases:** `check_<name>` / `check_<name>_sync` accept `config=` and optional `config_slice=`; when both are set, `config_slice=` sets/overrides that check’s slice on `Config` (e.g. DMARC → `Config.dmarc`).
 
-See `.plan/v2/reference/config-system.md` for the general config precedence model (defaults → top-level → group → domain).
+For the full config precedence model (defaults → top-level → group → domain), see **Config System** below and the code references there.
 
 ### Key patterns
 
@@ -114,7 +119,7 @@ See `.plan/v2/reference/config-system.md` for the general config precedence mode
 - Checks use `ChecksReplace` (list) or `ChecksDelta` (`+name`, `-name` string).
 - `core/config/defaults.py` holds all default constants.
 
-See `.plan/v2/reference/config-system.md` for full schema.
+**Where to read the full schema and merge rules:** `core/config/parser/` (YAML v1), `core/config/blocks.py`, `core/config/pattern.py`, `core/config/config_manager.py`, per-check config slices under `core/schema/`, and `tests/core/config/`.
 
 ---
 

@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 
+__all__ = ["data_summary_lines"]
+
 _RECORD_MAX = 240
 _SUGGESTED_MAX = 240
 _MECH_MAX_LINE = 400

@@ -1,3 +1,5 @@
+"""Registry mapping config schema version numbers to parser callables."""
+
 from __future__ import annotations
 
 from dnsight.core.config.parser.versions.base import VersionParser

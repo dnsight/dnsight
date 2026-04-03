@@ -17,6 +17,20 @@ from dnsight.orchestrator import run_domain_stream as orchestrator_run_domain_st
 from dnsight.sdk._manager import config_manager, resolve_run_manager
 
 
+__all__ = [
+    "run_batch",
+    "run_batch_sync",
+    "run_check",
+    "run_check_sync",
+    "run_domain",
+    "run_domain_stream",
+    "run_domain_stream_sync",
+    "run_domain_sync",
+    "run_targets",
+    "run_targets_sync",
+]
+
+
 async def run_check(
     check_name: str,
     domain: str,

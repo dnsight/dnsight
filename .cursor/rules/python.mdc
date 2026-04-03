@@ -1,0 +1,13 @@
+---
+description: Python modules in dnsight — align with AGENTS.md
+globs: src/**/*.py,tests/**/*.py
+alwaysApply: false
+---
+
+# dnsight — Python (`src/`, `tests/`)
+
+Follow **[AGENTS.md](../../AGENTS.md)** for style, public API (`__all__`), dependency layers, and testing rules.
+
+- Start every module under `src/` with `from __future__ import annotations`.
+- **Tests:** no real DNS or HTTP — use fakes (`FakeDNSResolver`, `FakeHTTPClient`); see AGENTS.md.
+- Before you consider a change done: run **`just check`** and **`just test`**.

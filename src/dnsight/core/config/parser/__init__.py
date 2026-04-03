@@ -1,3 +1,5 @@
+"""Public entrypoints for loading and discovering dnsight configuration files."""
+
 from __future__ import annotations
 
 from dnsight.core.config.parser.file import (

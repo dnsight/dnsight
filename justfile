@@ -83,7 +83,7 @@ publish:
 
 # Remove build artifacts and cache
 clean:
-    rm -rf dist/ coverage.xml .coverage  htmlcov/ .pytest_cache/ .mypy_cache/ .ruff_cache/
+    rm -rf dist/ coverage.xml .coverage junit.xml  htmlcov/ .pytest_cache/ .mypy_cache/ .ruff_cache/
     find . -type d -name __pycache__ -print0 | xargs -0 rm -rf 2>/dev/null || true
     find . -type f -name "*.pyc" -delete
 

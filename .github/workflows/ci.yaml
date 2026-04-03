@@ -31,9 +31,13 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Run Checks
+      - name: Run checks
         shell: bash
         run: just check
+
+      - name: Build package
+        shell: bash
+        run: just build
 
   # Tests - matrix across Python versions
   test:

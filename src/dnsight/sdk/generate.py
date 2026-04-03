@@ -9,6 +9,9 @@ from dnsight.core.registry import get
 from dnsight.core.types import Capability
 
 
+__all__ = ["generate"]
+
+
 def generate(check_name: str, *, params: BaseGenerateParams) -> GeneratedRecord:
     """Generate a DNS record for *check_name* and return a :class:`GeneratedRecord`.
 

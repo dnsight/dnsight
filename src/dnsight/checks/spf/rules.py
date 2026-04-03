@@ -32,6 +32,8 @@ from dnsight.core.types import Severity
 if TYPE_CHECKING:
     from dnsight.utils.dns import DNSResolver
 
+__all__: list[str] = []
+
 SPF1_PREFIX = "v=spf1"
 _TOKEN_SPLIT = re.compile(r"\s+")
 _MODIFIER_REDIRECT = re.compile(r"^redirect=([^=]+)$", re.IGNORECASE)

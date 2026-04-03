@@ -1,0 +1,70 @@
+name: Security report
+description: Report a suspected vulnerability in dnsight (code, CLI, or SDK)
+labels: [security]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for **security-sensitive** findings (for example unsafe handling of untrusted input,
+        credential exposure, or incorrect trust decisions). For general bugs, use **Bug report** instead.
+
+        Reports are handled in the open unless you indicate otherwise; see **SECURITY.md** in the repository root.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is the issue, who could be affected, and why it matters (one
+        short paragraph).
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: |
+        What could an attacker or mistake achieve? Examples: data exposure,
+        misleading audit results, local code execution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimal commands, config, or code. Redact secrets and real hostnames
+        if needed.
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected
+    attributes:
+      label: Affected versions
+      description: dnsight version or commit, Python version, OS, install method (pipx
+        / uv / pip), if known.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: public_ok
+    attributes:
+      label: Visibility
+      description: We default to public discussion; check if you need a different
+        arrangement.
+      options:
+        - label: I am okay with public discussion of this report on GitHub Issues
+          required: false
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Links to related issues, PRs, or standards (optional).
+    validations:
+      required: false
