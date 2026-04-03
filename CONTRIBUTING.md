@@ -90,6 +90,13 @@ Maintainers roll fragments into **[CHANGELOG.md](CHANGELOG.md)** at release time
 - **CLI** must not import from `checks/` directly; go through `dnsight.sdk`.
 - The default test suite must **not** use real DNS or HTTP; use fakes (see `FakeDNSResolver`, `FakeHTTPClient` in `AGENTS.md` and existing tests).
 
+### Local config for manual runs
+
+For optional **manual** audits with real DNS/HTTP and YAML you do not want in git,
+use [`local/dnsight-configs/`](local/dnsight-configs/README.md). Files there are
+gitignored except the README; see that file for CLI examples. This is separate
+from CI: `just test` stays deterministic and offline.
+
 ## Adding a new check (outline)
 
 Use an existing check under `src/dnsight/checks/` as a template. You will typically need to:

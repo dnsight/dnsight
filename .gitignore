@@ -40,6 +40,10 @@ dmypy.json
 .envrc
 .pypirc
 
+### Local dnsight YAML (see local/dnsight-configs/README.md)
+local/dnsight-configs/*
+!local/dnsight-configs/README.md
+
 ### Cursor
 .cursorignore
 .cursorindexingignore
