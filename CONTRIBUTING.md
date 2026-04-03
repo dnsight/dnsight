@@ -25,6 +25,53 @@ Optional: `just pre` runs pre-commit on all files without committing.
 3. Keep commits readable (clear messages); no formal commit-message scheme required.
 4. **Dependencies:** Do not add new runtime or dev dependencies unless they are clearly necessary. If you add one, explain **why** in the PR (smaller dependency trees are a project goal).
 
+## Pull requests: labels, titles, and branches
+
+- Use **existing** GitHub labels that fit the work (`enhancement`, `bug`, `security`, `documentation`, `dependencies`, `github_actions`, …). **At least one** when it makes sense; **several** are fine if the PR really spans categories.
+- Add the **`skip-changelog`** label when this PR must **not** require a Towncrier fragment (Dependabot uses it automatically; humans use it when CI rules say no fragment is needed). Create the label in the repo if it is missing, for example:
+  `gh label create "skip-changelog" --color 6A737D --description "Do not require a Towncrier changelog fragment (CI)."`
+- **Titles:** prefix with the **primary** kind of change so the queue is easy to scan, for example `Feature:`, `Bugfix:`, `Docs:`, `Security:`, `Chore:`, `CI:`, `Deps:` (map mentally to `enhancement`, `bug`, `documentation`, etc.).
+- **Branches (optional):** use a short slug for the main theme, e.g. `feature/…`, `bugfix/…`, `docs/…`, `security/…`, `chore/…`, `ci/…`, `deps/…`.
+
+Do **not** try to paste every repo label on every PR, and do not worry about triage-only labels unless they help reviewers.
+
+## Release notes (Towncrier)
+
+PRs **into `main`** that change **`src/**` or **`pyproject.toml`** must include at least one valid news fragment under **`changelog.d/`**, unless the **`skip-changelog`** label is present or the diff is **`uv.lock` only**. Stacked PRs into other branches are not checked until you open a PR into `main`.
+
+Allowed fragment suffixes (five types only): **`security`**, **`feature`**, **`bugfix`**, **`patch`**, **`other`**. Name files `changelog.d/<PR#>.<suffix>.md` (example: `42.feature.md`). Unknown suffixes fail CI.
+
+**CI enforces the PR number:** every `changelog.d/*.md` file **added or modified** in your PR must start with **this PR’s number** and a dot (from the PR URL, e.g. `…/pull/128` → `128.feature.md`). Open the PR (or refresh to read the number), then name or rename the fragment so you do not collide with another PR’s number. Leading `+` slugs are not accepted when this check runs.
+
+**Filenames vs. PR links:** Towncrier treats the last dot-separated segment that is a type (`feature`, `bugfix`, …) as the category; **everything before that** becomes the issue id in `[#…](…/pull/…)`. So `128.caa.feature.md` becomes issue `128.caa` and breaks the GitHub pull URL. Prefer **`128.feature.md`**. To add **several separate changelog bullets for the same PR** with the same link, use Towncrier’s numeric counter after the type: **`128.feature.1.md`**, **`128.feature.2.md`**, and so on (issue stays `128`). To cover **several points in one bullet**, use **one** fragment file and put multiple Markdown list lines (or paragraphs) in the body.
+
+**GitHub label → fragment (when you need a note):**
+
+| Label (examples) | Prefer fragment |
+| --- | --- |
+| `enhancement` | `.feature.md` |
+| `bug` | `.bugfix.md` or `.patch.md` (bugfix = user-visible fix; patch = small maintenance—use what fits) |
+| `security` | `.security.md` |
+| `documentation` | `.other.md` (e.g. start the line with `Docs:`) |
+| `dependencies` / `github_actions` | Usually no fragment (path rules); optional `.other.md` if you want a release line |
+
+Commands (after `just install`):
+
+```bash
+uv run towncrier create 123.feature.md -c "Short user-facing summary."
+uv run towncrier check --compare-with origin/main
+```
+
+Maintainers roll fragments into **[CHANGELOG.md](CHANGELOG.md)** at release time with `towncrier build` (see **Releasing** below).
+
+## Releasing (maintainers)
+
+1. On **`main`**, with changes merged and CI green.
+2. Run **`uv run towncrier build --yes --version X.Y.Z`** using the semver **without** a `v` prefix (the git tag will be `vX.Y.Z`). This updates `CHANGELOG.md` and removes the built fragments from `changelog.d/`.
+3. Commit the changelog and fragment removals (e.g. `Prepare release X.Y.Z`) and push to **`main`**.
+4. Create and push git tag **`vX.Y.Z`** on that commit (or create the tag via a GitHub Release). The tag must point **after** the changelog commit.
+5. **Publish** the GitHub **Release** (not only a draft). The publish workflow verifies that `CHANGELOG.md` contains `## [X.Y.Z]` and that `changelog.d/` has no leftover `*.md` fragments, then builds and uploads to PyPI.
+
 ## Workflow
 
 - **Branches:** Regular contributors with repo access should work on a **branch on this repository** and open a PR into `main`. If you do not have write access, use a **fork** and open a PR from there.

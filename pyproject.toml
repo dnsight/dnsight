@@ -45,6 +45,7 @@ dependencies = [
 "Homepage" = "https://github.com/dnsight/dnsight"
 "Repository" = "https://github.com/dnsight/dnsight"
 "Issues" = "https://github.com/dnsight/dnsight/issues"
+"Changelog" = "https://github.com/dnsight/dnsight/blob/main/CHANGELOG.md"
 
 
 [project.scripts]
@@ -82,6 +83,7 @@ dev = [
   "pytest-cov>=7.0.0,<8.0.0",
   "hypothesis>=6.151.9,<7.0.0",
   "mutmut>=3.5.0,<4.0.0",
+  "towncrier>=24.7.0,<26.0.0",
 ]
 
 [tool.ruff]
@@ -126,6 +128,29 @@ addopts = "--cov=src/dnsight --cov-report=term-missing --cov-report=xml --junitx
 [tool.coverage.run]
 source = ["src/dnsight"]
 omit = ["*/tests/**"]
+
+[tool.towncrier]
+directory = "changelog.d"
+filename = "CHANGELOG.md"
+start_string = "<!-- towncrier release notes start -->\n"
+underlines = ["", "", ""]
+title_format = "## [{version}](https://github.com/dnsight/dnsight/releases/tag/v{version}) - {project_date}"
+issue_format = "[#{issue}](https://github.com/dnsight/dnsight/pull/{issue})"
+
+[[tool.towncrier.type]]
+name = "Security"
+
+[[tool.towncrier.type]]
+name = "Feature"
+
+[[tool.towncrier.type]]
+name = "Bugfix"
+
+[[tool.towncrier.type]]
+name = "Patch"
+
+[[tool.towncrier.type]]
+name = "Other"
 
 [tool.yamlfix]
 whitelines = 1                # preserve single blank lines between list items etc.

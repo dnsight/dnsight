@@ -23,6 +23,23 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      - name: Verify changelog matches release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ github.event.release.tag_name }}"
+          VER="${TAG#v}"
+          if ! grep -Fq "## [${VER}]" CHANGELOG.md; then
+            echo "CHANGELOG.md must contain a '## [${VER}]' section (run towncrier build before tagging)."
+            exit 1
+          fi
+          shopt -s nullglob
+          fragments=(changelog.d/*.md)
+          if ((${#fragments[@]})); then
+            echo "Remove pending news fragments in changelog.d/ before release (leftover: ${fragments[*]})."
+            exit 1
+          fi
+
       - name: Build
         run: just build
 

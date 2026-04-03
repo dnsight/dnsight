@@ -75,7 +75,7 @@ Longer reference (config in depth, CLI details, API docs) will live under **`doc
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Security: [SECURITY.md](SECURITY.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md). Changelog: [CHANGELOG.md](CHANGELOG.md). Security: [SECURITY.md](SECURITY.md).
 
 ## License
 

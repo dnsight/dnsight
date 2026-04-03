@@ -6,6 +6,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    labels:
+      - skip-changelog
+      - dependencies
     groups:
       actions:
         patterns: ['*']  # group all action updates into one PR
@@ -15,6 +18,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    labels:
+      - skip-changelog
+      - dependencies
     groups:
       python-deps:
         patterns: ['*']

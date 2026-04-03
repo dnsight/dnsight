@@ -1,0 +1,85 @@
+name: Changelog
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  towncrier:
+    name: Towncrier
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base ref
+        run: git fetch origin "refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Enforce changelog fragments when required
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          PR="${{ github.event.pull_request.number }}"
+          REPO="${{ github.repository }}"
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          BASE_REF="${{ github.base_ref }}"
+
+          if gh pr view "$PR" --repo "$REPO" --json labels -q '.labels[].name' | grep -qx 'skip-changelog'; then
+            echo "Label skip-changelog present; skipping towncrier check."
+            exit 0
+          fi
+
+          mapfile -t files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          if [ "${#files[@]}" -eq 0 ]; then
+            exit 0
+          fi
+
+          needs_changelog=false
+          only_lock=true
+          for f in "${files[@]}"; do
+            if [[ "$f" != uv.lock ]]; then
+              only_lock=false
+            fi
+            if [[ "$f" == src/* ]] || [[ "$f" == "pyproject.toml" ]]; then
+              needs_changelog=true
+            fi
+          done
+
+          if [[ "$only_lock" == true && "$needs_changelog" == false ]]; then
+            echo "Only uv.lock changed; skipping towncrier check."
+            exit 0
+          fi
+
+          if [[ "$needs_changelog" == false ]]; then
+            echo "No changelog-trigger paths (src/** or pyproject.toml); skipping towncrier check."
+            exit 0
+          fi
+
+          echo "Running towncrier check against origin/${BASE_REF} …"
+          uv run towncrier check --compare-with "origin/${BASE_REF}"
+
+          diff_names=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA")
+          mapfile -t fragments < <(echo "$diff_names" | grep -E '^changelog\.d/[^/]+\.md$' || true)
+          for f in "${fragments[@]:-}"; do
+            base=$(basename "$f" .md)
+            if [[ "$base" != "${PR}."* ]]; then
+              msg="Fragment basename must start with this PR number: '${PR}.'"
+              msg="${msg} (e.g. changelog.d/${PR}.feature.md). Got: ${base}"
+              echo "::error file=${f}::${msg}"
+              exit 1
+            fi
+          done
