@@ -18,6 +18,10 @@ just pre-install    # install pre-commit hooks (use this on every clone)
 
 Optional: `just pre` runs pre-commit on all files without committing.
 
+## CLI (Typer)
+
+New or edited commands under `src/dnsight/cli/` should use **`typing.Annotated`** for all Typer options and arguments (not `param: T = typer.Option(...)`). Defaults belong on the parameter; for flags, avoid duplicating `True`/`False` inside `typer.Option` when using `Annotated`. Shared parameter shapes live in [`src/dnsight/cli/helpers.py`](src/dnsight/cli/helpers.py) and [`src/dnsight/cli/annotations.py`](src/dnsight/cli/annotations.py).
+
 ## Before you open a PR
 
 1. Run **`just check`** and **`just test`**; both must pass (this matches CI).

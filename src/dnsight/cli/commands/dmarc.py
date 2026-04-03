@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated, TypeAlias
+
 import typer
 
 from dnsight.cli._completion_common import prefix_choices
@@ -80,73 +82,99 @@ def _build_dmarc_overlay(
     )
 
 
-_OPT_DMARC_CHECK_POLICY = typer.Option(
-    None,
-    "--policy",
-    "-p",
-    help="Minimum required DMARC policy.",
-    autocompletion=_complete_dmarc_policy,
-    case_sensitive=False,
-)
-_OPT_DMARC_TARGET_POLICY = typer.Option(
-    None,
-    "--target-policy",
-    help="Target policy for recommendations when not strict.",
-    autocompletion=_complete_dmarc_policy,
-    case_sensitive=False,
-)
-_OPT_DMARC_ADKIM_CHECK = typer.Option(
-    None,
-    "--adkim",
-    help="adkim= alignment: r or s.",
-    autocompletion=_complete_dmarc_alignment,
-    case_sensitive=False,
-)
-_OPT_DMARC_ASPF_CHECK = typer.Option(
-    None,
-    "--aspf",
-    help="aspf= alignment: r or s.",
-    autocompletion=_complete_dmarc_alignment,
-    case_sensitive=False,
-)
-_OPT_DMARC_SUBDOMAIN_MIN = typer.Option(
-    None,
-    "--subdomain-policy-minimum",
-    help=(
-        "Minimum subdomain policy (sp); omit for YAML default; "
-        "pass '' to disable sp enforcement."
+DmarcCheckPolicyOpt: TypeAlias = Annotated[
+    DmarcSchema.PolicyLiteral | None,
+    typer.Option(
+        "--policy",
+        "-p",
+        help="Minimum required DMARC policy.",
+        autocompletion=_complete_dmarc_policy,
+        case_sensitive=False,
     ),
-    autocompletion=_complete_dmarc_policy,
-)
-_OPT_DMARC_GEN_POLICY = typer.Option(
-    "none",
-    "--policy",
-    "-p",
-    help="Generated record p=.",
-    autocompletion=_complete_dmarc_policy,
-    case_sensitive=False,
-)
-_OPT_DMARC_GEN_SUBDOMAIN_POLICY = typer.Option(
-    None,
-    "--subdomain-policy",
-    help="Generated sp= (optional).",
-    autocompletion=_complete_dmarc_policy,
-    case_sensitive=False,
-)
-_OPT_DMARC_GEN_ADKIM = typer.Option(
-    "r",
-    "--adkim",
-    help="adkim= r|s.",
-    autocompletion=_complete_dmarc_alignment,
-    case_sensitive=False,
-)
-_OPT_DMARC_GEN_ASPF = typer.Option(
-    "r",
-    "--aspf",
-    help="aspf= r|s.",
-    autocompletion=_complete_dmarc_alignment,
-    case_sensitive=False,
-)
+]
+
+DmarcTargetPolicyOpt: TypeAlias = Annotated[
+    DmarcSchema.PolicyLiteral | None,
+    typer.Option(
+        "--target-policy",
+        help="Target policy for recommendations when not strict.",
+        autocompletion=_complete_dmarc_policy,
+        case_sensitive=False,
+    ),
+]
+
+DmarcAdkimCheckOpt: TypeAlias = Annotated[
+    DmarcSchema.AlignmentLiteral | None,
+    typer.Option(
+        "--adkim",
+        help="adkim= alignment: r or s.",
+        autocompletion=_complete_dmarc_alignment,
+        case_sensitive=False,
+    ),
+]
+
+DmarcAspfCheckOpt: TypeAlias = Annotated[
+    DmarcSchema.AlignmentLiteral | None,
+    typer.Option(
+        "--aspf",
+        help="aspf= alignment: r or s.",
+        autocompletion=_complete_dmarc_alignment,
+        case_sensitive=False,
+    ),
+]
+
+DmarcSubdomainMinOpt: TypeAlias = Annotated[
+    str | None,
+    typer.Option(
+        "--subdomain-policy-minimum",
+        help=(
+            "Minimum subdomain policy (sp); omit for YAML default; "
+            "pass '' to disable sp enforcement."
+        ),
+        autocompletion=_complete_dmarc_policy,
+    ),
+]
+
+DmarcGenPolicyOpt: TypeAlias = Annotated[
+    DmarcSchema.PolicyLiteral,
+    typer.Option(
+        "--policy",
+        "-p",
+        help="Generated record p=.",
+        autocompletion=_complete_dmarc_policy,
+        case_sensitive=False,
+    ),
+]
+
+DmarcGenSubdomainPolicyOpt: TypeAlias = Annotated[
+    DmarcSchema.PolicyLiteral | None,
+    typer.Option(
+        "--subdomain-policy",
+        help="Generated sp= (optional).",
+        autocompletion=_complete_dmarc_policy,
+        case_sensitive=False,
+    ),
+]
+
+DmarcGenAdkimOpt: TypeAlias = Annotated[
+    DmarcSchema.AlignmentLiteral,
+    typer.Option(
+        "--adkim",
+        help="adkim= r|s.",
+        autocompletion=_complete_dmarc_alignment,
+        case_sensitive=False,
+    ),
+]
+
+DmarcGenAspfOpt: TypeAlias = Annotated[
+    DmarcSchema.AlignmentLiteral,
+    typer.Option(
+        "--aspf",
+        help="aspf= r|s.",
+        autocompletion=_complete_dmarc_alignment,
+        case_sensitive=False,
+    ),
+]
 
 
 def register_dmarc(app: typer.Typer) -> None:
@@ -161,43 +189,52 @@ def register_dmarc(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        policy: DmarcSchema.PolicyLiteral | None = _OPT_DMARC_CHECK_POLICY,
-        target_policy: DmarcSchema.PolicyLiteral | None = _OPT_DMARC_TARGET_POLICY,
-        rua_required: bool | None = typer.Option(
-            None,
-            "--rua-required/--no-rua-required",
-            help="Require aggregate reporting (rua).",
-        ),
-        ruf_required: bool | None = typer.Option(
-            None,
-            "--ruf-required/--no-ruf-required",
-            help="Require forensic reporting (ruf).",
-        ),
-        expected_rua: str | None = typer.Option(
-            None,
-            "--expected-rua",
-            help="Comma-separated rua URIs (exact set match when non-empty).",
-        ),
-        expected_ruf: str | None = typer.Option(
-            None,
-            "--expected-ruf",
-            help="Comma-separated ruf URIs (exact set match when non-empty).",
-        ),
-        minimum_pct: int | None = typer.Option(
-            None,
-            "--minimum-pct",
-            help="Minimum acceptable pct (0–100).",
-            min=0,
-            max=100,
-        ),
-        require_strict_alignment: bool | None = typer.Option(
-            None,
-            "--require-strict-alignment/--no-require-strict-alignment",
-            help="If true, issue when adkim or aspf is relaxed.",
-        ),
-        adkim: DmarcSchema.AlignmentLiteral | None = _OPT_DMARC_ADKIM_CHECK,
-        aspf: DmarcSchema.AlignmentLiteral | None = _OPT_DMARC_ASPF_CHECK,
-        subdomain_policy_minimum: str | None = _OPT_DMARC_SUBDOMAIN_MIN,
+        policy: DmarcCheckPolicyOpt = None,
+        target_policy: DmarcTargetPolicyOpt = None,
+        rua_required: Annotated[
+            bool | None,
+            typer.Option(
+                "--rua-required/--no-rua-required",
+                help="Require aggregate reporting (rua).",
+            ),
+        ] = None,
+        ruf_required: Annotated[
+            bool | None,
+            typer.Option(
+                "--ruf-required/--no-ruf-required",
+                help="Require forensic reporting (ruf).",
+            ),
+        ] = None,
+        expected_rua: Annotated[
+            str | None,
+            typer.Option(
+                "--expected-rua",
+                help="Comma-separated rua URIs (exact set match when non-empty).",
+            ),
+        ] = None,
+        expected_ruf: Annotated[
+            str | None,
+            typer.Option(
+                "--expected-ruf",
+                help="Comma-separated ruf URIs (exact set match when non-empty).",
+            ),
+        ] = None,
+        minimum_pct: Annotated[
+            int | None,
+            typer.Option(
+                "--minimum-pct", help="Minimum acceptable pct (0–100).", min=0, max=100
+            ),
+        ] = None,
+        require_strict_alignment: Annotated[
+            bool | None,
+            typer.Option(
+                "--require-strict-alignment/--no-require-strict-alignment",
+                help="If true, issue when adkim or aspf is relaxed.",
+            ),
+        ] = None,
+        adkim: DmarcAdkimCheckOpt = None,
+        aspf: DmarcAspfCheckOpt = None,
+        subdomain_policy_minimum: DmarcSubdomainMinOpt = None,
     ) -> None:
         if ctx.invoked_subcommand is not None:
             return
@@ -223,18 +260,21 @@ def register_dmarc(app: typer.Typer) -> None:
     @t.command("generate", help="Print a suggested DMARC TXT record.")
     def generate_cmd(
         *,
-        policy: DmarcSchema.PolicyLiteral = _OPT_DMARC_GEN_POLICY,
-        subdomain_policy: DmarcSchema.PolicyLiteral
-        | None = _OPT_DMARC_GEN_SUBDOMAIN_POLICY,
-        pct: int = typer.Option(100, "--pct", help="pct= 0–100.", min=0, max=100),
-        adkim: DmarcSchema.AlignmentLiteral = _OPT_DMARC_GEN_ADKIM,
-        aspf: DmarcSchema.AlignmentLiteral = _OPT_DMARC_GEN_ASPF,
-        rua: str | None = typer.Option(
-            None, "--rua", help="Comma-separated rua= mailto or http URIs."
-        ),
-        ruf: str | None = typer.Option(
-            None, "--ruf", help="Comma-separated ruf= mailto or http URIs."
-        ),
+        policy: DmarcGenPolicyOpt = "none",
+        subdomain_policy: DmarcGenSubdomainPolicyOpt = None,
+        pct: Annotated[
+            int, typer.Option("--pct", help="pct= 0–100.", min=0, max=100)
+        ] = 100,
+        adkim: DmarcGenAdkimOpt = "r",
+        aspf: DmarcGenAspfOpt = "r",
+        rua: Annotated[
+            str | None,
+            typer.Option("--rua", help="Comma-separated rua= mailto or http URIs."),
+        ] = None,
+        ruf: Annotated[
+            str | None,
+            typer.Option("--ruf", help="Comma-separated ruf= mailto or http URIs."),
+        ] = None,
     ) -> None:
         params = DMARCGenerateParams(
             policy=policy,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated, TypeAlias
+
 import typer
 
 from dnsight.cli._completion_common import complete_with_csv_suffix
@@ -32,18 +34,23 @@ def _complete_dkim_disallowed(ctx: typer.Context, incomplete: str | None) -> lis
     )
 
 
-_OPT_DKIM_SELECTORS = typer.Option(
-    None,
-    "--selectors",
-    help="Comma-separated DKIM selectors to try first.",
-    autocompletion=_complete_dkim_selectors,
-)
-_OPT_DKIM_DISALLOWED_ALGORITHMS = typer.Option(
-    None,
-    "--disallowed-algorithms",
-    help="Comma-separated weak algorithm tokens (tab suggests common weak values).",
-    autocompletion=_complete_dkim_disallowed,
-)
+DkimSelectorsOpt: TypeAlias = Annotated[
+    str | None,
+    typer.Option(
+        "--selectors",
+        help="Comma-separated DKIM selectors to try first.",
+        autocompletion=_complete_dkim_selectors,
+    ),
+]
+
+DkimDisallowedAlgorithmsOpt: TypeAlias = Annotated[
+    str | None,
+    typer.Option(
+        "--disallowed-algorithms",
+        help="Comma-separated weak algorithm tokens (tab suggests common weak values).",
+        autocompletion=_complete_dkim_disallowed,
+    ),
+]
 
 
 def _build_dkim_overlay(
@@ -75,11 +82,12 @@ def register_dkim(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        selectors: str | None = _OPT_DKIM_SELECTORS,
-        min_key_bits: int | None = typer.Option(
-            None, "--min-key-bits", help="Minimum RSA key size in bits.", min=0
-        ),
-        disallowed_algorithms: str | None = _OPT_DKIM_DISALLOWED_ALGORITHMS,
+        selectors: DkimSelectorsOpt = None,
+        min_key_bits: Annotated[
+            int | None,
+            typer.Option("--min-key-bits", help="Minimum RSA key size in bits.", min=0),
+        ] = None,
+        disallowed_algorithms: DkimDisallowedAlgorithmsOpt = None,
     ) -> None:
         if ctx.invoked_subcommand is not None:
             return

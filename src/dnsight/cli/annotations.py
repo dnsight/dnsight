@@ -1,8 +1,10 @@
 """Reusable Typer shapes for shared CLI parameters.
 
-Factories build ``typer.Argument`` / ``typer.Option`` values; type aliases wrap them
-in :class:`typing.Annotated` for command signatures. Check- and generate-specific
-parameters stay on their commands.
+This package is the stable import surface for cross-command ``Annotated`` aliases
+(see ``cli/helpers.py`` for implementations). **Convention:** all CLI options and
+arguments use ``Annotated[T, typer.Option(...)]`` or ``Annotated[..., typer.Argument(...)]``
+with the Python default on ``=``; check-specific options stay defined in
+``cli/commands/`` (often as local ``TypeAlias`` names when reused within a file).
 """
 
 from __future__ import annotations

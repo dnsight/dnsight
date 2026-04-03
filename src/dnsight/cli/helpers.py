@@ -1,4 +1,12 @@
-"""Small CLI helpers: Typer Argument/Option factories and shared utilities."""
+"""Small CLI helpers: Typer Argument/Option factories and shared utilities.
+
+**Normative CLI style:** Every Typer parameter uses :class:`typing.Annotated` with
+``typer.Option`` / ``typer.Argument`` metadata (Typer ≥ 0.24). This module defines
+factory functions that return ``ArgumentInfo`` / ``OptionInfo`` and ``TypeAlias``
+names such as ``DomainsArg`` for use in command signatures. Prefer adding new
+shared CLI shapes here (or re-exporting them from ``cli/annotations.py``) rather
+than using ``name: T = typer.Option(...)`` as the parameter default.
+"""
 
 from __future__ import annotations
 

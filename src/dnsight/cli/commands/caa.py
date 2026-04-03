@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import typer
 
 from dnsight.cli._parse import parse_csv_option
@@ -86,70 +88,96 @@ def register_caa(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        require_caa: bool | None = typer.Option(
-            None,
-            "--require-caa/--no-require-caa",
-            help="Require effective CAA with issue tags.",
-        ),
-        required_issuers: str | None = typer.Option(
-            None,
-            "--required-issuers",
-            help="Comma-separated CA issuer domains required in issue tags.",
-        ),
-        check_issuewild: bool | None = typer.Option(
-            None,
-            "--check-issuewild/--no-check-issuewild",
-            help="Validate issuewild vs issue consistency.",
-        ),
-        restrict_wildcard_issuance: bool | None = typer.Option(
-            None,
-            "--restrict-wildcard-issuance/--no-restrict-wildcard-issuance",
-            help="Wildcard issuance must be restricted via issuewild.",
-        ),
-        cross_reference_crt_sh: bool | None = typer.Option(
-            None,
-            "--cross-reference-crt-sh/--no-cross-reference-crt-sh",
-            help="Query crt.sh and compare issuers to CAA.",
-        ),
-        names: str | None = typer.Option(
-            None,
-            "--names",
-            help="Comma-separated extra hostnames (under zone) to check.",
-        ),
-        enumerate_names: bool | None = typer.Option(
-            None,
-            "--enumerate-names/--no-enumerate-names",
-            help="Discover names via DNS walk.",
-        ),
-        max_enumeration_depth: int | None = typer.Option(
-            None, "--max-enumeration-depth", help="Max CNAME/DNAME depth.", min=0
-        ),
-        max_names: int | None = typer.Option(
-            None, "--max-names", help="Max distinct names to enumerate.", min=0
-        ),
-        include_www: bool | None = typer.Option(
-            None, "--include-www/--no-include-www", help="Seed www.<zone>."
-        ),
-        include_mx_targets: bool | None = typer.Option(
-            None,
-            "--include-mx-targets/--no-include-mx-targets",
-            help="Include MX exchange hostnames in discovery.",
-        ),
-        include_srv_targets: bool | None = typer.Option(
-            None,
-            "--include-srv-targets/--no-include-srv-targets",
-            help="Include SRV targets in discovery.",
-        ),
-        enumerate_dname: bool | None = typer.Option(
-            None,
-            "--enumerate-dname/--no-enumerate-dname",
-            help="Follow DNAME during walk.",
-        ),
-        reporting_email: str | None = typer.Option(
-            None,
-            "--reporting-email",
-            help="Email for iodef mailto in GENERATE (optional).",
-        ),
+        require_caa: Annotated[
+            bool | None,
+            typer.Option(
+                "--require-caa/--no-require-caa",
+                help="Require effective CAA with issue tags.",
+            ),
+        ] = None,
+        required_issuers: Annotated[
+            str | None,
+            typer.Option(
+                "--required-issuers",
+                help="Comma-separated CA issuer domains required in issue tags.",
+            ),
+        ] = None,
+        check_issuewild: Annotated[
+            bool | None,
+            typer.Option(
+                "--check-issuewild/--no-check-issuewild",
+                help="Validate issuewild vs issue consistency.",
+            ),
+        ] = None,
+        restrict_wildcard_issuance: Annotated[
+            bool | None,
+            typer.Option(
+                "--restrict-wildcard-issuance/--no-restrict-wildcard-issuance",
+                help="Wildcard issuance must be restricted via issuewild.",
+            ),
+        ] = None,
+        cross_reference_crt_sh: Annotated[
+            bool | None,
+            typer.Option(
+                "--cross-reference-crt-sh/--no-cross-reference-crt-sh",
+                help="Query crt.sh and compare issuers to CAA.",
+            ),
+        ] = None,
+        names: Annotated[
+            str | None,
+            typer.Option(
+                "--names", help="Comma-separated extra hostnames (under zone) to check."
+            ),
+        ] = None,
+        enumerate_names: Annotated[
+            bool | None,
+            typer.Option(
+                "--enumerate-names/--no-enumerate-names",
+                help="Discover names via DNS walk.",
+            ),
+        ] = None,
+        max_enumeration_depth: Annotated[
+            int | None,
+            typer.Option(
+                "--max-enumeration-depth", help="Max CNAME/DNAME depth.", min=0
+            ),
+        ] = None,
+        max_names: Annotated[
+            int | None,
+            typer.Option("--max-names", help="Max distinct names to enumerate.", min=0),
+        ] = None,
+        include_www: Annotated[
+            bool | None,
+            typer.Option("--include-www/--no-include-www", help="Seed www.<zone>."),
+        ] = None,
+        include_mx_targets: Annotated[
+            bool | None,
+            typer.Option(
+                "--include-mx-targets/--no-include-mx-targets",
+                help="Include MX exchange hostnames in discovery.",
+            ),
+        ] = None,
+        include_srv_targets: Annotated[
+            bool | None,
+            typer.Option(
+                "--include-srv-targets/--no-include-srv-targets",
+                help="Include SRV targets in discovery.",
+            ),
+        ] = None,
+        enumerate_dname: Annotated[
+            bool | None,
+            typer.Option(
+                "--enumerate-dname/--no-enumerate-dname",
+                help="Follow DNAME during walk.",
+            ),
+        ] = None,
+        reporting_email: Annotated[
+            str | None,
+            typer.Option(
+                "--reporting-email",
+                help="Email for iodef mailto in GENERATE (optional).",
+            ),
+        ] = None,
     ) -> None:
         if ctx.invoked_subcommand is not None:
             return
@@ -178,17 +206,25 @@ def register_caa(app: typer.Typer) -> None:
     @t.command("generate", help="Print suggested CAA records.")
     def generate_cmd(
         *,
-        issuers: str | None = typer.Option(
-            None, "--issuers", help="Comma-separated CA domains for 0 issue lines."
-        ),
-        emit_issuewild: bool = typer.Option(
-            False,
-            "--emit-issuewild/--no-emit-issuewild",
-            help="Emit issuewild lines matching issuers.",
-        ),
-        iodef_mailto: str | None = typer.Option(
-            None, "--iodef-mailto", help="mailto address for 0 iodef line (optional)."
-        ),
+        issuers: Annotated[
+            str | None,
+            typer.Option(
+                "--issuers", help="Comma-separated CA domains for 0 issue lines."
+            ),
+        ] = None,
+        emit_issuewild: Annotated[
+            bool,
+            typer.Option(
+                "--emit-issuewild/--no-emit-issuewild",
+                help="Emit issuewild lines matching issuers.",
+            ),
+        ] = False,
+        iodef_mailto: Annotated[
+            str | None,
+            typer.Option(
+                "--iodef-mailto", help="mailto address for 0 iodef line (optional)."
+            ),
+        ] = None,
     ) -> None:
         params = CaaGenerateParams(
             issuers=list(parse_csv_option(issuers) or []),

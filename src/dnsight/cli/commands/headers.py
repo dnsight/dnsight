@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Annotated
 
 import typer
 
@@ -61,22 +62,28 @@ def register_headers(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        require: str | None = typer.Option(
-            None,
-            "--require",
-            help="Comma-separated required header tokens (HSTS, CSP, etc.).",
-            autocompletion=_complete_headers_require,
-        ),
-        urls: str | None = typer.Option(
-            None,
-            "--urls",
-            help="Comma-separated URLs to GET (when empty, https://domain and www).",
-        ),
-        strict_recommendations: bool | None = typer.Option(
-            None,
-            "--strict-recommendations/--no-strict-recommendations",
-            help="Recommend strictest best practice.",
-        ),
+        require: Annotated[
+            str | None,
+            typer.Option(
+                "--require",
+                help="Comma-separated required header tokens (HSTS, CSP, etc.).",
+                autocompletion=_complete_headers_require,
+            ),
+        ] = None,
+        urls: Annotated[
+            str | None,
+            typer.Option(
+                "--urls",
+                help="Comma-separated URLs to GET (when empty, https://domain and www).",
+            ),
+        ] = None,
+        strict_recommendations: Annotated[
+            bool | None,
+            typer.Option(
+                "--strict-recommendations/--no-strict-recommendations",
+                help="Recommend strictest best practice.",
+            ),
+        ] = None,
     ) -> None:
         if ctx.invoked_subcommand is not None:
             return
@@ -94,11 +101,13 @@ def register_headers(app: typer.Typer) -> None:
     @gen_app.command("csp")
     def gen_csp(
         *,
-        sources_json: str = typer.Option(
-            "{}",
-            "--sources-json",
-            help='JSON object mapping CSP directive names to string lists, e.g. \'{"default-src":["self"]}\'',
-        ),
+        sources_json: Annotated[
+            str,
+            typer.Option(
+                "--sources-json",
+                help='JSON object mapping CSP directive names to string lists, e.g. \'{"default-src":["self"]}\'',
+            ),
+        ] = "{}",
     ) -> None:
         try:
             raw = json.loads(sources_json)
@@ -127,13 +136,13 @@ def register_headers(app: typer.Typer) -> None:
     @gen_app.command("hsts")
     def gen_hsts(
         *,
-        max_age: int = typer.Option(
-            31536000, "--max-age", help="max-age in seconds.", min=0
-        ),
-        include_subdomains: bool = typer.Option(
-            True, "--include-subdomains/--no-include-subdomains"
-        ),
-        preload: bool = typer.Option(False, "--preload/--no-preload"),
+        max_age: Annotated[
+            int, typer.Option("--max-age", help="max-age in seconds.", min=0)
+        ] = 31_536_000,
+        include_subdomains: Annotated[
+            bool, typer.Option("--include-subdomains/--no-include-subdomains")
+        ] = True,
+        preload: Annotated[bool, typer.Option("--preload/--no-preload")] = False,
     ) -> None:
         params = HstsGenerateParams(
             max_age=max_age, include_subdomains=include_subdomains, preload=preload

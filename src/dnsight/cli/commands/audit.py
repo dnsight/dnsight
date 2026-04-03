@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import typer
 
 from dnsight.cli._completion_common import complete_with_csv_suffix
@@ -54,20 +56,24 @@ def register_audit(app: typer.Typer) -> None:
         *,
         recursive: RecursiveOpt = False,
         depth: DepthOpt = 3,
-        checks: str | None = typer.Option(
-            None,
-            "--checks",
-            "-c",
-            help="Comma-separated list of checks to run.",
-            autocompletion=_complete_audit_checks,
-        ),
-        exclude: str | None = typer.Option(
-            None,
-            "--exclude",
-            "-e",
-            help="Comma-separated list of checks to exclude.",
-            autocompletion=_complete_audit_exclude,
-        ),
+        checks: Annotated[
+            str | None,
+            typer.Option(
+                "--checks",
+                "-c",
+                help="Comma-separated list of checks to run.",
+                autocompletion=_complete_audit_checks,
+            ),
+        ] = None,
+        exclude: Annotated[
+            str | None,
+            typer.Option(
+                "--exclude",
+                "-e",
+                help="Comma-separated list of checks to exclude.",
+                autocompletion=_complete_audit_exclude,
+            ),
+        ] = None,
     ) -> None:
         """Run a full audit for domain(s) or all manifest targets from config."""
         state = get_cli_state(ctx)

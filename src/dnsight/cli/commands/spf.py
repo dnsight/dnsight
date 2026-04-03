@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated, TypeAlias
+
 import typer
 
 from dnsight.cli._completion_common import prefix_choices
@@ -28,20 +30,25 @@ def _complete_spf_disposition(ctx: typer.Context, incomplete: str | None) -> lis
     return prefix_choices(incomplete, SpfSchema.DISPOSITION_VALUES)
 
 
-_OPT_SPF_REQUIRED_DISPOSITION = typer.Option(
-    None,
-    "--required-disposition",
-    help="Required terminal SPF mechanism (-all, ~all, ?all, +all).",
-    autocompletion=_complete_spf_disposition,
-    case_sensitive=False,
-)
-_OPT_SPF_GEN_DISPOSITION = typer.Option(
-    "-all",
-    "--disposition",
-    help="Terminal disposition.",
-    autocompletion=_complete_spf_disposition,
-    case_sensitive=False,
-)
+SpfRequiredDispositionOpt: TypeAlias = Annotated[
+    SpfSchema.RequiredDispositionLiteral | None,
+    typer.Option(
+        "--required-disposition",
+        help="Required terminal SPF mechanism (-all, ~all, ?all, +all).",
+        autocompletion=_complete_spf_disposition,
+        case_sensitive=False,
+    ),
+]
+
+SpfGenDispositionOpt: TypeAlias = Annotated[
+    SpfSchema.DispositionLiteral,
+    typer.Option(
+        "--disposition",
+        help="Terminal disposition.",
+        autocompletion=_complete_spf_disposition,
+        case_sensitive=False,
+    ),
+]
 
 
 def _build_spf_overlay(
@@ -74,28 +81,36 @@ def register_spf(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        required_disposition: SpfSchema.RequiredDispositionLiteral | None = (
-            _OPT_SPF_REQUIRED_DISPOSITION
-        ),
-        lookup_limit: int | None = typer.Option(
-            None, "--lookup-limit", help="Max DNS lookups during SPF evaluation.", min=0
-        ),
-        max_includes: int | None = typer.Option(
-            None, "--max-includes", help="Cap on include traversals (optional)."
-        ),
-        allow_redirect: bool | None = typer.Option(
-            None,
-            "--allow-redirect/--no-allow-redirect",
-            help="Allow redirect= mechanism.",
-        ),
-        flatten: bool = typer.Option(
-            False,
-            "--flatten/--no-flatten",
-            help=(
-                "Expand flattened SPF view in Rich/Markdown-style output "
-                "(JSON/SARIF already include full data)."
+        required_disposition: SpfRequiredDispositionOpt = None,
+        lookup_limit: Annotated[
+            int | None,
+            typer.Option(
+                "--lookup-limit", help="Max DNS lookups during SPF evaluation.", min=0
             ),
-        ),
+        ] = None,
+        max_includes: Annotated[
+            int | None,
+            typer.Option(
+                "--max-includes", help="Cap on include traversals (optional)."
+            ),
+        ] = None,
+        allow_redirect: Annotated[
+            bool | None,
+            typer.Option(
+                "--allow-redirect/--no-allow-redirect",
+                help="Allow redirect= mechanism.",
+            ),
+        ] = None,
+        flatten: Annotated[
+            bool,
+            typer.Option(
+                "--flatten/--no-flatten",
+                help=(
+                    "Expand flattened SPF view in Rich/Markdown-style output "
+                    "(JSON/SARIF already include full data)."
+                ),
+            ),
+        ] = False,
     ) -> None:
         if ctx.invoked_subcommand is not None:
             return
@@ -121,12 +136,14 @@ def register_spf(app: typer.Typer) -> None:
     @t.command("generate", help="Print a minimal SPF TXT record.")
     def generate_cmd(
         *,
-        include: str | None = typer.Option(
-            None,
-            "--include",
-            help="Comma-separated include: domains for generated record.",
-        ),
-        disposition: SpfSchema.DispositionLiteral = _OPT_SPF_GEN_DISPOSITION,
+        include: Annotated[
+            str | None,
+            typer.Option(
+                "--include",
+                help="Comma-separated include: domains for generated record.",
+            ),
+        ] = None,
+        disposition: SpfGenDispositionOpt = "-all",
     ) -> None:
         inc = list(parse_csv_option(include) or [])
         params = SPFGenerateParams(includes=inc, disposition=disposition)

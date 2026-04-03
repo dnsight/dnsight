@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import typer
 
 from dnsight.cli.commands._check_base import (
@@ -62,20 +64,27 @@ def register_mx(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        check_ptr: bool | None = typer.Option(
-            None, "--check-ptr/--no-check-ptr", help="Resolve PTR for MX hostnames."
-        ),
-        check_starttls: bool | None = typer.Option(
-            None,
-            "--check-starttls/--no-check-starttls",
-            help="Probe STARTTLS on port 25.",
-        ),
-        starttls_timeout_seconds: int | None = typer.Option(
-            None,
-            "--starttls-timeout-seconds",
-            help="TCP/SMTP timeout for STARTTLS probe.",
-            min=0,
-        ),
+        check_ptr: Annotated[
+            bool | None,
+            typer.Option(
+                "--check-ptr/--no-check-ptr", help="Resolve PTR for MX hostnames."
+            ),
+        ] = None,
+        check_starttls: Annotated[
+            bool | None,
+            typer.Option(
+                "--check-starttls/--no-check-starttls",
+                help="Probe STARTTLS on port 25.",
+            ),
+        ] = None,
+        starttls_timeout_seconds: Annotated[
+            int | None,
+            typer.Option(
+                "--starttls-timeout-seconds",
+                help="TCP/SMTP timeout for STARTTLS probe.",
+                min=0,
+            ),
+        ] = None,
     ) -> None:
         if ctx.invoked_subcommand is not None:
             return
@@ -91,11 +100,13 @@ def register_mx(app: typer.Typer) -> None:
     @t.command("generate", help="Print MX RDATA lines from pref:host rows.")
     def generate_cmd(
         *,
-        mx: str = typer.Option(
-            ...,
-            "--mx",
-            help='Comma-separated pref:host rows (e.g. "10:mail.example.com,20:mx2.example.com").',
-        ),
+        mx: Annotated[
+            str,
+            typer.Option(
+                "--mx",
+                help='Comma-separated pref:host rows (e.g. "10:mail.example.com,20:mx2.example.com").',
+            ),
+        ],
     ) -> None:
         targets = _parse_mx_targets(mx)
         if not targets:

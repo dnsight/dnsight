@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated, TypeAlias
+
 import typer
 
 from dnsight.cli._completion_common import complete_with_csv_suffix
@@ -29,12 +31,14 @@ def _complete_dnssec_disallowed(
     )
 
 
-_OPT_DNSSEC_DISALLOWED_ALGORITHMS = typer.Option(
-    None,
-    "--disallowed-algorithms",
-    help="Comma-separated weak DNSSEC algorithms (tab suggests common weak values).",
-    autocompletion=_complete_dnssec_disallowed,
-)
+DnssecDisallowedAlgorithmsOpt: TypeAlias = Annotated[
+    str | None,
+    typer.Option(
+        "--disallowed-algorithms",
+        help="Comma-separated weak DNSSEC algorithms (tab suggests common weak values).",
+        autocompletion=_complete_dnssec_disallowed,
+    ),
+]
 
 
 def _build_dnssec_overlay(
@@ -84,39 +88,54 @@ def register_dnssec(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        require_ds: bool | None = typer.Option(
-            None,
-            "--require-ds/--no-require-ds",
-            help="Require DS at parent delegation.",
-        ),
-        signature_expiry_days_warning: int | None = typer.Option(
-            None,
-            "--signature-expiry-days-warning",
-            help="Warn when RRSIG expires within this many days.",
-            min=0,
-        ),
-        disallowed_algorithms: str | None = _OPT_DNSSEC_DISALLOWED_ALGORITHMS,
-        validate_negative_responses: bool | None = typer.Option(
-            None,
-            "--validate-negative-responses/--no-validate-negative-responses",
-            help="Probe NXDOMAIN and verify NSEC/NSEC3.",
-        ),
-        validate_nodata_proofs: bool | None = typer.Option(
-            None,
-            "--validate-nodata-proofs/--no-validate-nodata-proofs",
-            help="Probe NODATA and verify proofs.",
-        ),
-        nxdomain_probe_label: str | None = typer.Option(
-            None,
-            "--nxdomain-probe-label",
-            help="Leftmost label for NXDOMAIN probe (optional).",
-        ),
-        require_ns: bool | None = typer.Option(
-            None, "--require-ns/--no-require-ns", help="Require NS at zone apex."
-        ),
-        nodata_probe_name: str | None = typer.Option(
-            None, "--nodata-probe-name", help="FQDN for NODATA proof probe (optional)."
-        ),
+        require_ds: Annotated[
+            bool | None,
+            typer.Option(
+                "--require-ds/--no-require-ds", help="Require DS at parent delegation."
+            ),
+        ] = None,
+        signature_expiry_days_warning: Annotated[
+            int | None,
+            typer.Option(
+                "--signature-expiry-days-warning",
+                help="Warn when RRSIG expires within this many days.",
+                min=0,
+            ),
+        ] = None,
+        disallowed_algorithms: DnssecDisallowedAlgorithmsOpt = None,
+        validate_negative_responses: Annotated[
+            bool | None,
+            typer.Option(
+                "--validate-negative-responses/--no-validate-negative-responses",
+                help="Probe NXDOMAIN and verify NSEC/NSEC3.",
+            ),
+        ] = None,
+        validate_nodata_proofs: Annotated[
+            bool | None,
+            typer.Option(
+                "--validate-nodata-proofs/--no-validate-nodata-proofs",
+                help="Probe NODATA and verify proofs.",
+            ),
+        ] = None,
+        nxdomain_probe_label: Annotated[
+            str | None,
+            typer.Option(
+                "--nxdomain-probe-label",
+                help="Leftmost label for NXDOMAIN probe (optional).",
+            ),
+        ] = None,
+        require_ns: Annotated[
+            bool | None,
+            typer.Option(
+                "--require-ns/--no-require-ns", help="Require NS at zone apex."
+            ),
+        ] = None,
+        nodata_probe_name: Annotated[
+            str | None,
+            typer.Option(
+                "--nodata-probe-name", help="FQDN for NODATA proof probe (optional)."
+            ),
+        ] = None,
     ) -> None:
         if ctx.invoked_subcommand is not None:
             return

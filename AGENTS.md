@@ -76,6 +76,8 @@ cli/  →  sdk/  →  orchestrator.py  →  checks/  →  core/
 
 **Examples:** Good: `from dnsight.sdk import run_check_sync` in `cli/`. Bad: `from dnsight.checks.dmarc import ...` in `cli/` — use the SDK (or orchestrator patterns), not check packages directly.
 
+**CLI (Typer):** Declare every CLI option and argument with `typing.Annotated[..., typer.Option(...)]` or `typer.Argument(...)` (see Typer ≥ 0.24). Put the Python default on the parameter (`= None`, `= False`, etc.); for booleans, do **not** pass the default literal into `typer.Option` inside `Annotated`. Reuse shared shapes as `TypeAlias` values in `cli/helpers.py` (factories + aliases) and `cli/annotations.py` (re-exports).
+
 ### SDK and CLI (same conceptual API)
 
 - **Orchestrator** implements execution only (registry strings, `ConfigManager`, `Runtime`, trees, batch). **SDK** resolves config via `config_manager()` / `resolve_run_manager()` then calls orchestrator; it does not embed check-specific orchestration logic.

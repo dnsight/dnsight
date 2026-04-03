@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Annotated, TypeAlias
 
 import click.exceptions
 import typer
@@ -24,66 +25,77 @@ __all__ = ["app"]
 click.exceptions.NoArgsIsHelpError.exit_code = 0
 
 
-_CONFIG_CLI = typer.Option(
-    None,
-    "--config",
-    help="Path to dnsight.yaml (default: discover from CWD).",
-    exists=True,
-    file_okay=True,
-    dir_okay=False,
-    resolve_path=True,
-    autocompletion=complete_config_discovery_paths,
-)
-
-_FORMAT_CLI = typer.Option(
-    OutputFormat.RICH,
-    "--format",
-    "-f",
-    help="Output format: rich, json, sarif, markdown.",
-    case_sensitive=False,
-    autocompletion=complete_output_format,
-)
-
-_OUTPUT_CLI = typer.Option(
-    None,
-    "--output",
-    "-o",
-    help="Write serialised results to this file instead of stdout.",
-    file_okay=True,
-    dir_okay=False,
-    resolve_path=True,
-    writable=True,
-)
-
-_QUIET_CLI = typer.Option(
-    False,
-    "--quiet",
-    "-q",
-    help="Diagnostics only at ERROR on stderr (suppresses INFO/DEBUG). "
-    "Audit output is unchanged. Wins over --verbose.",
-)
-
-_VERBOSE_CLI = typer.Option(
-    False,
-    "--verbose",
-    "-v",
-    help="DEBUG logging on stderr with source paths and Rich tracebacks. "
-    "Ignored if --quiet is set.",
-)
-
-
 def _version_option_callback(value: bool) -> None:
     if value:
         version_cmd()
 
 
-_VERSION_CLI = typer.Option(
-    False,
-    "--version",
-    help="Show the dnsight version and exit.",
-    callback=_version_option_callback,
-    is_eager=True,
-)
+ConfigPathOpt: TypeAlias = Annotated[
+    Path | None,
+    typer.Option(
+        "--config",
+        help="Path to dnsight.yaml (default: discover from CWD).",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        resolve_path=True,
+        autocompletion=complete_config_discovery_paths,
+    ),
+]
+
+OutputFormatOpt: TypeAlias = Annotated[
+    OutputFormat,
+    typer.Option(
+        "--format",
+        "-f",
+        help="Output format: rich, json, sarif, markdown.",
+        case_sensitive=False,
+        autocompletion=complete_output_format,
+    ),
+]
+
+OutputPathOpt: TypeAlias = Annotated[
+    Path | None,
+    typer.Option(
+        "--output",
+        "-o",
+        help="Write serialised results to this file instead of stdout.",
+        file_okay=True,
+        dir_okay=False,
+        resolve_path=True,
+        writable=True,
+    ),
+]
+
+QuietOpt: TypeAlias = Annotated[
+    bool,
+    typer.Option(
+        "--quiet",
+        "-q",
+        help="Diagnostics only at ERROR on stderr (suppresses INFO/DEBUG). "
+        "Audit output is unchanged. Wins over --verbose.",
+    ),
+]
+
+VerboseOpt: TypeAlias = Annotated[
+    bool,
+    typer.Option(
+        "--verbose",
+        "-v",
+        help="DEBUG logging on stderr with source paths and Rich tracebacks. "
+        "Ignored if --quiet is set.",
+    ),
+]
+
+VersionOpt: TypeAlias = Annotated[
+    bool,
+    typer.Option(
+        "--version",
+        help="Show the dnsight version and exit.",
+        callback=_version_option_callback,
+        is_eager=True,
+    ),
+]
 
 _APP_HELP = """\
 Audit DNS, email authentication (SPF, DKIM, DMARC), and related security signals.
@@ -99,12 +111,12 @@ app = typer.Typer(name="dnsight", help=_APP_HELP, no_args_is_help=True)
 def _main(
     ctx: typer.Context,
     *,
-    config: Path | None = _CONFIG_CLI,
-    output_format: OutputFormat = _FORMAT_CLI,
-    output_path: Path | None = _OUTPUT_CLI,
-    quiet: bool = _QUIET_CLI,
-    verbose: bool = _VERBOSE_CLI,
-    version: bool = _VERSION_CLI,
+    config: ConfigPathOpt = None,
+    output_format: OutputFormatOpt = OutputFormat.RICH,
+    output_path: OutputPathOpt = None,
+    quiet: QuietOpt = False,
+    verbose: VerboseOpt = False,
+    version: VersionOpt = False,
 ) -> None:
     _ = version
     if quiet:
