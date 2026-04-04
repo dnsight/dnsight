@@ -73,8 +73,8 @@ DEFAULT_GLOBAL_CONCURRENCY_LIMIT: Final[int] = 10
 # Recommendations: if true recommend strictest; if false recommend alignment to config
 DEFAULT_STRICT_RECOMMENDATIONS: Final[bool] = False
 # DMARC (secure defaults)
-DEFAULT_DMARC_POLICY: Final[str] = "reject"  # minimum required policy
-DEFAULT_DMARC_TARGET_POLICY: Final[str | None] = (
+DEFAULT_DMARC_POLICY: Final[Literal["reject"]] = "reject"  # minimum required policy
+DEFAULT_DMARC_TARGET_POLICY: Final[Literal["none", "quarantine", "reject"] | None] = (
     None  # if set, recommend moving to this; None = only check minimum
 )
 DEFAULT_DMARC_RUA_REQUIRED: Final[bool] = True

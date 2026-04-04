@@ -23,6 +23,7 @@ import dns.resolver
 import dns.reversename
 
 from dnsight.core.exceptions import CheckError
+from dnsight.core.logger import get_logger
 
 
 class DNSKEYDict(TypedDict):
@@ -45,6 +46,15 @@ class DnssecQueryResult:
     rcode: int
     ad: bool
     message: dns.message.Message
+
+
+logger = get_logger(__name__)
+
+
+def _dns_debug(resolver: object, name: str, rdtype: str) -> None:
+    logger.debug(
+        "DNS query backend=%s name=%r rdtype=%s", type(resolver).__name__, name, rdtype
+    )
 
 
 __all__ = [
@@ -150,6 +160,7 @@ class AsyncDNSResolver:
         callers can inspect authority (NSEC/NSEC3).
         """
         r = self._resolver_dnssec()
+        _dns_debug(self, name, rdtype)
         try:
             ans = await r.resolve(name, rdtype)
         except dns.resolver.NXDOMAIN as exc:
@@ -189,6 +200,7 @@ class AsyncDNSResolver:
         Raises:
             CheckError: On any DNS resolution failure.
         """
+        _dns_debug(self, name, "TXT")
         try:
             answer = await self._inner.resolve(name, "TXT")
             return [
@@ -210,6 +222,7 @@ class AsyncDNSResolver:
         Raises:
             CheckError: On any DNS resolution failure.
         """
+        _dns_debug(self, name, "MX")
         try:
             answer = await self._inner.resolve(name, "MX")
             results: list[tuple[int, str]] = [
@@ -231,6 +244,7 @@ class AsyncDNSResolver:
         Raises:
             CheckError: On any DNS resolution failure.
         """
+        _dns_debug(self, name, "A")
         try:
             answer = await self._inner.resolve(name, "A")
             return [str(rdata) for rdata in answer]
@@ -239,6 +253,7 @@ class AsyncDNSResolver:
 
     async def resolve_aaaa(self, name: str) -> list[str]:
         """Resolve IPv6 AAAA records for *name*."""
+        _dns_debug(self, name, "AAAA")
         try:
             answer = await self._inner.resolve(name, "AAAA")
             return [str(rdata) for rdata in answer]
@@ -247,6 +262,7 @@ class AsyncDNSResolver:
 
     async def resolve_cname(self, name: str) -> list[str]:
         """Resolve CNAME targets for *name* (trailing dots stripped)."""
+        _dns_debug(self, name, "CNAME")
         try:
             answer = await self._inner.resolve(name, "CNAME")
             return [str(rdata.target).rstrip(".") for rdata in answer]
@@ -255,6 +271,7 @@ class AsyncDNSResolver:
 
     async def resolve_dname(self, name: str) -> list[str]:
         """Resolve DNAME targets for *name* (trailing dots stripped)."""
+        _dns_debug(self, name, "DNAME")
         try:
             answer = await self._inner.resolve(name, "DNAME")
             return [str(rdata.target).rstrip(".") for rdata in answer]
@@ -268,6 +285,7 @@ class AsyncDNSResolver:
             List of ``(priority, weight, port, target)`` tuples (target without
             trailing dot).
         """
+        _dns_debug(self, name, "SRV")
         try:
             answer = await self._inner.resolve(name, "SRV")
             return [
@@ -294,6 +312,7 @@ class AsyncDNSResolver:
         Raises:
             CheckError: On any DNS resolution failure.
         """
+        _dns_debug(self, ipv4, "PTR")
         try:
             rev = dns.reversename.from_address(ipv4)
             answer = await self._inner.resolve(rev, "PTR")
@@ -313,6 +332,7 @@ class AsyncDNSResolver:
         Raises:
             CheckError: On any DNS resolution failure.
         """
+        _dns_debug(self, name, "CAA")
         try:
             answer = await self._inner.resolve(name, "CAA")
             out: list[tuple[int, str, str]] = []
@@ -344,6 +364,7 @@ class AsyncDNSResolver:
         Raises:
             CheckError: On any DNS resolution failure.
         """
+        _dns_debug(self, name, "NS")
         try:
             answer = await self._inner.resolve(name, "NS")
             return [str(rdata.target).rstrip(".") for rdata in answer]
@@ -364,6 +385,7 @@ class AsyncDNSResolver:
         Raises:
             CheckError: On any DNS resolution failure.
         """
+        _dns_debug(self, name, "DS")
         try:
             answer = await self._inner.resolve(name, "DS")
             return [
@@ -386,6 +408,7 @@ class AsyncDNSResolver:
         Raises:
             CheckError: On any DNS resolution failure.
         """
+        _dns_debug(self, name, "DNSKEY")
         try:
             answer = await self._inner.resolve(name, "DNSKEY")
             return [
@@ -428,6 +451,7 @@ class FakeDNSResolver:
         self._dnssec_messages: dict[str, dns.message.Message] = dnssec_messages or {}
 
     def _get(self, name: str, rtype: str) -> list[Any]:
+        _dns_debug(self, name, rtype)
         key = f"{name}/{rtype}"
         if key not in self._records:
             raise CheckError(f"no {rtype} record for {name}")
@@ -485,6 +509,7 @@ class FakeDNSResolver:
 
     async def query_dnssec(self, name: str, rdtype: str) -> DnssecQueryResult:
         """Return a pre-built DNS message for ``query_dnssec``."""
+        _dns_debug(self, name, rdtype.upper())
         key = f"{name}/{rdtype.upper()}"
         if key not in self._dnssec_messages:
             raise CheckError(f"no dnssec response for {name} {rdtype}")

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import pytest
 
 import dnsight.core.registry as registry
@@ -30,3 +32,14 @@ def _reset_singletons() -> None:  # noqa: PT004
     reset_resolver()
     reset_http_client()
     reset_starttls_probe()
+
+
+@pytest.fixture(autouse=True)
+def _reset_dnsight_package_logger() -> None:  # noqa: PT004
+    """Clear CLI-configured handlers so tests do not leak logging state."""
+    log = logging.getLogger("dnsight")
+    log.handlers.clear()
+    log.setLevel(logging.NOTSET)
+    yield  # type: ignore[misc]
+    log.handlers.clear()
+    log.setLevel(logging.NOTSET)

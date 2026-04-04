@@ -16,6 +16,7 @@ from dnsight.checks.headers.models import (
 from dnsight.core.config.blocks import Config, HeadersConfig
 from dnsight.core.exceptions import CheckError
 from dnsight.core.models import Issue, Recommendation
+from dnsight.core.schema.headers import HeadersSchema
 from dnsight.utils.http import HTTPClient, HTTPResponse
 
 
@@ -63,16 +64,6 @@ def _norm_require_token(raw: str) -> str:
     return raw.strip().upper().replace(" ", "_").replace("-", "_")
 
 
-# Normalised token -> HTTP header name (for display and lookup)
-_TOKEN_TO_HEADER_NAME: dict[str, str] = {
-    "HSTS": "Strict-Transport-Security",
-    "CSP": "Content-Security-Policy",
-    "X_FRAME_OPTIONS": "X-Frame-Options",
-    "PERMISSIONS_POLICY": "Permissions-Policy",
-    "X_CONTENT_TYPE_OPTIONS": "X-Content-Type-Options",
-}
-
-
 def _header_lookup(response_headers: dict[str, str], canonical_name: str) -> str | None:
     lower = canonical_name.lower()
     for k, v in response_headers.items():
@@ -112,7 +103,7 @@ def build_header_results(
     out: list[HeaderResult] = []
     for raw in require:
         norm = _norm_require_token(raw)
-        name = _TOKEN_TO_HEADER_NAME.get(norm, raw.strip())
+        name = HeadersSchema.REQUIRE_TOKEN_TO_HEADER_NAME.get(norm, raw.strip())
         val = _header_lookup(response_headers, name)
         out.append(HeaderResult(name=name, present=val is not None, value=val))
     return out

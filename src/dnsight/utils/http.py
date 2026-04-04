@@ -13,12 +13,24 @@ request failures so checks receive a uniform exception type.
 from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
+from urllib.parse import urlparse
 
 import httpx
 from pydantic import BaseModel, ConfigDict
 
 from dnsight.core.exceptions import CheckError
+from dnsight.core.logger import get_logger
 from dnsight.version import __version__
+
+
+logger = get_logger(__name__)
+
+
+def _http_url_summary(url: str) -> str:
+    parsed = urlparse(url)
+    if parsed.netloc:
+        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+    return url
 
 
 __all__ = [
@@ -172,6 +184,12 @@ class AsyncHTTPClient:
         Raises:
             CheckError: On transport or protocol errors.
         """
+        logger.debug(
+            "HTTP request backend=%s method=%s url=%s",
+            type(self).__name__,
+            method,
+            _http_url_summary(url),
+        )
         try:
             response = await self._client.request(method, url, **kwargs)
             return HTTPResponse(
@@ -203,8 +221,18 @@ class FakeHTTPClient:
 
     async def get(self, url: str, **kwargs: Any) -> HTTPResponse:
         """Return pre-configured response for *url* or raise ``CheckError``."""
+        logger.debug(
+            "HTTP request backend=%s method=GET url=%s",
+            type(self).__name__,
+            _http_url_summary(url),
+        )
         return self._get_response(url)
 
     async def head(self, url: str, **kwargs: Any) -> HTTPResponse:
         """Return pre-configured response for *url* or raise ``CheckError``."""
+        logger.debug(
+            "HTTP request backend=%s method=HEAD url=%s",
+            type(self).__name__,
+            _http_url_summary(url),
+        )
         return self._get_response(url)

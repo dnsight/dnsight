@@ -31,7 +31,21 @@ dnsight config example > dnsight.yaml
 dnsight dmarc generate
 ```
 
-Global flags (e.g. output format) are on the root command—try `dnsight --help` for options like `--quiet` and `--format`.
+Global flags (e.g. output format) are on the root command—try `dnsight --help` for options like `--format`.
+
+### Logging (CLI)
+
+Diagnostics go to **stderr** via the `dnsight` logger, using **Rich** (level colours, optional paths and tracebacks). Audit **results on stdout are unchanged** by `--quiet`; quiet only raises the log threshold so INFO/DEBUG lines disappear.
+
+| Flag | Effect |
+| --- | --- |
+| *(default)* | INFO logs, compact lines (`message · logger.name`) |
+| `--quiet` / `-q` | ERROR only on stderr |
+| `--verbose` / `-v` | DEBUG, show call paths, Rich tracebacks on errors |
+
+If both `--quiet` and `--verbose` are passed, **`--quiet` wins**.
+
+**Library use:** call `configure()` from `dnsight.core` when you want visible logs. Keyword options include `detailed_log=True` (include file/line in plain mode or path column in Rich mode), `use_rich=True` for coloured output, `rich_tracebacks=True` for exception formatting, and `format_string=...` for a fully custom `logging.Formatter` layout (this forces a plain stderr stream handler).
 
 ## Commands
 

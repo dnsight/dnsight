@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import Field
+
+import dnsight.core.config.defaults as _defaults
 
 
 __all__ = ["DkimSchema"]
@@ -12,6 +14,19 @@ __all__ = ["DkimSchema"]
 
 class DkimSchema:
     """DKIM field types — shared by DkimConfig and checks."""
+
+    #: Same tuple as :data:`dnsight.core.config.defaults.DEFAULT_DKIM_COMMON_SELECTORS`.
+    COMMON_SELECTOR_SUGGESTIONS: Final[tuple[str, ...]] = (
+        _defaults.DEFAULT_DKIM_COMMON_SELECTORS
+    )
+    #: Tab-completion hints for ``--disallowed-algorithms`` (weak k=/hash tokens); the
+    #: check still accepts any string that matches its normalisation rules.
+    WEAK_ALGORITHM_COMPLETION_HINTS: Final[tuple[str, ...]] = (
+        "md5",
+        "rsa-md5",
+        "sha1",
+        "rsa-sha1",
+    )
 
     MinKeyBitsInt = Annotated[
         int,

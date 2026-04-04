@@ -8,6 +8,7 @@ from typing import Annotated, Never, TypeAlias, cast
 import typer
 from typer.models import ArgumentInfo, OptionInfo
 
+from dnsight.cli._completion_common import complete_config_discovery_paths
 from dnsight.cli._parse import parse_csv_option
 from dnsight.cli.state import GlobalState
 from dnsight.core.models import DomainResult
@@ -71,6 +72,7 @@ def check_command_config_path_option() -> OptionInfo:
             file_okay=True,
             dir_okay=False,
             resolve_path=True,
+            autocompletion=complete_config_discovery_paths,
         ),
     )
 
@@ -87,6 +89,7 @@ def config_source_argument() -> ArgumentInfo:
         typer.Argument(
             show_default=False,
             help="YAML file path, '-' for stdin, or omit for --config / discovery.",
+            autocompletion=complete_config_discovery_paths,
         ),
     )
 

@@ -22,6 +22,7 @@ class GlobalState:
     output_format: OutputFormat
     output_path: Path | None
     quiet: bool
+    verbose: bool
 
 
 def get_cli_state(ctx: typer.Context) -> GlobalState:

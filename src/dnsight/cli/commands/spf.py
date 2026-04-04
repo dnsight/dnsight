@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from dnsight.cli._completion_common import prefix_choices
 from dnsight.cli._parse import parse_csv_option
 from dnsight.cli.commands._check_base import (
     effective_cli_config_path,
@@ -14,6 +15,7 @@ from dnsight.cli.commands._check_base import (
 from dnsight.cli.helpers import CheckCommandConfigPath, DomainsArg
 from dnsight.cli.output import emit_generated_record
 from dnsight.core.config import Config, SpfConfig
+from dnsight.core.schema.spf import SpfSchema
 from dnsight.sdk import SPFGenerateParams, generate_spf
 from dnsight.serialisers import SerialiserOptions
 
@@ -21,9 +23,30 @@ from dnsight.serialisers import SerialiserOptions
 __all__ = ["register_spf"]
 
 
+def _complete_spf_disposition(ctx: typer.Context, incomplete: str | None) -> list[str]:
+    _ = ctx
+    return prefix_choices(incomplete, SpfSchema.DISPOSITION_VALUES)
+
+
+_OPT_SPF_REQUIRED_DISPOSITION = typer.Option(
+    None,
+    "--required-disposition",
+    help="Required terminal SPF mechanism (-all, ~all, ?all, +all).",
+    autocompletion=_complete_spf_disposition,
+    case_sensitive=False,
+)
+_OPT_SPF_GEN_DISPOSITION = typer.Option(
+    "-all",
+    "--disposition",
+    help="Terminal disposition.",
+    autocompletion=_complete_spf_disposition,
+    case_sensitive=False,
+)
+
+
 def _build_spf_overlay(
     *,
-    required_disposition: str | None,
+    required_disposition: SpfSchema.RequiredDispositionLiteral | None,
     lookup_limit: int | None,
     max_includes: int | None,
     allow_redirect: bool | None,
@@ -51,10 +74,8 @@ def register_spf(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        required_disposition: str | None = typer.Option(
-            None,
-            "--required-disposition",
-            help="Required terminal SPF mechanism (e.g. -all, ~all).",
+        required_disposition: SpfSchema.RequiredDispositionLiteral | None = (
+            _OPT_SPF_REQUIRED_DISPOSITION
         ),
         lookup_limit: int | None = typer.Option(
             None, "--lookup-limit", help="Max DNS lookups during SPF evaluation.", min=0
@@ -105,9 +126,7 @@ def register_spf(app: typer.Typer) -> None:
             "--include",
             help="Comma-separated include: domains for generated record.",
         ),
-        disposition: str = typer.Option(
-            "-all", "--disposition", help="Terminal disposition."
-        ),
+        disposition: SpfSchema.DispositionLiteral = _OPT_SPF_GEN_DISPOSITION,
     ) -> None:
         inc = list(parse_csv_option(include) or [])
         params = SPFGenerateParams(includes=inc, disposition=disposition)

@@ -179,7 +179,9 @@ class DMARCGenerateParams(BaseGenerateParams):
     @classmethod
     def from_config(cls, config: DmarcConfig) -> Self:
         """Build params from DmarcConfig for generation."""
-        align = "s" if config.require_strict_alignment else "r"
+        align: DmarcSchema.AlignmentLiteral = (
+            "s" if config.require_strict_alignment else "r"
+        )
         if config.expected_rua:
             rua = list(config.expected_rua)
         elif config.rua_required:

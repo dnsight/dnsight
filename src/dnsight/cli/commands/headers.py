@@ -6,6 +6,7 @@ import json
 
 import typer
 
+from dnsight.cli._completion_common import complete_with_csv_suffix
 from dnsight.cli._parse import parse_csv_option
 from dnsight.cli.commands._check_base import (
     effective_cli_config_path,
@@ -16,10 +17,16 @@ from dnsight.cli.commands._check_base import (
 from dnsight.cli.helpers import CheckCommandConfigPath, DomainsArg
 from dnsight.cli.output import emit_generated_record
 from dnsight.core.config import Config, HeadersConfig
+from dnsight.core.schema.headers import HeadersSchema
 from dnsight.sdk import CspGenerateParams, HstsGenerateParams, generate_headers
 
 
 __all__ = ["register_headers"]
+
+
+def _complete_headers_require(ctx: typer.Context, incomplete: str | None) -> list[str]:
+    _ = ctx
+    return complete_with_csv_suffix(incomplete, HeadersSchema.REQUIRE_TOKEN_LABELS)
 
 
 def _build_headers_overlay(
@@ -58,6 +65,7 @@ def register_headers(app: typer.Typer) -> None:
             None,
             "--require",
             help="Comma-separated required header tokens (HSTS, CSP, etc.).",
+            autocompletion=_complete_headers_require,
         ),
         urls: str | None = typer.Option(
             None,

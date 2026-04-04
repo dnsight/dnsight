@@ -21,6 +21,7 @@ from dnsight.core.concurrency import ConcurrencyManager
 from dnsight.core.config import ConfigManager, ResolvedConfig
 from dnsight.core.config.blocks import ResolverConfig
 from dnsight.core.exceptions import CheckError
+from dnsight.core.logger import get_logger
 from dnsight.core.models import CheckResult, DomainResult, ZoneResult
 from dnsight.core.registry import get
 from dnsight.core.runtime import Runtime
@@ -28,6 +29,8 @@ from dnsight.core.throttle import ThrottleManager
 from dnsight.core.types import Status
 from dnsight.utils.dns import AsyncDNSResolver, get_resolver, set_resolver
 
+
+logger = get_logger(__name__)
 
 __all__ = [
     "RunAuditOptions",
@@ -128,6 +131,7 @@ def build_runtime(mgr: ConfigManager, resolved: ResolvedConfig) -> Runtime:
     """Configure DNS, then build throttle, concurrency, and :class:`Runtime`."""
     apply_resolver_config(resolved.config.resolver)
     rps, conc = _effective_limits(mgr, resolved)
+    logger.debug("Runtime limits: max_rps=%s max_concurrency=%s", rps, conc)
     throttle = ThrottleManager(max_rps=rps)
     concurrency = ConcurrencyManager(limit=conc)
     return Runtime(
@@ -181,6 +185,12 @@ async def run_zone(
     resolved = runtime.config
     rps = runtime.effective_max_rps
     domain_throttle = runtime.throttle.child(max_rps=rps)
+    logger.debug(
+        "Running zone %r with %d check(s): %s",
+        domain,
+        len(checks),
+        ", ".join(checks) if checks else "(none)",
+    )
 
     async def _run_one(name: str) -> tuple[str, CheckResult[Any]]:
         check_throttle = domain_throttle.child(max_rps=rps)
@@ -192,6 +202,13 @@ async def run_zone(
                     domain, config=resolved.config, throttler=check_throttle
                 )
             except BaseException as exc:
+                logger.error(
+                    "Check %r raised %s for zone %r",
+                    name,
+                    type(exc).__name__,
+                    domain,
+                    exc_info=True,
+                )
                 res = _failed_check_result(exc)
             return name, res
 
@@ -245,6 +262,7 @@ async def run_domain(
     )
     apex = _apex_from_domain_arg(mgr, domain)
     names = _resolved_check_names(mgr, domain, checks=checks, exclude=exclude)
+    logger.info("Running audit for %s", apex)
     root = await _run_zone_tree(
         apex, mgr, names, None, recursive=recursive, remaining_depth=depth
     )
@@ -298,6 +316,7 @@ async def run_domain_stream(
     )
     apex = _apex_from_domain_arg(mgr, domain)
     names = _resolved_check_names(mgr, domain, checks=checks, exclude=exclude)
+    logger.info("Running audit for %s", apex)
     async for z in _stream_zones_dfs(
         apex, mgr, names, None, recursive=recursive, remaining_depth=depth
     ):
@@ -312,12 +331,14 @@ async def run_check_for_target(
 
     apex = _apex_from_domain_arg(mgr, domain)
     target = mgr.target_string(domain)
+    logger.info("Running check %r for %s", check_name, target)
     resolved = mgr.resolve(target)
     runtime = build_runtime(mgr, resolved)
     zone_result = await run_zone(apex, runtime, [check_name])
     out = zone_result.results.get(check_name)
     if out is not None:
         return out
+    logger.error("Check %r did not produce a result for target %s", check_name, target)
     return CheckResult(
         status=Status.FAILED,
         data=None,

@@ -100,9 +100,6 @@ def emit_check_result(
             check_name=check_name,
             options=opts,
         )
-    if state.quiet:
-        typer.echo(_quiet_summary(code), err=True)
-        return code
     if state.output_path is None:
         rich_tty = state.output_format == OutputFormat.RICH and sys.stdout.isatty()
         if rich_tty:
@@ -128,18 +125,10 @@ def _normalise_batch(results: DomainResult | Sequence[DomainResult]) -> _Batch:
     return t
 
 
-def _quiet_summary(code: int) -> str:
-    if code == 0:
-        return "dnsight: all checks completed with no issues."
-    if code == 1:
-        return "dnsight: completed with issues."
-    return "dnsight: one or more checks did not complete successfully."
-
-
 def emit_audit_results(
     state: GlobalState, results: DomainResult | Sequence[DomainResult]
 ) -> int:
-    """Serialise to ``--output`` and/or stdout; print quiet summary to stderr if needed.
+    """Serialise to ``--output`` and/or stdout.
 
     Returns:
         Process exit code in ``{0, 1, 2}`` for the audit outcome.
@@ -156,10 +145,6 @@ def emit_audit_results(
             batch[0] if len(batch) == 1 else list(batch)
         )
         write_serialiser(serialiser, payload, state.output_path)
-
-    if state.quiet:
-        typer.echo(_quiet_summary(code), err=True)
-        return code
 
     if state.output_path is None:
         rich_tty = (

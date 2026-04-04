@@ -8,6 +8,7 @@ from dnsight.core.config.parser.file import (
     config_manager_from_mapping,
     default_config_manager,
     discover_config_path,
+    iter_existing_config_paths,
 )
 
 
@@ -17,4 +18,5 @@ __all__ = [
     "config_manager_from_mapping",
     "default_config_manager",
     "discover_config_path",
+    "iter_existing_config_paths",
 ]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from dnsight.cli._completion_common import complete_with_csv_suffix
 from dnsight.cli._parse import parse_csv_option
 from dnsight.cli.commands._check_base import (
     effective_cli_config_path,
@@ -13,9 +14,27 @@ from dnsight.cli.commands._check_base import (
 )
 from dnsight.cli.helpers import CheckCommandConfigPath, DomainsArg
 from dnsight.core.config import Config, DnssecConfig
+from dnsight.core.schema.dnssec import DnssecSchema
 
 
 __all__ = ["register_dnssec"]
+
+
+def _complete_dnssec_disallowed(
+    ctx: typer.Context, incomplete: str | None
+) -> list[str]:
+    _ = ctx
+    return complete_with_csv_suffix(
+        incomplete, DnssecSchema.WEAK_ALGORITHM_COMPLETION_HINTS
+    )
+
+
+_OPT_DNSSEC_DISALLOWED_ALGORITHMS = typer.Option(
+    None,
+    "--disallowed-algorithms",
+    help="Comma-separated weak DNSSEC algorithms (tab suggests common weak values).",
+    autocompletion=_complete_dnssec_disallowed,
+)
 
 
 def _build_dnssec_overlay(
@@ -76,11 +95,7 @@ def register_dnssec(app: typer.Typer) -> None:
             help="Warn when RRSIG expires within this many days.",
             min=0,
         ),
-        disallowed_algorithms: str | None = typer.Option(
-            None,
-            "--disallowed-algorithms",
-            help="Comma-separated weak DNSSEC algorithms.",
-        ),
+        disallowed_algorithms: str | None = _OPT_DNSSEC_DISALLOWED_ALGORITHMS,
         validate_negative_responses: bool | None = typer.Option(
             None,
             "--validate-negative-responses/--no-validate-negative-responses",

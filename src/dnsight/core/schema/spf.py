@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal, TypeAlias
 
 from pydantic import Field
 
@@ -13,12 +13,13 @@ __all__ = ["SpfSchema"]
 class SpfSchema:
     """SPF field types — shared by SpfConfig, SPFData, SpfGenerateParams."""
 
+    DispositionLiteral: TypeAlias = Literal["+all", "-all", "~all", "?all"]
+    RequiredDispositionLiteral: TypeAlias = DispositionLiteral
+    DISPOSITION_VALUES: Final[tuple[str, ...]] = ("-all", "~all", "?all", "+all")
+
     DispositionStr = Annotated[
-        str,
-        Field(
-            pattern=r"^[+?~-]all$",
-            description="Terminal all mechanism: +all, -all, ~all, or ?all",
-        ),
+        DispositionLiteral,
+        Field(description="Terminal all mechanism: +all, -all, ~all, or ?all"),
     ]
     LookupLimitInt = Annotated[
         int,
@@ -26,4 +27,3 @@ class SpfSchema:
             ge=1, le=50, description="Max DNS lookups for SPF (RFC 7208 default 10)."
         ),
     ]
-    RequiredDispositionLiteral = Literal["-all", "~all", "?all", "+all"]

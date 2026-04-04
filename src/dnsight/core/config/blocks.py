@@ -80,7 +80,7 @@ class DmarcConfig(MergeableConfig):
         default=defaults.DEFAULT_DMARC_POLICY,
         description="Minimum required policy (none < quarantine < reject). Validation passes when actual >= this.",
     )
-    target_policy: str | None = Field(
+    target_policy: DmarcSchema.PolicyLiteral | None = Field(
         default=defaults.DEFAULT_DMARC_TARGET_POLICY,
         description=(
             "Target policy for recommendations when strict_recommendations is False. "

@@ -22,6 +22,7 @@ __all__ = [
     "config_manager_from_mapping",
     "default_config_manager",
     "discover_config_path",
+    "iter_existing_config_paths",
 ]
 
 _ALLOWED_SUFFIXES = frozenset({".yaml", ".yml"})
@@ -47,6 +48,38 @@ def discover_config_path(start: Path | None = None) -> Path | None:
             if candidate.is_file():
                 return candidate
     return None
+
+
+def iter_existing_config_paths(
+    start: Path | None = None, *, max_directories: int = 64
+) -> list[Path]:
+    """Return every existing ``dnsight.yaml`` / ``dnsight.yml`` found upward from *start*.
+
+    Walks *start* (or :func:`Path.cwd`) and up to *max_directories* parent directories
+    (including the start directory). Unlike :func:`discover_config_path`, this returns
+    **all** matches, e.g. for shell completion.
+
+    Args:
+        start: Directory to begin from; defaults to :func:`Path.cwd`.
+        max_directories: Cap on how many directory levels to scan (including *start*).
+
+    Returns:
+        Resolved paths to existing config files, in search order (shallow to deep
+        is not guaranteed across branches; order matches discovery walk).
+    """
+    cur = (start or Path.cwd()).resolve()
+    chain = (cur, *cur.parents)
+    if max_directories > 0:
+        chain = chain[:max_directories]
+    found: list[Path] = []
+    seen: set[Path] = set()
+    for search_dir in chain:
+        for name in _CONFIG_FILE_NAMES:
+            candidate = (search_dir / name).resolve()
+            if candidate.is_file() and candidate not in seen:
+                seen.add(candidate)
+                found.append(candidate)
+    return found
 
 
 def default_config_manager() -> ConfigManager:

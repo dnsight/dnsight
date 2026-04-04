@@ -108,6 +108,7 @@ For the full config precedence model (defaults → top-level → group → domai
 - **Capabilities**: `CHECK`, `GENERATE`. `BaseCheck` gates dispatch; raises `CapabilityError` for unsupported actions.
 - **Exceptions (SDK)**: `CapabilityError` and config validation errors belong to the orchestrator/config layer. Check code surfaces DNS/HTTP failures via `CheckError` from utils and partial or completed `CheckResult` with `error`/`issues` as appropriate—not raw resolver exceptions.
 - **No caching**: One audit = one run. Pure CPU helpers may use `@lru_cache`; never on DNS/HTTP.
+- **Logging**: Use `get_logger(__name__)` from `dnsight.core.logger` in orchestration and I/O code. **INFO** for user-visible run boundaries (orchestrator), **DEBUG** for DNS/HTTP and per-zone dispatch, **ERROR** for unexpected check failures (results remain the primary contract). The CLI calls `configure()` once from global flags (`use_rich`, `detailed_log`, `rich_tracebacks` as appropriate); `--quiet` lowers log level only—it does not hide audit output. Do not add verbosity parameters to SDK or orchestrator entrypoints. See Phase 7 §12 in `.plan/v2/phases/phase-7-polish.md` and README “Logging (CLI)”.
 
 ---
 

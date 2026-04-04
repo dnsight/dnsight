@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from dnsight.cli._completion_common import complete_with_csv_suffix
 from dnsight.cli._parse import parse_csv_option
 from dnsight.cli.commands._check_base import (
     effective_cli_config_path,
@@ -13,9 +14,36 @@ from dnsight.cli.commands._check_base import (
 )
 from dnsight.cli.helpers import CheckCommandConfigPath, DomainsArg
 from dnsight.core.config import Config, DkimConfig
+from dnsight.core.schema.dkim import DkimSchema
 
 
 __all__ = ["register_dkim"]
+
+
+def _complete_dkim_selectors(ctx: typer.Context, incomplete: str | None) -> list[str]:
+    _ = ctx
+    return complete_with_csv_suffix(incomplete, DkimSchema.COMMON_SELECTOR_SUGGESTIONS)
+
+
+def _complete_dkim_disallowed(ctx: typer.Context, incomplete: str | None) -> list[str]:
+    _ = ctx
+    return complete_with_csv_suffix(
+        incomplete, DkimSchema.WEAK_ALGORITHM_COMPLETION_HINTS
+    )
+
+
+_OPT_DKIM_SELECTORS = typer.Option(
+    None,
+    "--selectors",
+    help="Comma-separated DKIM selectors to try first.",
+    autocompletion=_complete_dkim_selectors,
+)
+_OPT_DKIM_DISALLOWED_ALGORITHMS = typer.Option(
+    None,
+    "--disallowed-algorithms",
+    help="Comma-separated weak algorithm tokens (tab suggests common weak values).",
+    autocompletion=_complete_dkim_disallowed,
+)
 
 
 def _build_dkim_overlay(
@@ -47,17 +75,11 @@ def register_dkim(app: typer.Typer) -> None:
         domains: DomainsArg = None,
         *,
         config_path: CheckCommandConfigPath = None,
-        selectors: str | None = typer.Option(
-            None, "--selectors", help="Comma-separated DKIM selectors to try first."
-        ),
+        selectors: str | None = _OPT_DKIM_SELECTORS,
         min_key_bits: int | None = typer.Option(
             None, "--min-key-bits", help="Minimum RSA key size in bits.", min=0
         ),
-        disallowed_algorithms: str | None = typer.Option(
-            None,
-            "--disallowed-algorithms",
-            help="Comma-separated weak algorithm tokens.",
-        ),
+        disallowed_algorithms: str | None = _OPT_DKIM_DISALLOWED_ALGORITHMS,
     ) -> None:
         if ctx.invoked_subcommand is not None:
             return

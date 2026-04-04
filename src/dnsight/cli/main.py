@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import click.exceptions
 import typer
 
+from dnsight.cli._completion_common import (
+    complete_config_discovery_paths,
+    complete_output_format,
+)
 from dnsight.cli.commands import register_commands, version_cmd
 from dnsight.cli.state import GlobalState
+from dnsight.core.logger import configure
 from dnsight.core.types import OutputFormat
 
 
@@ -26,6 +32,7 @@ _CONFIG_CLI = typer.Option(
     file_okay=True,
     dir_okay=False,
     resolve_path=True,
+    autocompletion=complete_config_discovery_paths,
 )
 
 _FORMAT_CLI = typer.Option(
@@ -34,6 +41,7 @@ _FORMAT_CLI = typer.Option(
     "-f",
     help="Output format: rich, json, sarif, markdown.",
     case_sensitive=False,
+    autocompletion=complete_output_format,
 )
 
 _OUTPUT_CLI = typer.Option(
@@ -51,7 +59,16 @@ _QUIET_CLI = typer.Option(
     False,
     "--quiet",
     "-q",
-    help="Suppress normal output; print a one-line outcome summary on stderr.",
+    help="Diagnostics only at ERROR on stderr (suppresses INFO/DEBUG). "
+    "Audit output is unchanged. Wins over --verbose.",
+)
+
+_VERBOSE_CLI = typer.Option(
+    False,
+    "--verbose",
+    "-v",
+    help="DEBUG logging on stderr with source paths and Rich tracebacks. "
+    "Ignored if --quiet is set.",
 )
 
 
@@ -86,14 +103,26 @@ def _main(
     output_format: OutputFormat = _FORMAT_CLI,
     output_path: Path | None = _OUTPUT_CLI,
     quiet: bool = _QUIET_CLI,
+    verbose: bool = _VERBOSE_CLI,
     version: bool = _VERSION_CLI,
 ) -> None:
     _ = version
+    if quiet:
+        configure(
+            logging.ERROR, use_rich=True, detailed_log=False, rich_tracebacks=False
+        )
+    elif verbose:
+        configure(logging.DEBUG, use_rich=True, detailed_log=True, rich_tracebacks=True)
+    else:
+        configure(
+            logging.INFO, use_rich=True, detailed_log=False, rich_tracebacks=False
+        )
     ctx.obj = GlobalState(
         config_path=config,
         output_format=output_format,
         output_path=output_path,
         quiet=quiet,
+        verbose=verbose,
     )
 
 
