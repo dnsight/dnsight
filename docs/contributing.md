@@ -1,6 +1,6 @@
 # Contributing
 
-Contributor workflow, changelog fragments, and review expectations are documented in the repository:
+Contributor workflow and review expectations are documented in the repository:
 
 - [**CONTRIBUTING.md** (on GitHub)](https://github.com/dnsight/dnsight/blob/main/CONTRIBUTING.md)
 - [**AGENTS.md** (on GitHub)](https://github.com/dnsight/dnsight/blob/main/AGENTS.md) — architecture, dependency layers, CLI Typer conventions, and quality bar

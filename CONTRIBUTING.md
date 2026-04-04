@@ -13,8 +13,10 @@ Clone the repository, then:
 
 ```bash
 just install        # editable install + dev dependencies
-just pre-install    # install pre-commit hooks (use this on every clone)
+just pre-install    # pre-commit + commit-msg (conventional commits)
 ```
+
+`just pre-install` also enables the **commit-msg** hook ([conventional-pre-commit](https://github.com/compilerla/conventional-pre-commit)).
 
 Optional: `just pre` runs pre-commit on all files without committing.
 
@@ -26,55 +28,38 @@ New or edited commands under `src/dnsight/cli/` should use **`typing.Annotated`*
 
 1. Run **`just check`** and **`just test`**; both must pass (this matches CI).
 2. Run **`just fix`** if Ruff/formatting fails, then re-run checks.
-3. Keep commits readable (clear messages); no formal commit-message scheme required.
+3. Use **Conventional Commits** for **PR titles** (default **squash** merge uses the title as the only new commit on `main`). If you merge without squash, use conventional messages on the commits you want in the notes. Allowed types: `feat`, `fix`, `docs`, `chore`, `deps`, `refactor`, `test`, `ci`, `rm`. CI enforces **PR titles** via [`.github/workflows/pr-title.yaml`](.github/workflows/pr-title.yaml); enable it as a **required check** on `main` in branch protection.
 4. **Dependencies:** Do not add new runtime or dev dependencies unless they are clearly necessary. If you add one, explain **why** in the PR (smaller dependency trees are a project goal).
 
 ## Pull requests: labels, titles, and branches
 
 - Use **existing** GitHub labels that fit the work (`enhancement`, `bug`, `security`, `documentation`, `dependencies`, `github_actions`, …). **At least one** when it makes sense; **several** are fine if the PR really spans categories.
-- Add the **`skip-changelog`** label when this PR must **not** require a Towncrier fragment (Dependabot uses it automatically; humans use it when CI rules say no fragment is needed). Create the label in the repo if it is missing, for example:
-  `gh label create "skip-changelog" --color 6A737D --description "Do not require a Towncrier changelog fragment (CI)."`
-- **Titles:** prefix with the **primary** kind of change so the queue is easy to scan, for example `Feature:`, `Bugfix:`, `Docs:`, `Security:`, `Chore:`, `CI:`, `Deps:` (map mentally to `enhancement`, `bug`, `documentation`, etc.).
+- **Titles:** conventional form `type: summary` or `type(scope): summary` (e.g. `feat: add DMARC report`, `fix(cli): handle empty zone`). Map labels mentally (`enhancement` → often `feat`, `bug` → `fix`, etc.).
 - **Branches (optional):** use a short slug for the main theme, e.g. `feature/…`, `bugfix/…`, `docs/…`, `security/…`, `chore/…`, `ci/…`, `deps/…`.
 
 Do **not** try to paste every repo label on every PR, and do not worry about triage-only labels unless they help reviewers.
 
-## Release notes (Towncrier)
+## Merging to `main` (squash vs merge)
 
-PRs **into `main`** that change **`src/**`**, **`pyproject.toml`**, **`docs/**`**, or **`tools/docgen/**`** must include at least one valid news fragment under **`changelog.d/`**, unless the **`skip-changelog`** label is present or the diff is **`uv.lock` only**. Stacked PRs into other branches are not checked until you open a PR into `main`.
+- **Preferred: Squash and merge.** One commit lands on `main` per PR, using the **PR title** as the message—this matches release notes (one conventional line per change) and keeps history easy to read. Repo settings can default to squash; branch protection can allow only squash if you want to enforce it.
+- **Rebase and merge:** Every commit from the PR appears on `main`. Use **conventional messages on each commit** you care about in release notes; `chore` / `deps` / `ci` / `test` lines are still filtered per [`cliff.toml`](cliff.toml).
+- **Create a merge commit:** The GitHub **merge commit** (`Merge pull request #…`) is **omitted** from generated release notes; the commits brought in by the merge still appear if they match conventional types and your parsers. Prefer squash unless you have a reason to keep a merge bubble.
 
-Allowed fragment suffixes (five types only): **`security`**, **`feature`**, **`bugfix`**, **`patch`**, **`other`**. Name files `changelog.d/<PR#>.<suffix>.md` (example: `42.feature.md`). Unknown suffixes fail CI.
+Release note generation never includes those merge-commit messages, regardless of squash default.
 
-**CI enforces the PR number:** every `changelog.d/*.md` file **added or modified** in your PR must start with **this PR’s number** and a dot (from the PR URL, e.g. `…/pull/128` → `128.feature.md`). Open the PR (or refresh to read the number), then name or rename the fragment so you do not collide with another PR’s number. Leading `+` slugs are not accepted when this check runs.
+## Release notes
 
-**Filenames vs. PR links:** Towncrier treats the last dot-separated segment that is a type (`feature`, `bugfix`, …) as the category; **everything before that** becomes the issue id in `[#…](…/pull/…)`. So `128.caa.feature.md` becomes issue `128.caa` and breaks the GitHub pull URL. Prefer **`128.feature.md`**. To add **several separate changelog bullets for the same PR** with the same link, use Towncrier’s numeric counter after the type: **`128.feature.1.md`**, **`128.feature.2.md`**, and so on (issue stays `128`). To cover **several points in one bullet**, use **one** fragment file and put multiple Markdown list lines (or paragraphs) in the body.
+There is no per-PR changelog fragment workflow. **[git-cliff](https://git-cliff.org/)** turns conventional history into Markdown (see [`cliff.toml`](cliff.toml)). **`feat`**, **`fix`**, **`docs`**, **`refactor`**, and **`rm`** appear in release notes; **`chore`**, **`deps`**, **`ci`**, and **`test`** are skipped. **Git merge commits** (`Merge pull request …`, `Merge branch …`, etc.) are always skipped.
 
-**GitHub label → fragment (when you need a note):**
-
-| Label (examples) | Prefer fragment |
-| --- | --- |
-| `enhancement` | `.feature.md` |
-| `bug` | `.bugfix.md` or `.patch.md` (bugfix = user-visible fix; patch = small maintenance—use what fits) |
-| `security` | `.security.md` |
-| `documentation` | `.other.md` (e.g. start the line with `Docs:`) |
-| `dependencies` / `github_actions` | Usually no fragment (path rules); optional `.other.md` if you want a release line |
-
-Commands (after `just install`):
-
-```bash
-uv run towncrier create 123.feature.md -c "Short user-facing summary."
-uv run towncrier check --compare-with origin/main
-```
-
-Maintainers roll fragments into **[CHANGELOG.md](CHANGELOG.md)** at release time with `towncrier build` (see **Releasing** below).
+Preview locally: `just release-notes` (unreleased → default `local/release-notes.md`, gitignored under `local/`) or `just release-notes vX.Y.Z ''` for stdout. With **`GITHUB_TOKEN`** set (e.g. `gh auth token`), PR links are filled in; otherwise the recipe uses **`--offline`**.
 
 ## Releasing (maintainers)
 
 1. On **`main`**, with changes merged and CI green.
-2. Run **`uv run towncrier build --yes --version X.Y.Z`** using the semver **without** a `v` prefix (the git tag will be `vX.Y.Z`). This updates `CHANGELOG.md` and removes the built fragments from `changelog.d/`.
-3. Commit the changelog and fragment removals (e.g. `Prepare release X.Y.Z`) and push to **`main`**.
-4. Create and push git tag **`vX.Y.Z`** on that commit (or create the tag via a GitHub Release). The tag must point **after** the changelog commit.
-5. **Publish** the GitHub **Release** (not only a draft). The publish workflow verifies that `CHANGELOG.md` contains `## [X.Y.Z]` and that `changelog.d/` has no leftover `*.md` fragments, then builds and uploads to PyPI.
+2. Create and push tag **`vX.Y.Z`** (or create the tag when publishing the GitHub Release).
+3. **Publish** the GitHub **Release** for that tag. The [Publish workflow](.github/workflows/publish.yaml) runs on **`release: published`**: checks out the tag, runs **`just release-notes "$TAG" release-notes.md`**, builds, publishes to **PyPI**, then **updates the release body** and attaches **`dist/*`**.
+
+PyPI’s project page uses **`README.md`** as the long description; the **Changelog** link points at **GitHub Releases**.
 
 ## Workflow
 

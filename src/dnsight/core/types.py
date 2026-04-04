@@ -50,12 +50,12 @@ class RankedEnum(str, Enum):  # noqa: UP042 - custom __new__ with rank; StrEnum 
         """Same concrete enum class as ``self``, else ``None`` (caller returns ``NotImplemented``)."""
         if type(other) is not type(self):
             return None
-        return cast(Self, other)
+        return other
 
     def _equality_peer(self, other: object) -> Self | None:
         """Same concrete enum class as ``self``, else ``None`` (caller handles ``str`` / unknown)."""
         if type(other) is type(self):
-            return cast(Self, other)
+            return other
         return None
 
     def __lt__(self, other: str) -> bool | NotImplementedType:

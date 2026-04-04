@@ -10,6 +10,7 @@ __pycache__/
 build/
 dist/
 site/
+site/
 *.egg-info/
 *.egg
 .Python
@@ -42,7 +43,7 @@ dmypy.json
 .pypirc
 
 ### Local dnsight YAML (see local/dnsight-configs/README.md)
-local/dnsight-configs/*
+local/
 !local/dnsight-configs/README.md
 
 ### Cursor

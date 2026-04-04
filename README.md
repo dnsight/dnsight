@@ -100,7 +100,7 @@ This README, **AGENTS.md**, and the code remain the day-to-day sources of truth 
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Changelog: [CHANGELOG.md](CHANGELOG.md). Security: [SECURITY.md](SECURITY.md).
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, conventional commits, and release notes. Releases: [GitHub Releases](https://github.com/dnsight/dnsight/releases). Security: [SECURITY.md](SECURITY.md).
 
 ## License
 

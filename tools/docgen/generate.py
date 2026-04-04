@@ -69,11 +69,53 @@ def _md_path(path: tuple[str, ...]) -> Path:
     return DOCS_CLI.joinpath(*path) / "index.md"
 
 
+def _append_options_md(parts: list[str], node: click.Command) -> None:
+    params = [
+        p
+        for p in node.params
+        if not getattr(p, "hidden", False) and p.name not in _SKIP_ROOT_PARAM_NAMES
+    ]
+    if not params:
+        return
+    parts.append("## Options\n\n")
+    parts.append("| Option | Type | Default | Required | Description |\n")
+    parts.append("| --- | --- | --- | --- | --- |\n")
+    for p in params:
+        parts.append(_format_param_row(p) + "\n")
+    parts.append("\n")
+
+
+def _append_subcommands_md(parts: list[str], node: click.Command) -> None:
+    if not isinstance(node, click.Group) or not node.commands:
+        return
+    parts.append("## Subcommands\n\n")
+    parts.append("| Command | Description |\n")
+    parts.append("| --- | --- |\n")
+    for name in sorted(node.commands):
+        sub = node.commands[name]
+        desc = (sub.short_help or sub.help or "—").split("\n")[0]
+        desc = desc.replace("|", "\\|")
+        rel = f"{name}/index.md"
+        parts.append(f"| [`{name}`]({rel}) | {desc} |\n")
+    parts.append("\n")
+
+
+def _write_cli_doc(rel: Path, content: str) -> None:
+    """Write *content* to *rel* only when it resolves under ``DOCS_CLI``."""
+    base = DOCS_CLI.resolve()
+    target = rel.resolve()
+    if not target.is_relative_to(base):
+        msg = f"CLI doc output outside docs/cli tree: {rel}"
+        raise ValueError(msg)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("w", encoding="utf-8") as fh:
+        fh.write(content)
+
+
 def _emit_markdown(
     path: tuple[str, ...], node: click.Command, root: click.Group
 ) -> None:
-    out = _md_path(path)
-    out.parent.mkdir(parents=True, exist_ok=True)
+    rel = _md_path(path)
     title = "dnsight" if not path else "dnsight " + " ".join(path)
     parts: list[str] = [BANNER, f"# `{title}`\n\n"]
     if node.help:
@@ -85,36 +127,15 @@ def _emit_markdown(
                 "*With no subcommand or arguments, this group shows help "
                 "(Click/Typer `no_args_is_help`).*\n\n"
             )
-    params = [
-        p
-        for p in node.params
-        if not getattr(p, "hidden", False) and p.name not in _SKIP_ROOT_PARAM_NAMES
-    ]
-    if params:
-        parts.append("## Options\n\n")
-        parts.append("| Option | Type | Default | Required | Description |\n")
-        parts.append("| --- | --- | --- | --- | --- |\n")
-        for p in params:
-            parts.append(_format_param_row(p) + "\n")
-        parts.append("\n")
-    if isinstance(node, click.Group) and node.commands:
-        parts.append("## Subcommands\n\n")
-        parts.append("| Command | Description |\n")
-        parts.append("| --- | --- |\n")
-        for name in sorted(node.commands):
-            sub = node.commands[name]
-            desc = (sub.short_help or sub.help or "—").split("\n")[0]
-            desc = desc.replace("|", "\\|")
-            rel = f"{name}/index.md"
-            parts.append(f"| [`{name}`]({rel}) | {desc} |\n")
-        parts.append("\n")
+    _append_options_md(parts, node)
+    _append_subcommands_md(parts, node)
     epilog = getattr(node, "epilog", None)
     if epilog:
         parts.append("## Epilog\n\n")
         parts.append(epilog.strip() + "\n\n")
     if not path:
         parts.extend(_root_index_sections(root))
-    out.write_text("".join(parts), encoding="utf-8")
+    _write_cli_doc(rel, "".join(parts))
 
 
 def _format_option_cell(p: click.Parameter) -> str:
@@ -132,30 +153,39 @@ def _format_type_cell(p: click.Parameter) -> str:
     return getattr(p.type, "name", None) or str(p.type)
 
 
-def _format_default_cell(p: click.Parameter) -> str:
+def _format_flag_default_cell(p: click.Parameter) -> str:
     default_val = p.default
-    if getattr(p, "is_flag", False):
-        secondary = getattr(p, "secondary_opts", None) or ()
-        if secondary:
-            if default_val is None:
-                # Tri-state: omitting the flag does not set a value on the CLI; we
-                # do not echo dnsight.yaml / schema defaults here (see Configuration).
-                return "—"
-            if default_val is True:
-                return "`true`"
-            if default_val is False:
-                return "`false`"
-            return f"`{default_val!r}`"
-        if callable(default_val):
-            return "*(callable)*"
+    secondary = getattr(p, "secondary_opts", None) or ()
+    if secondary:
         if default_val is None:
+            # Tri-state: omitting the flag does not set a value on the CLI; we
+            # do not echo dnsight.yaml / schema defaults here (see Configuration).
             return "—"
-        return "`true`" if default_val else "`false`"
+        if default_val is True:
+            return "`true`"
+        if default_val is False:
+            return "`false`"
+        return f"`{default_val!r}`"
+    if callable(default_val):
+        return "*(callable)*"
+    if default_val is None:
+        return "—"
+    return "`true`" if default_val else "`false`"
+
+
+def _format_non_flag_default_cell(p: click.Parameter) -> str:
+    default_val = p.default
     if callable(default_val):
         return "*(callable)*"
     if default_val is None:
         return "—"
     return f"`{default_val!r}`"
+
+
+def _format_default_cell(p: click.Parameter) -> str:
+    if getattr(p, "is_flag", False):
+        return _format_flag_default_cell(p)
+    return _format_non_flag_default_cell(p)
 
 
 def _format_param_row(p: click.Parameter) -> str:

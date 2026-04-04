@@ -45,7 +45,7 @@ dependencies = [
 "Homepage" = "https://github.com/dnsight/dnsight"
 "Repository" = "https://github.com/dnsight/dnsight"
 "Issues" = "https://github.com/dnsight/dnsight/issues"
-"Changelog" = "https://github.com/dnsight/dnsight/blob/main/CHANGELOG.md"
+"Changelog" = "https://github.com/dnsight/dnsight/releases"
 "Documentation" = "https://dnsight.github.io/dnsight/"
 
 
@@ -70,6 +70,7 @@ dev = [
   # CI/CD
   "hatch-vcs>=0.5.0,<0.6.0",
   "pre-commit>=4.0.0,<5.0.0",
+  "git-cliff>=2.12.0,<3.0.0",
   # Linting + Formatting
   "ruff>=0.15.5,<1.0.0",
   "mypy>=1.19.1,<2.0.0",
@@ -84,7 +85,6 @@ dev = [
   "pytest-cov>=7.0.0,<8.0.0",
   "hypothesis>=6.151.9,<7.0.0",
   "mutmut>=3.5.0,<4.0.0",
-  "towncrier>=24.7.0,<26.0.0",
 ]
 
 docs = [
@@ -137,29 +137,6 @@ addopts = "--cov=src/dnsight --cov=tools --cov-report=term-missing --cov-report=
 [tool.coverage.run]
 source = ["src/dnsight", "tools"]
 omit = ["*/tests/**"]
-
-[tool.towncrier]
-directory = "changelog.d"
-filename = "CHANGELOG.md"
-start_string = "<!-- towncrier release notes start -->\n"
-underlines = ["", "", ""]
-title_format = "## [{version}](https://github.com/dnsight/dnsight/releases/tag/v{version}) - {project_date}"
-issue_format = "[#{issue}](https://github.com/dnsight/dnsight/pull/{issue})"
-
-[[tool.towncrier.type]]
-name = "Security"
-
-[[tool.towncrier.type]]
-name = "Feature"
-
-[[tool.towncrier.type]]
-name = "Bugfix"
-
-[[tool.towncrier.type]]
-name = "Patch"
-
-[[tool.towncrier.type]]
-name = "Other"
 
 [tool.yamlfix]
 whitelines = 1                # preserve single blank lines between list items etc.
