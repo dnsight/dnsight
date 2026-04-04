@@ -1,14 +1,13 @@
+# Intentionally minimal: secrets + ruff; full lint/format/typecheck in CI (just check).
+# Keep pinned SHAs for supply chain security.
 repos:
-  # Make check
-  - repo: local
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.5
     hooks:
-      - id: check
-        name: check
-        entry: just check
-        language: system
-        pass_filenames: false
+      - id: ruff-check
+      - id: ruff-format
+        args: [--check]
 
-  # Aikido security scanner (secrets, passwords, API keys)
   - repo: https://github.com/AikidoSec/pre-commit
     rev: 77ecd16894235d3260203df342995eda0f14c5b5
     hooks:

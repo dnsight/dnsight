@@ -1,0 +1,45 @@
+---
+description: Cursor behaviour rules for dnsight — dependency rules and never-do list
+globs: ""
+alwaysApply: true
+---
+# dnsight — Cursor rules
+
+Full standards, layout, quality bar, and config: see **AGENTS.md**.
+
+- Use `from __future__ import annotations` at the top of every Python module in `src/`.
+- Adding a check: see AGENTS.md and `.plan/v2/reference/checks-reference.md`.
+
+---
+
+## Dependency rules (never violate)
+
+```md
+cli/  →  sdk.py  →  orchestrator.py  →  checks/    →  core/
+                                        checks/    →  utils/
+                                        serialisers/ →  core/
+```
+
+- `core/` imports nothing from other internal packages
+- `cli/` imports from `sdk.py` and `core/` only
+- Checks import from `core/` and `utils/` only — never from each other or from `orchestrator`
+- If a proposed change requires violating these rules, stop and flag it
+
+---
+
+## Never do
+
+- **Do not put generic type parameters on constructor calls** (e.g. `defaultdict[K, V](...)`, `list[str](...)`). Type parameters belong in variable annotations or return types only; the constructor is called without brackets.
+- Add `Any` to a public API signature
+- Import from `cli/` outside of `cli/`
+- Import from `checks/` in `cli/` — go through `sdk.py`
+- Add persistence, a database, scheduled jobs, or an HTTP server
+- Raise `NotImplementedError` for capabilities — use the capability registry and `CapabilityError` instead
+- Use real DNS or HTTP in the default test suite — use fakes
+- Silently swallow exceptions in checks — wrap in partial result with error message
+
+---
+
+## Output formats
+
+Default: Rich. Also JSON, SARIF, Markdown. Partial runs still produce output — never suppress results because one check failed.

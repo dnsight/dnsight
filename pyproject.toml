@@ -5,7 +5,7 @@ description = "DNS, email, and web security hygiene SDK and CLI for DevOps and s
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
-authors = [{ name = "Mikey Scott", email = "mikey@middleauth.io" }]
+authors = [{ name = "Mikey Scott" }]
 keywords = [
   "dns",
   "dmarc",
@@ -64,18 +64,23 @@ required-version = ">=0.10.7"
 
 [dependency-groups]
 dev = [
+  # CI/CD
   "hatch-vcs>=0.5.0,<0.6.0",
   "pre-commit>=4.0.0,<5.0.0",
+  # Linting + Formatting
+  "ruff>=0.8.6,<1.0.0",
   "mypy>=1.19.1,<2.0.0",
-  "pytest>=9.0.2,<10.0.0",
-  "pytest-asyncio>=1.3.0,<2.0.0",
-  "pytest-cov>=7.0.0,<8.0.0",
-  "types-pyyaml>=6.0.12.20250915,<7.0.0.0",
   "yamllint>=1.38.0,<2.0.0",
   "yamlfix>=1.19.1,<2.0.0",
   "check-jsonschema>=0.37.0,<1.0.0",
   "taplo>=0.9.3,<1.0.0",
-  "ruff>=0.8.6,<1.0.0",
+  "types-pyyaml>=6.0.12.20250915,<7.0.0.0",
+  # Testing
+  "pytest>=9.0.2,<10.0.0",
+  "pytest-asyncio>=1.3.0,<2.0.0",
+  "pytest-cov>=7.0.0,<8.0.0",
+  "hypothesis>=6.151.9,<7.0.0",
+  "mutmut>=3.5.0,<4.0.0",
 ]
 
 [tool.ruff]
@@ -97,6 +102,7 @@ docstring-code-format = true
 known-first-party = ["dnsight"]
 lines-after-imports = 2
 section-order = [
+  "future",
   "standard-library",
   "third-party",
   "first-party",

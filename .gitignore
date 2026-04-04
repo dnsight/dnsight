@@ -46,3 +46,6 @@ dmypy.json
 
 ### Archive
 archive/
+
+### Plan
+.plan/

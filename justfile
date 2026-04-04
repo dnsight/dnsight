@@ -49,6 +49,10 @@ fix:
 pre-install:
     uv run pre-commit install
 
+# Update pre-commit hooks
+pre-update:
+    uv run pre-commit autoupdate
+
 # Run pre-commit on all files
 pre:
     uv run pre-commit run --all-files

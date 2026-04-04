@@ -4,7 +4,6 @@
     "projectKey": "dnsight_dnsight"
   },
   "cSpell.words": [
-    "addopts",
     "asyncio",
     "dmarc",
     "dnsight",
@@ -28,5 +27,6 @@
     "whitelines",
     "yamlfix"
 ],
-  "python-envs.pythonProjects": []
+  "python-envs.pythonProjects": [],
+  "sonarlint.testFilePattern": "tests/**"
 }
