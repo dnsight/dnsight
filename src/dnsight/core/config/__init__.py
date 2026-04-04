@@ -10,7 +10,12 @@ from dnsight.core.config.blocks import (
 )
 from dnsight.core.config.config_manager import ConfigManager
 from dnsight.core.config.mergeable import MergeableConfig
-from dnsight.core.config.parser import config_manager_from_file
+from dnsight.core.config.parser import (
+    config_manager_from_discovered,
+    config_manager_from_file,
+    default_config_manager,
+    discover_config_path,
+)
 from dnsight.core.config.pattern import Pattern
 from dnsight.core.config.targets import (
     ChecksDelta,
@@ -35,7 +40,10 @@ __all__ = [
     "Config",
     "ConfigManager",
     "DmarcConfig",
+    "config_manager_from_discovered",
     "config_manager_from_file",
+    "default_config_manager",
+    "discover_config_path",
     "MergeableConfig",
     "ResolverConfig",
     "Pattern",

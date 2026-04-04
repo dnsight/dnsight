@@ -17,8 +17,8 @@ from typing import Any, Protocol, runtime_checkable
 import httpx
 from pydantic import BaseModel, ConfigDict
 
-from dnsight import __version__
 from dnsight.core.exceptions import CheckError
+from dnsight.version import __version__
 
 
 __all__ = [

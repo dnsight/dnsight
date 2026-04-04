@@ -35,6 +35,7 @@ class TestParseV1Integration:
     def test_minimal_config_returns_config_manager(self) -> None:
         mgr = parse_v1(_minimal())
         assert isinstance(mgr, ConfigManager)
+        assert mgr.config_schema_version == 1
         assert mgr.targets == []
         assert mgr.default_target_checks.enabled_names() == []
 

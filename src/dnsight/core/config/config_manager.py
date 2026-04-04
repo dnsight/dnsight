@@ -38,6 +38,9 @@ class ConfigManager:
 
     If default_target_checks has no checks enabled, at least one matching rule
     must set checks (e.g. via ChecksReplace) or no checks will run for that target.
+
+    ``config_schema_version`` is ``0`` when the manager was built without a YAML
+    file (e.g. programmatic defaults); otherwise it matches the file's ``version``.
     """
 
     targets: list[Target]
@@ -48,6 +51,7 @@ class ConfigManager:
     resolved_configs: dict[str, ResolvedTargetConfig] = field(default_factory=dict)
     global_max_rps: float = field(default=DEFAULT_GLOBAL_MAX_RPS)
     global_max_concurrency: int = field(default=DEFAULT_GLOBAL_CONCURRENCY_LIMIT)
+    config_schema_version: int = field(default=0)
 
     @staticmethod
     def target_string(domain_or_target: str | Target, path: str | None = None) -> str:

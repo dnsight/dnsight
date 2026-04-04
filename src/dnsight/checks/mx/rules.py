@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from dnsight.checks.mx.models import (
     MXData,
+    MXGenerateParams,
     MXHostResult,
     MXIssueId,
     MXRecommendationId,
@@ -22,12 +23,37 @@ if TYPE_CHECKING:
 
 
 __all__ = [
+    "build_mx_generated_value",
     "collect_mx_data",
     "extract_mx_config",
     "normalise_config",
     "normalise_hostname",
     "validate_mx_results",
 ]
+
+
+def build_mx_generated_value(params: MXGenerateParams) -> str:
+    """Build newline-separated MX RDATA lines (preference and FQDN exchange).
+
+    Each line is ``"<preference> <exchange>."`` suitable for pasting into a zone
+    file under an ``MX`` record at the apex. Targets are sorted by preference
+    then hostname.
+
+    Raises:
+        ValueError: If there are no targets or a hostname is empty after normalisation.
+    """
+    if not params.targets:
+        raise ValueError(
+            "MX generation requires at least one target with priority and hostname."
+        )
+    rows: list[tuple[int, str]] = []
+    for t in params.targets:
+        hn = normalise_hostname(t.hostname)
+        if not hn:
+            raise ValueError("MX hostname must be non-empty.")
+        rows.append((t.priority, hn))
+    rows.sort(key=lambda r: (r[0], r[1]))
+    return "\n".join(f"{prio} {host}." for prio, host in rows)
 
 
 def extract_mx_config(config: Config | MxConfig | None) -> MxConfig:

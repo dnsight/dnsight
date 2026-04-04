@@ -1,9 +1,16 @@
-"""dnsight — DNS, email, and web security hygiene."""
+"""Stable SDK: config resolution, domain audits, single checks, generate records.
 
-import logging
+Use :func:`run_check` / :func:`run_domain` / :func:`run_targets` with registry names
+from :func:`dnsight.core.registry.all_checks`. Optional aliases in
+:mod:`dnsight.sdk.aliases` provide async ``check_<name>``, ``check_<name>_sync``, and
+``generate_*`` for ergonomics. CLI should parse argv into the same keyword arguments
+as these SDK functions.
+"""
 
-from dnsight.sdk import (
-    RunAuditOptions,
+from __future__ import annotations
+
+from dnsight.orchestrator import RunAuditOptions
+from dnsight.sdk.aliases import (
     check_caa,
     check_caa_sync,
     check_dkim,
@@ -18,12 +25,14 @@ from dnsight.sdk import (
     check_mx_sync,
     check_spf,
     check_spf_sync,
-    generate,
     generate_caa,
     generate_dmarc,
     generate_headers,
     generate_mx,
     generate_spf,
+)
+from dnsight.sdk.generate import generate
+from dnsight.sdk.run import (
     run_batch,
     run_batch_sync,
     run_check,
@@ -35,11 +44,9 @@ from dnsight.sdk import (
     run_targets,
     run_targets_sync,
 )
-from dnsight.version import __version__
 
 
 __all__ = [
-    "__version__",
     "RunAuditOptions",
     "check_caa",
     "check_caa_sync",
@@ -72,5 +79,3 @@ __all__ = [
     "run_targets",
     "run_targets_sync",
 ]
-
-logging.getLogger("dnsight").addHandler(logging.NullHandler())

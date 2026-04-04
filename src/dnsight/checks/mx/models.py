@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from dnsight.checks.base import BaseCheckData
+from dnsight.checks.base import BaseCheckData, BaseGenerateParams
+from dnsight.core.config.blocks import MxConfig
+from dnsight.core.schema.mx import MxSchema
 from dnsight.core.types import (
     IssueDescriptor,
     IssueId,
@@ -17,6 +19,8 @@ from dnsight.core.types import (
 
 __all__ = [
     "MXData",
+    "MXGenerateParams",
+    "MXGenerateTarget",
     "MXHostResult",
     "MXIssueId",
     "MXRecommendationId",
@@ -87,6 +91,41 @@ class MXHostResult(BaseModel):
     ptr_matches: bool | None = None
     starttls_supported: bool | None = None
     starttls_error: str | None = None
+
+
+class MXGenerateTarget(BaseModel):
+    """One MX row for :class:`MXGenerateParams` (preference + exchange host)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    priority: MxSchema.MxPreferenceInt = Field(
+        ..., description="Preference; lower is more preferred."
+    )
+    hostname: MxSchema.MxExchangeStr = Field(
+        ..., description="Mail server hostname (e.g. mail.example.com)."
+    )
+
+    @field_validator("hostname")
+    @classmethod
+    def _strip_hostname(cls, v: str) -> str:
+        s = (v or "").strip()
+        if not s:
+            raise ValueError("hostname must be non-empty")
+        return s
+
+
+class MXGenerateParams(BaseGenerateParams):
+    """Parameters to synthesize MX RDATA lines for a zone file."""
+
+    targets: list[MXGenerateTarget] = Field(
+        default_factory=list,
+        description="MX targets; each becomes one line: preference exchange.",
+    )
+
+    @classmethod
+    def from_config(cls, config: MxConfig) -> MXGenerateParams:
+        """Build params from :class:`MxConfig` (no default targets; use explicit *targets*)."""
+        return cls(targets=[])
 
 
 class MXData(BaseCheckData):

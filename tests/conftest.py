@@ -11,8 +11,11 @@ from dnsight.utils.smtp import reset_starttls_probe
 
 
 @pytest.fixture(autouse=True)
-def _clean_registry() -> None:  # noqa: PT004
+def _clean_registry(request: pytest.FixtureRequest) -> None:  # noqa: PT004
     """Clear the check registry before each test so registrations don't leak."""
+    if request.node.get_closest_marker("registry_builtins"):
+        yield  # type: ignore[misc]
+        return
     saved = dict(registry._CHECKS)
     registry._CHECKS.clear()
     yield  # type: ignore[misc]

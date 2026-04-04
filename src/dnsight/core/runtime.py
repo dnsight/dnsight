@@ -1,10 +1,4 @@
-"""Runtime for dnsight.
-
-One ``Runtime`` is created per audit by the orchestrator and holds the
-shared infrastructure for the run. Checks do **not** import or receive
-Runtime — the orchestrator uses it to build throttle hierarchies and
-concurrency wrappers around check calls.
-"""
+"""Per-run throttle and concurrency bundle for the orchestrator."""
 
 from __future__ import annotations
 
@@ -26,14 +20,23 @@ class Runtime:
     The orchestrator uses ``throttle`` and ``concurrency`` to wrap
     check invocations; ``config`` provides resolved settings.
 
+    ``effective_max_rps`` and ``effective_max_concurrency`` mirror the
+    limits used to construct ``throttle`` and ``concurrency`` so nested
+    helpers (e.g. per-zone runs, recursion) can build child throttlers
+    without threading extra arguments.
+
     Attributes:
         config: Resolved configuration for this run.
         throttle: Root (global) throttle manager. The orchestrator
             calls ``throttle.child(...)`` to create per-domain and
             per-check throttlers.
         concurrency: Global concurrency limiter.
+        effective_max_rps: Combined global RPS limit used for this run.
+        effective_max_concurrency: Combined concurrency limit for this run.
     """
 
     config: ResolvedConfig
     throttle: ThrottleManager
     concurrency: ConcurrencyLimiter
+    effective_max_rps: float
+    effective_max_concurrency: int

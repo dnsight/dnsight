@@ -15,13 +15,13 @@ Full standards, layout, quality bar, and config: see **AGENTS.md**.
 ## Dependency rules (never violate)
 
 ```md
-cli/  →  sdk.py  →  orchestrator.py  →  checks/    →  core/
+cli/  →  sdk/  →  orchestrator.py  →  checks/    →  core/
                                         checks/    →  utils/
                                         serialisers/ →  core/
 ```
 
 - `core/` imports nothing from other internal packages
-- `cli/` imports from `sdk.py` and `core/` only
+- `cli/` imports from `dnsight.sdk` and `core/` only
 - Checks import from `core/` and `utils/` only — never from each other or from `orchestrator`
 - If a proposed change requires violating these rules, stop and flag it
 
@@ -32,7 +32,7 @@ cli/  →  sdk.py  →  orchestrator.py  →  checks/    →  core/
 - **Do not put generic type parameters on constructor calls** (e.g. `defaultdict[K, V](...)`, `list[str](...)`). Type parameters belong in variable annotations or return types only; the constructor is called without brackets.
 - Add `Any` to a public API signature
 - Import from `cli/` outside of `cli/`
-- Import from `checks/` in `cli/` — go through `sdk.py`
+- Import from `checks/` in `cli/` — go through `dnsight.sdk`
 - Add persistence, a database, scheduled jobs, or an HTTP server
 - Raise `NotImplementedError` for capabilities — use the capability registry and `CapabilityError` instead
 - Use real DNS or HTTP in the default test suite — use fakes

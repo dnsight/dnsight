@@ -1,4 +1,4 @@
-"""Tests for config_manager_from_file."""
+"""Tests for config file loading and discovery."""
 
 from __future__ import annotations
 
@@ -6,9 +6,16 @@ from pathlib import Path
 
 import pytest
 
+import dnsight.checks  # noqa: F401
+from dnsight.core.config import (
+    config_manager_from_discovered,
+    default_config_manager,
+    discover_config_path,
+)
 from dnsight.core.config.config_manager import ConfigManager
 from dnsight.core.config.parser.file import config_manager_from_file
 from dnsight.core.exceptions import ConfigError
+from dnsight.core.registry import all_checks
 
 
 @pytest.fixture()
@@ -113,6 +120,7 @@ class TestHappyPath:
         )
         p = _write_yaml(config_dir, "dnsight.yaml", content)
         mgr = config_manager_from_file(p)
+        assert mgr.config_schema_version == 1
         assert mgr.targets[0].domain == "example.com"
         assert mgr.default_target_config.dmarc.policy == "reject"
         assert mgr.default_target_checks.is_enabled("dmarc")
@@ -121,3 +129,58 @@ class TestHappyPath:
         p = _write_yaml(config_dir, "c.yaml", "version: 1\n")
         mgr = config_manager_from_file(str(p))
         assert isinstance(mgr, ConfigManager)
+
+
+# ---------------------------------------------------------------------------
+# Discovery and default manager
+# ---------------------------------------------------------------------------
+
+
+class TestDiscoverConfigPath:
+    def test_finds_file_in_start_dir(self, config_dir: Path) -> None:
+        _write_yaml(config_dir, "dnsight.yaml", "version: 1\n")
+        assert discover_config_path(config_dir) == config_dir / "dnsight.yaml"
+
+    def test_prefers_yaml_over_yml(self, config_dir: Path) -> None:
+        _write_yaml(config_dir, "dnsight.yml", "version: 1\n")
+        _write_yaml(config_dir, "dnsight.yaml", "version: 1\n")
+        assert discover_config_path(config_dir) == config_dir / "dnsight.yaml"
+
+    def test_walks_up_to_parent(
+        self, config_dir: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        sub = config_dir / "deep" / "nested"
+        sub.mkdir(parents=True)
+        _write_yaml(config_dir, "dnsight.yaml", "version: 1\n")
+        monkeypatch.chdir(sub)
+        assert discover_config_path() == config_dir / "dnsight.yaml"
+
+    def test_returns_none_when_missing(self, config_dir: Path) -> None:
+        assert discover_config_path(config_dir) is None
+
+
+class TestDefaultConfigManager:
+    def test_enables_all_registered_checks(self) -> None:
+        mgr = default_config_manager()
+        assert mgr.config_schema_version == 0
+        expected = frozenset(d.name for d in all_checks())
+        assert mgr.default_target_checks.enabled == expected
+
+    def test_resolve_uses_enabled_checks(self) -> None:
+        mgr = default_config_manager()
+        names = mgr.resolve("example.com").checks.enabled_names()
+        assert set(names) == {d.name for d in all_checks()}
+
+
+class TestConfigManagerFromDiscovered:
+    def test_uses_file_when_present(self, config_dir: Path) -> None:
+        _write_yaml(config_dir, "dnsight.yaml", "version: 1\n")
+        mgr = config_manager_from_discovered(start=config_dir)
+        assert mgr.config_schema_version == 1
+
+    def test_falls_back_when_no_file(self, config_dir: Path) -> None:
+        mgr = config_manager_from_discovered(start=config_dir)
+        assert mgr.config_schema_version == 0
+        assert mgr.default_target_checks.enabled == frozenset(
+            d.name for d in all_checks()
+        )

@@ -63,9 +63,12 @@ from dnsight.checks.headers import issue_descriptor as headers_issue_descriptor
 from dnsight.checks.mx import (
     MXCheck,
     MXData,
+    MXGenerateParams,
+    MXGenerateTarget,
     MXIssueId,
     MXRecommendationId,
     check_mx,
+    generate_mx,
     get_mx,
 )
 from dnsight.checks.spf import (
@@ -118,9 +121,12 @@ __all__ = [
     # MX
     "MXCheck",
     "MXData",
+    "MXGenerateParams",
+    "MXGenerateTarget",
     "MXIssueId",
     "MXRecommendationId",
     "check_mx",
+    "generate_mx",
     "get_mx",
     # DKIM
     "DKIMCheck",

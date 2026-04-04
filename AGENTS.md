@@ -37,6 +37,12 @@ Always run `just check` and `just test` before considering a change complete.
 
 ```text
 src/dnsight/
+├── orchestrator.py  # Generic run_domain, run_zone, run_check_for_target, batch (no per-check symbols)
+├── sdk/               # Human-facing: config resolution + thin calls into orchestrator
+│   ├── _manager.py    # config_manager; resolve_run_manager; minimal_config_manager
+│   ├── run.py         # run_check, run_domain, run_targets, streams (+ sync shims)
+│   ├── generate.py    # generate(check_name, params=...)
+│   └── aliases.py     # Optional check_*_sync / generate_* wrappers (registry names)
 ├── core/          # Foundation — no internal imports
 │   ├── types.py           # Severity, Status, Capability, enums
 │   ├── exceptions.py      # DNSightError, CheckError, ConfigError, CapabilityError
@@ -57,13 +63,36 @@ src/dnsight/
 ### Dependency rules (never violate)
 
 ```text
-cli/  →  sdk.py  →  orchestrator.py  →  checks/  →  core/
+cli/  →  sdk/  →  orchestrator.py  →  checks/  →  core/
                                         checks/  →  utils/
 ```
 
 - `core/` imports nothing from other internal packages
 - `checks/` never imports from each other or from orchestrator
-- `cli/` imports from `sdk.py` and `core/` only — never directly from `checks/`
+- `cli/` imports from `dnsight.sdk` and `core/` only — never directly from `checks/`
+
+### SDK and CLI (same conceptual API)
+
+- **Orchestrator** implements execution only (registry strings, `ConfigManager`, `Runtime`, trees, batch). **SDK** resolves config via `config_manager()` / `resolve_run_manager()` then calls orchestrator; it does not embed check-specific orchestration logic.
+- **Single check**: `run_check` / `run_check_sync(name, domain, config_path=..., mgr=..., config=...)` with `name` from `all_checks()`. Optional `dnsight.sdk.aliases` provide async `check_<name>` and `check_<name>_sync` for each registered check, plus typed `generate_*`; programmatic overrides use `config=` and optional `config_slice=` (the matching `Config` field) when `mgr` is unset.
+- **Full audit (one root)**: `run_domain` / `run_domain_sync`. **Manifest / execute all targets**: `run_targets` / `run_targets_sync` (deprecated aliases: `run_batch` / `run_batch_sync`). Shared options: `RunAuditOptions` (or equivalent keyword args) for `checks` / `exclude` / `recursive` / `depth`.
+- **CLI** (when implemented) should parse argv into the **same keyword arguments** as these SDK functions.
+
+#### SDK programmatic `Config` (single-check only, v1)
+
+Applies to `run_check` / `run_check_sync` and typed aliases that forward programmatic config. **`run_domain` and `run_targets` do not** accept inline `config=`; they use `mgr` + YAML + discovery only.
+
+| Order | Source | Behaviour |
+| --- | --- | --- |
+| 1 | `mgr=` | Use the passed `ConfigManager` as-is; inline `config=` is ignored for that call. |
+| 2 | `config=` not set | Same as `config_manager`: optional `config_path`, else discover `dnsight.yaml`, else built-in defaults (`default_config_manager`). |
+| 3 | `config=` set | If a YAML file applies (explicit `config_path` or discovered `dnsight.yaml`), load it, `resolve(domain)`, merge `config=` on top (explicit fields in `config=` win). Then build a **synthetic** single-check manager for that run. If no YAML file exists, build that synthetic manager from `config=` alone. |
+
+**Synthetic manager:** Built by `minimal_config_manager`: one catch-all include rule, no manifest `targets` rows, `enabled_checks` = the one check being run. This is not equivalent to a full multi-target YAML config; pattern nuance is folded into the merged `Config` for that audit.
+
+**Check aliases:** `check_<name>` / `check_<name>_sync` accept `config=` and optional `config_slice=`; when both are set, `config_slice=` sets/overrides that check’s slice on `Config` (e.g. DMARC → `Config.dmarc`).
+
+See `.plan/v2/reference/config-system.md` for the general config precedence model (defaults → top-level → group → domain).
 
 ### Key patterns
 

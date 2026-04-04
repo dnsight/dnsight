@@ -62,6 +62,7 @@ def parse_v1(data: dict[str, Any]) -> ConfigManager:
         data.get("config", []), resolver, strict_recommendations
     )
     return ConfigManager(
+        config_schema_version=int(data["version"]),
         targets=targets,
         target_configs=target_configs,
         default_target_config=default_config,
