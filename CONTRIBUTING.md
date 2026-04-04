@@ -41,7 +41,7 @@ Do **not** try to paste every repo label on every PR, and do not worry about tri
 
 ## Release notes (Towncrier)
 
-PRs **into `main`** that change **`src/**` or **`pyproject.toml`** must include at least one valid news fragment under **`changelog.d/`**, unless the **`skip-changelog`** label is present or the diff is **`uv.lock` only**. Stacked PRs into other branches are not checked until you open a PR into `main`.
+PRs **into `main`** that change **`src/**`**, **`pyproject.toml`**, **`docs/**`**, or **`tools/docgen/**`** must include at least one valid news fragment under **`changelog.d/`**, unless the **`skip-changelog`** label is present or the diff is **`uv.lock` only**. Stacked PRs into other branches are not checked until you open a PR into `main`.
 
 Allowed fragment suffixes (five types only): **`security`**, **`feature`**, **`bugfix`**, **`patch`**, **`other`**. Name files `changelog.d/<PR#>.<suffix>.md` (example: `42.feature.md`). Unknown suffixes fail CI.
 

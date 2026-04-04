@@ -55,7 +55,8 @@ jobs:
             if [[ "$f" != uv.lock ]]; then
               only_lock=false
             fi
-            if [[ "$f" == src/* ]] || [[ "$f" == "pyproject.toml" ]]; then
+            if [[ "$f" == src/* ]] || [[ "$f" == "pyproject.toml" ]] \
+              || [[ "$f" == docs/* ]] || [[ "$f" == tools/docgen/* ]]; then
               needs_changelog=true
             fi
           done
@@ -66,7 +67,8 @@ jobs:
           fi
 
           if [[ "$needs_changelog" == false ]]; then
-            echo "No changelog-trigger paths (src/** or pyproject.toml); skipping towncrier check."
+            echo "No changelog-trigger paths: src/**, pyproject.toml, docs/**, tools/docgen/**."
+            echo "Skipping towncrier check."
             exit 0
           fi
 
