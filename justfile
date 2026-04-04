@@ -82,28 +82,28 @@ test *args:
 
 # == Release notes (git-cliff) ==================================================
 
-# Generate Markdown release notes (same logic as the Publish workflow).
-# version: omit for unreleased commits since the last tag; or v0.3.0 / 0.3.0 (tag must exist in git).
+# Generate Markdown release notes (same logic as the Publish workflow for tagged releases).
+# version: omit for a local preview — range is origin/main..HEAD (or main..HEAD), not “since last tag”.
+#          With v0.3.0 / 0.3.0: range is previous tag..tag (tag must exist).
 # file: output path; default local/release-notes.md. Pass "" as second arg for stdout.
-# Note: git-cliff --latest ignores --tag and always uses the repo's newest tag — we use prev..tag instead.
 release-notes version="" file="local/release-notes.md":
     #!/usr/bin/env bash
     set -euo pipefail
     repo=dnsight/dnsight
-    cliff() {
-      if [[ -z "${GITHUB_TOKEN:-}" ]]; then
-        uv run git-cliff "$@" --github-repo "$repo" --offline
-      else
-        uv run git-cliff "$@" --github-repo "$repo"
-      fi
-    }
+    args=(uv run git-cliff --github-repo "$repo")
+    if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+      args+=(--offline -vv)
+    fi
     if [[ -z "{{version}}" ]]; then
-      if [[ -n "{{file}}" ]]; then
-        mkdir -p "$(dirname "{{file}}")"
-        cliff --unreleased -o "{{file}}"
+      if git rev-parse -q --verify refs/remotes/origin/main >/dev/null; then
+        base=origin/main
+      elif git rev-parse -q --verify refs/heads/main >/dev/null; then
+        base=main
       else
-        cliff --unreleased
+        echo "release-notes: need origin/main or main to diff against; git fetch origin main" >&2
+        exit 1
       fi
+      args+=("$base..HEAD")
     else
       tag="{{version}}"
       [[ "$tag" == v* ]] || tag="v$tag"
@@ -112,17 +112,19 @@ release-notes version="" file="local/release-notes.md":
         exit 1
       fi
       if prev=$(git describe --tags --abbrev=0 "${tag}^" 2>/dev/null); then
-        range="$prev..$tag"
+        args+=("$prev..$tag")
       else
         root=$(git rev-list --max-parents=0 HEAD | tail -1)
-        range="$root..$tag"
+        args+=("$root..$tag")
       fi
-      if [[ -n "{{file}}" ]]; then
-        mkdir -p "$(dirname "{{file}}")"
-        cliff "$range" -o "{{file}}"
-      else
-        cliff "$range"
-      fi
+    fi
+    if [[ -n "{{file}}" ]]; then
+      mkdir -p "$(dirname "{{file}}")"
+      args+=(-o "{{file}}")
+    fi
+    "${args[@]}"
+    if [[ -n "{{file}}" ]]; then
+      python3 -c "import pathlib,sys; p=pathlib.Path(sys.argv[1]); p.write_text(p.read_text(encoding='utf-8').strip('\n')+'\n', encoding='utf-8')" "{{file}}"
     fi
 
 # == Build and publish ==========================================================
