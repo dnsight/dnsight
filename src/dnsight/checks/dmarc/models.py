@@ -35,7 +35,9 @@ class DMARCIssueId(IssueId):
     POLICY_NONE = "dmarc.policy.none"
     SUBDOMAIN_POLICY_WEAK = "dmarc.subdomain_policy.weak"
     RUA_MISSING = "dmarc.rua.missing"
+    RUA_MISMATCH = "dmarc.rua.mismatch"
     RUF_MISSING = "dmarc.ruf.missing"
+    RUF_MISMATCH = "dmarc.ruf.mismatch"
     PCT_NOT_100 = "dmarc.pct.not_100"
     PCT_NOT_MIN = "dmarc.pct.not_min"
     MULTIPLE_RECORDS = "dmarc.multiple_records"
@@ -73,7 +75,13 @@ _DMARC_ISSUE_DESCRIPTORS: dict[DMARCIssueId, IssueDescriptor] = {
     DMARCIssueId.RUA_MISSING: IssueDescriptor(
         DMARCIssueId.RUA_MISSING, Severity.MEDIUM
     ),
+    DMARCIssueId.RUA_MISMATCH: IssueDescriptor(
+        DMARCIssueId.RUA_MISMATCH, Severity.MEDIUM
+    ),
     DMARCIssueId.RUF_MISSING: IssueDescriptor(DMARCIssueId.RUF_MISSING, Severity.LOW),
+    DMARCIssueId.RUF_MISMATCH: IssueDescriptor(
+        DMARCIssueId.RUF_MISMATCH, Severity.MEDIUM
+    ),
     DMARCIssueId.PCT_NOT_100: IssueDescriptor(DMARCIssueId.PCT_NOT_100, Severity.LOW),
     DMARCIssueId.PCT_NOT_MIN: IssueDescriptor(
         DMARCIssueId.PCT_NOT_MIN, Severity.MEDIUM
@@ -155,8 +163,18 @@ class DMARCGenerateParams(BaseGenerateParams):
     def from_config(cls, config: DmarcConfig) -> Self:
         """Build params from DmarcConfig for generation."""
         align = "s" if config.require_strict_alignment else "r"
-        rua = ["mailto:dmarc@example.com"] if config.rua_required else []
-        ruf = ["mailto:dmarc@example.com"] if config.ruf_required else []
+        if config.expected_rua:
+            rua = list(config.expected_rua)
+        elif config.rua_required:
+            rua = ["mailto:dmarc@example.com"]
+        else:
+            rua = []
+        if config.expected_ruf:
+            ruf = list(config.expected_ruf)
+        elif config.ruf_required:
+            ruf = ["mailto:dmarc@example.com"]
+        else:
+            ruf = []
         return cls(
             policy=config.policy,
             subdomain_policy=config.subdomain_policy_minimum,

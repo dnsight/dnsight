@@ -42,6 +42,16 @@ def _policy_strength(p: str) -> int:
     return _POLICY_STRENGTH.get((p or "").lower(), -1)
 
 
+def _normalize_reporting_uri(uri: str) -> str:
+    """Normalize a reporting URI for set comparison (strip + casefold)."""
+    return (uri or "").strip().casefold()
+
+
+def _reporting_uri_frozenset(uris: list[str]) -> frozenset[str]:
+    """Build a frozenset of normalized URIs; empty strings are dropped."""
+    return frozenset(_normalize_reporting_uri(u) for u in uris if (u or "").strip())
+
+
 # ---------------------------------------------------------------------------
 # Parser helpers
 # ---------------------------------------------------------------------------
@@ -263,9 +273,27 @@ def rule_subdomain_policy(
 def rule_rua(
     data: DMARCData, dmarc_config: DmarcConfig, strict: bool
 ) -> tuple[list[Issue], list[Recommendation]]:
-    """Check RUA (aggregate reporting) requirement."""
+    """Check RUA (aggregate reporting) requirement and optional expected URIs."""
     issues: list[Issue] = []
     recommendations: list[Recommendation] = []
+    if dmarc_config.expected_rua:
+        expected = _reporting_uri_frozenset(dmarc_config.expected_rua)
+        actual = _reporting_uri_frozenset(data.rua)
+        if expected != actual:
+            issues.append(
+                Issue(
+                    id=DMARCIssueId.RUA_MISMATCH.value,
+                    severity=Severity.MEDIUM,
+                    title="RUA URIs do not match configuration",
+                    description=(
+                        f"Expected rua= {sorted(expected)!r}; "
+                        f"found {sorted(actual)!r} in the record."
+                    ),
+                    remediation="Set rua= to exactly the configured reporting URIs.",
+                )
+            )
+            return issues, recommendations
+
     if dmarc_config.rua_required and not data.rua:
         issues.append(
             Issue(
@@ -298,9 +326,27 @@ def rule_rua(
 def rule_ruf(
     data: DMARCData, dmarc_config: DmarcConfig, strict: bool
 ) -> tuple[list[Issue], list[Recommendation]]:
-    """Check RUF (forensic reporting) requirement."""
+    """Check RUF (forensic reporting) requirement and optional expected URIs."""
     issues: list[Issue] = []
     recommendations: list[Recommendation] = []
+    if dmarc_config.expected_ruf:
+        expected = _reporting_uri_frozenset(dmarc_config.expected_ruf)
+        actual = _reporting_uri_frozenset(data.ruf)
+        if expected != actual:
+            issues.append(
+                Issue(
+                    id=DMARCIssueId.RUF_MISMATCH.value,
+                    severity=Severity.MEDIUM,
+                    title="RUF URIs do not match configuration",
+                    description=(
+                        f"Expected ruf= {sorted(expected)!r}; "
+                        f"found {sorted(actual)!r} in the record."
+                    ),
+                    remediation="Set ruf= to exactly the configured reporting URIs.",
+                )
+            )
+            return issues, recommendations
+
     if dmarc_config.ruf_required and not data.ruf:
         issues.append(
             Issue(

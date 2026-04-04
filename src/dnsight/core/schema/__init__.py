@@ -2,14 +2,35 @@
 
 from __future__ import annotations
 
+from dnsight.core.schema.caa import CaaSchema
+from dnsight.core.schema.dkim import DkimSchema
 from dnsight.core.schema.dmarc import DmarcSchema
+from dnsight.core.schema.dnssec import DnssecSchema
+from dnsight.core.schema.headers import HeadersSchema
+from dnsight.core.schema.mx import MxSchema
+from dnsight.core.schema.spf import SpfSchema
 
 
 class Schemas:
     """Namespace for check-specific schema types. Reduces import complexity."""
 
+    Caa = CaaSchema
+    Dnssec = DnssecSchema
     Dmarc = DmarcSchema
+    Dkim = DkimSchema
+    Headers = HeadersSchema
+    Mx = MxSchema
+    Spf = SpfSchema
 
 
 # Re-export for type annotations (mypy resolves DmarcSchema.PolicyStr)
-__all__ = ["DmarcSchema", "Schemas"]
+__all__ = [
+    "CaaSchema",
+    "DkimSchema",
+    "DnssecSchema",
+    "DmarcSchema",
+    "HeadersSchema",
+    "MxSchema",
+    "SpfSchema",
+    "Schemas",
+]

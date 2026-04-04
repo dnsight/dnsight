@@ -34,7 +34,7 @@ class TestDMARCIssueId:
         assert DMARCIssueId.PCT_NOT_100 == "dmarc.pct.not_100"
 
     def test_member_count(self) -> None:
-        assert len(DMARCIssueId) == 11
+        assert len(DMARCIssueId) == 13
 
 
 class TestDMARCRecommendationId:
@@ -220,6 +220,26 @@ class TestGenerateDmarc:
         assert params.alignment_spf == "s"
         assert len(params.rua) == 1
         assert "mailto:" in params.rua[0]
+
+    def test_from_config_expected_rua_ruf_override_placeholder(self) -> None:
+        config = DmarcConfig(
+            expected_rua=["mailto:agg@corp.test"],
+            expected_ruf=["mailto:forensic@corp.test"],
+            rua_required=True,
+            ruf_required=True,
+        )
+        params = DMARCGenerateParams.from_config(config)
+        assert params.rua == ["mailto:agg@corp.test"]
+        assert params.ruf == ["mailto:forensic@corp.test"]
+
+    def test_generate_includes_expected_uris(self) -> None:
+        config = DmarcConfig(
+            expected_rua=["mailto:rua@example.com"],
+            expected_ruf=["mailto:ruf@example.com"],
+        )
+        record = generate_dmarc(config=config)
+        assert "rua=mailto:rua@example.com" in record.value
+        assert "ruf=mailto:ruf@example.com" in record.value
 
 
 # -- Module-level aliases test ------------------------------------------------

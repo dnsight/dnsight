@@ -7,6 +7,7 @@ import pytest
 import dnsight.core.registry as registry
 from dnsight.utils.dns import reset_resolver
 from dnsight.utils.http import reset_http_client
+from dnsight.utils.smtp import reset_starttls_probe
 
 
 @pytest.fixture(autouse=True)
@@ -25,3 +26,4 @@ def _reset_singletons() -> None:  # noqa: PT004
     yield  # type: ignore[misc]
     reset_resolver()
     reset_http_client()
+    reset_starttls_probe()

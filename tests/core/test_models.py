@@ -282,6 +282,15 @@ class TestGeneratedRecord:
         assert rec.host == "_dmarc"
         assert rec.value == "v=DMARC1; p=reject"
 
+    def test_http_header_record_type(self) -> None:
+        rec = GeneratedRecord(
+            record_type=RecordType.HTTP_HEADER,
+            host="",
+            value="Strict-Transport-Security: max-age=31536000",
+        )
+        assert rec.record_type == RecordType.HTTP_HEADER
+        assert rec.host == ""
+
     def test_default_ttl(self) -> None:
         rec = GeneratedRecord(record_type=RecordType.TXT, host="@", value="v=spf1")
         assert rec.ttl == 3600

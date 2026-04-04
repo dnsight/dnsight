@@ -8,8 +8,10 @@ import pytest
 
 from dnsight.core.config.config_manager import ConfigManager
 from dnsight.core.config.defaults import (
+    DEFAULT_DNSSEC_REQUIRE_DS,
     DEFAULT_GLOBAL_CONCURRENCY_LIMIT,
     DEFAULT_GLOBAL_MAX_RPS,
+    DEFAULT_SPF_LOOKUP_LIMIT,
 )
 from dnsight.core.config.parser.versions.v1 import parse_v1
 from dnsight.core.config.targets import ChecksDelta, ChecksReplace, Target
@@ -312,14 +314,63 @@ class TestRuleConfigDmarc:
 
 
 # ---------------------------------------------------------------------------
+# Headers config in rules
+# ---------------------------------------------------------------------------
+
+
+class TestHeadersConfigInRules:
+    def test_headers_config_merges_from_rule(self) -> None:
+        mgr = parse_v1(
+            _minimal(config=[{"include": "*", "headers": {"require": ["CSP", "HSTS"]}}])
+        )
+        assert mgr.default_target_config.headers.require == ["CSP", "HSTS"]
+
+
+# ---------------------------------------------------------------------------
+# SPF and DNSSEC config in rules
+# ---------------------------------------------------------------------------
+
+
+class TestRuleConfigSpfDnssec:
+    def test_spf_config_merges_from_rule(self) -> None:
+        mgr = parse_v1(_minimal(config=[{"include": "*", "spf": {"lookup_limit": 5}}]))
+        assert mgr.default_target_config.spf.lookup_limit == 5
+
+    def test_spf_absent_uses_defaults(self) -> None:
+        mgr = parse_v1(_minimal(config=[{"include": "*"}]))
+        assert mgr.default_target_config.spf.lookup_limit == DEFAULT_SPF_LOOKUP_LIMIT
+
+    def test_dnssec_config_merges_from_rule(self) -> None:
+        mgr = parse_v1(
+            _minimal(
+                config=[
+                    {
+                        "include": "*",
+                        "dnssec": {
+                            "require_ds": True,
+                            "signature_expiry_days_warning": 14,
+                        },
+                    }
+                ]
+            )
+        )
+        assert mgr.default_target_config.dnssec.require_ds is True
+        assert mgr.default_target_config.dnssec.signature_expiry_days_warning == 14
+
+    def test_dnssec_absent_uses_defaults(self) -> None:
+        mgr = parse_v1(_minimal(config=[{"include": "*"}]))
+        assert mgr.default_target_config.dnssec.require_ds == DEFAULT_DNSSEC_REQUIRE_DS
+
+
+# ---------------------------------------------------------------------------
 # Unknown check config keys in rules are silently skipped
 # ---------------------------------------------------------------------------
 
 
 class TestUnknownCheckConfig:
-    def test_unknown_check_config_does_not_error(self) -> None:
+    def test_unknown_rule_keys_do_not_error(self) -> None:
         mgr = parse_v1(
-            _minimal(config=[{"include": "*", "headers": {"require": ["CSP", "HSTS"]}}])
+            _minimal(config=[{"include": "*", "future_unknown_slice": {"a": 1}}])
         )
         assert isinstance(mgr, ConfigManager)
 

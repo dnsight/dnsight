@@ -269,6 +269,31 @@ class TestRuleRua:
         _, recs = rule_rua(_data(rua=[]), _cfg(rua_required=False), True)
         assert any(r.id == DMARCRecommendationId.ADD_RUA for r in recs)
 
+    def test_mismatch_when_expected_rua_differs(self) -> None:
+        issues, _ = rule_rua(
+            _data(rua=["mailto:other@x.com"]),
+            _cfg(expected_rua=["mailto:dmarc@example.com"]),
+            False,
+        )
+        assert any(i.id == DMARCIssueId.RUA_MISMATCH for i in issues)
+
+    def test_passes_when_expected_rua_matches_normalized(self) -> None:
+        issues, _ = rule_rua(
+            _data(rua=["mailto:DMARC@Example.COM"]),
+            _cfg(expected_rua=["mailto:dmarc@example.com"]),
+            False,
+        )
+        assert issues == []
+
+    def test_mismatch_not_double_with_rua_required(self) -> None:
+        issues, _ = rule_rua(
+            _data(rua=[]),
+            _cfg(rua_required=True, expected_rua=["mailto:a@b.com"]),
+            False,
+        )
+        assert any(i.id == DMARCIssueId.RUA_MISMATCH for i in issues)
+        assert not any(i.id == DMARCIssueId.RUA_MISSING for i in issues)
+
 
 # ---------------------------------------------------------------------------
 # rule_ruf
@@ -289,6 +314,14 @@ class TestRuleRuf:
     def test_recommends_ruf_when_strict(self) -> None:
         _, recs = rule_ruf(_data(ruf=[]), _cfg(ruf_required=False), True)
         assert any(r.id == DMARCRecommendationId.ADD_RUF for r in recs)
+
+    def test_mismatch_when_expected_ruf_differs(self) -> None:
+        issues, _ = rule_ruf(
+            _data(ruf=["mailto:old@x.com"]),
+            _cfg(expected_ruf=["mailto:new@y.com"]),
+            False,
+        )
+        assert any(i.id == DMARCIssueId.RUF_MISMATCH for i in issues)
 
 
 # ---------------------------------------------------------------------------

@@ -38,47 +38,60 @@ class RankedEnum(str, Enum):  # noqa: UP042 - custom __new__ with rank; StrEnum 
     def __new__(cls, value: str, rank: int) -> Self:
         obj = str.__new__(cls, value)
         obj._value_ = value
-        obj._rank = rank
+        object.__setattr__(obj, "_rank", rank)
         return obj
 
-    def _assert_same_type(self, other: Self) -> None:
-        if not isinstance(other, type(self)):
-            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
+    @property
+    def rank(self) -> int:
+        """Numeric rank for ordering (higher = more severe / important)."""
+        return cast(int, object.__getattribute__(self, "_rank"))
 
-    def __lt__(self, other: Self) -> bool:
-        self._assert_same_type(other)
-        return self._rank < other._rank
+    def _ordering_peer(self, other: str) -> Self | None:
+        """Same concrete enum class as ``self``, else ``None`` (caller returns ``NotImplemented``)."""
+        if type(other) is not type(self):
+            return None
+        return cast(Self, other)
 
-    def __le__(self, other: Self) -> bool:
-        self._assert_same_type(other)
-        return self._rank <= other._rank
+    def _equality_peer(self, other: object) -> Self | None:
+        """Same concrete enum class as ``self``, else ``None`` (caller handles ``str`` / unknown)."""
+        if type(other) is type(self):
+            return cast(Self, other)
+        return None
 
-    def __gt__(self, other: Self) -> bool:
-        self._assert_same_type(other)
-        return self._rank > other._rank
+    def __lt__(self, other: str) -> bool | NotImplementedType:
+        peer = self._ordering_peer(other)
+        return NotImplemented if peer is None else self.rank < peer.rank
 
-    def __ge__(self, other: Self) -> bool:
-        self._assert_same_type(other)
-        return self._rank >= other._rank
+    def __le__(self, other: str) -> bool | NotImplementedType:
+        peer = self._ordering_peer(other)
+        return NotImplemented if peer is None else self.rank <= peer.rank
+
+    def __gt__(self, other: str) -> bool | NotImplementedType:
+        peer = self._ordering_peer(other)
+        return NotImplemented if peer is None else self.rank > peer.rank
+
+    def __ge__(self, other: str) -> bool | NotImplementedType:
+        peer = self._ordering_peer(other)
+        return NotImplemented if peer is None else self.rank >= peer.rank
 
     def __eq__(self, other: object) -> bool | NotImplementedType:
-        if type(other) is not type(self):
-            if isinstance(other, str):
-                return self.value == other
-            return NotImplemented
-        same: Self = cast(Self, other)
-        return self._rank == same._rank
+        peer = self._equality_peer(other)
+        if peer is not None:
+            return self.rank == peer.rank
+        if isinstance(other, str):
+            return cast(bool, self.value == other)
+        return NotImplemented
 
     def __ne__(self, other: object) -> bool | NotImplementedType:
-        if type(other) is not type(self):
-            if isinstance(other, str):
-                return self.value != other
-            return NotImplemented
-        same: Self = cast(Self, other)
-        return self._rank != same._rank
+        peer = self._equality_peer(other)
+        if peer is not None:
+            return self.rank != peer.rank
+        if isinstance(other, str):
+            return cast(bool, self.value != other)
+        return NotImplemented
 
     def __str__(self) -> str:
-        return self.value
+        return cast(str, self.value)
 
 
 class Severity(RankedEnum):
@@ -160,6 +173,8 @@ class RecordType(StrEnum):
 
     A = "A"
     AAAA = "AAAA"
+    CAA = "CAA"
     CNAME = "CNAME"
     MX = "MX"
     TXT = "TXT"
+    HTTP_HEADER = "HTTP_HEADER"

@@ -12,6 +12,7 @@ import pytest
 from dnsight.core.exceptions import CheckError
 from dnsight.utils.dns import (
     AsyncDNSResolver,
+    DnssecQueryResult,
     FakeDNSResolver,
     get_resolver,
     reset_resolver,
@@ -73,6 +74,28 @@ class TestFakeDNSResolver:
         fake = FakeDNSResolver()
         with pytest.raises(CheckError):
             await fake.resolve_caa("missing.example.com")
+
+    async def test_resolve_aaaa(self) -> None:
+        fake = FakeDNSResolver({"h.example.com/AAAA": ["2001:db8::1"]})
+        result = await fake.resolve_aaaa("h.example.com")
+        assert result == ["2001:db8::1"]
+
+    async def test_resolve_cname(self) -> None:
+        fake = FakeDNSResolver({"www.example.com/CNAME": ["cdn.example.com"]})
+        result = await fake.resolve_cname("www.example.com")
+        assert result == ["cdn.example.com"]
+
+    async def test_resolve_dname(self) -> None:
+        fake = FakeDNSResolver({"x.example.com/DNAME": ["y.example.org"]})
+        result = await fake.resolve_dname("x.example.com")
+        assert result == ["y.example.org"]
+
+    async def test_resolve_srv(self) -> None:
+        fake = FakeDNSResolver(
+            {"_smtp._tcp.example.com/SRV": [(10, 5, 25, "mail.example.com")]}
+        )
+        result = await fake.resolve_srv("_smtp._tcp.example.com")
+        assert result == [(10, 5, 25, "mail.example.com")]
 
     async def test_resolve_ns(self) -> None:
         fake = FakeDNSResolver(
@@ -295,3 +318,16 @@ class TestAsyncDNSResolver:
             pytest.raises(CheckError, match="DNS DNSKEY lookup failed"),
         ):
             await resolver.resolve_dnskey("bad.example.com")
+
+    async def test_query_dnssec_fake(self) -> None:
+        import dns.message
+        import dns.rcode
+
+        q = dns.message.make_query("x.example.com", "A")
+        r = dns.message.make_response(q)
+        r.set_rcode(dns.rcode.NXDOMAIN)
+        fake = FakeDNSResolver(dnssec_messages={"x.example.com/A": r})
+        out = await fake.query_dnssec("x.example.com", "A")
+        assert isinstance(out, DnssecQueryResult)
+        assert out.rcode == dns.rcode.NXDOMAIN
+        assert out.message.rcode() == dns.rcode.NXDOMAIN

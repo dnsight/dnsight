@@ -14,9 +14,15 @@ from collections import OrderedDict
 from typing import Any, TypeVar
 
 from dnsight.core.config.blocks import (
+    CaaConfig,
     Config,
+    DkimConfig,
     DmarcConfig,
+    DnssecConfig,
+    HeadersConfig,
+    MxConfig,
     ResolverConfig,
+    SpfConfig,
     ThrottleConfig,
 )
 from dnsight.core.config.config_manager import ConfigManager
@@ -184,6 +190,8 @@ _V1_DMARC_FIELD_MAP: dict[str, str] = {
     "rua_required": "rua_required",
     "target_policy": "target_policy",
     "ruf_required": "ruf_required",
+    "expected_rua": "expected_rua",
+    "expected_ruf": "expected_ruf",
     "minimum_pct": "minimum_pct",
     "require_strict_alignment": "require_strict_alignment",
     "subdomain_policy_minimum": "subdomain_policy_minimum",
@@ -204,6 +212,24 @@ def _build_rule_config(rule: dict[str, Any]) -> Config:
 
     if "dmarc" in rule and isinstance(rule["dmarc"], dict):
         kwargs["dmarc"] = _remap_fields(DmarcConfig, rule["dmarc"], _V1_DMARC_FIELD_MAP)
+
+    if "dkim" in rule and isinstance(rule["dkim"], dict):
+        kwargs["dkim"] = DkimConfig(**rule["dkim"])
+
+    if "mx" in rule and isinstance(rule["mx"], dict):
+        kwargs["mx"] = MxConfig(**rule["mx"])
+
+    if "headers" in rule and isinstance(rule["headers"], dict):
+        kwargs["headers"] = HeadersConfig(**rule["headers"])
+
+    if "caa" in rule and isinstance(rule["caa"], dict):
+        kwargs["caa"] = CaaConfig(**rule["caa"])
+
+    if "spf" in rule and isinstance(rule["spf"], dict):
+        kwargs["spf"] = SpfConfig(**rule["spf"])
+
+    if "dnssec" in rule and isinstance(rule["dnssec"], dict):
+        kwargs["dnssec"] = DnssecConfig(**rule["dnssec"])
 
     return Config(**kwargs) if kwargs else Config()
 
