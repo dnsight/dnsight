@@ -1,5 +1,9 @@
 # Intentionally minimal: secrets + ruff; full lint/format/typecheck in CI (just check).
 # Keep pinned SHAs for supply chain security.
+default_install_hook_types:
+  - pre-commit
+  - commit-msg
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.8

@@ -1,8 +1,5 @@
 # Default recipe — lists all available commands
 
-FOO := "v1"
-
-
 default:
     @just --list
 
@@ -52,7 +49,6 @@ fix:
 # Install pre-commit hooks (including commit-msg for conventional commits)
 pre-install:
     uv run pre-commit install
-    uv run pre-commit install --hook-type commit-msg
 
 # Update pre-commit hooks
 pre-update:
