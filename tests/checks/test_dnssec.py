@@ -16,7 +16,7 @@ import dnsight.checks  # noqa: F401 — registers checks
 import dnsight.checks.dnssec
 from dnsight.checks.dnssec import DNSSECIssueId, check_dnssec, get_dnssec
 from dnsight.core.config.blocks import DnssecConfig
-from dnsight.core.registry import get
+from dnsight.core.registry import get_check_def
 from dnsight.core.types import Capability, Status
 from dnsight.utils.dns import FakeDNSResolver, set_resolver
 
@@ -63,7 +63,7 @@ def _simple_ns_msg() -> dns.message.Message:
 class TestDNSSECRegistry:
     def test_dnssec_registered(self) -> None:
         importlib.reload(dnsight.checks.dnssec)
-        d = get("dnssec")
+        d = get_check_def("dnssec")
         assert d.name == "dnssec"
         assert Capability.CHECK in d.capabilities
         assert Capability.GENERATE not in d.capabilities

@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TypeAlias
 
-from dnsight.core.models import CheckResult, CheckResultAny, DomainResult, ZoneResult
+from dnsight.core.models import CheckResult, CheckResultAny
+from dnsight.sdk.audit.models import DomainResult, ZoneResult
 
 
 __all__ = ["BaseDomainSerialiser", "SerialiserOptions", "domain_result_from_check"]
@@ -36,6 +37,7 @@ def domain_result_from_check(
     )
     return DomainResult(
         domain=domain,
+        target=domain,
         timestamp=ts,
         config_version=config_version,
         zones=[zone],

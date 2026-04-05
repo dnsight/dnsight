@@ -19,7 +19,7 @@ from typer.models import ArgumentInfo, OptionInfo
 from dnsight.cli._completion_common import complete_config_discovery_paths
 from dnsight.cli._parse import parse_csv_option
 from dnsight.cli.state import GlobalState
-from dnsight.core.models import DomainResult
+from dnsight.sdk.audit.models import AuditResult, DomainResult
 
 
 def domains_argument() -> ArgumentInfo:
@@ -147,10 +147,15 @@ def worst_exit_code(*codes: int) -> int:
 
 
 def require_targets_or_domains(
-    domains: list[str], results: list[DomainResult], *, hint: str
+    domains: list[str], results: list[DomainResult] | AuditResult, *, hint: str
 ) -> None:
     """If there are no *domains* and *results* is empty, exit fatally with *hint*."""
-    if not domains and not results:
+    empty = (
+        len(results.domains) == 0
+        if isinstance(results, AuditResult)
+        else len(results) == 0
+    )
+    if not domains and empty:
         cli_exit_fatal(hint)
 
 

@@ -18,7 +18,7 @@ from dnsight.checks.spf import (
 from dnsight.checks.spf.rules import flatten_spf as flatten_spf_impl
 from dnsight.core.config.blocks import SpfConfig
 from dnsight.core.exceptions import CheckError
-from dnsight.core.registry import get
+from dnsight.core.registry import get_check_def
 from dnsight.core.types import Capability, Status
 from dnsight.utils.dns import FakeDNSResolver, reset_resolver, set_resolver
 
@@ -35,7 +35,7 @@ class TestSPFRegistry:
         import dnsight.checks.spf
 
         importlib.reload(dnsight.checks.spf)
-        d = get("spf")
+        d = get_check_def("spf")
         assert d.name == "spf"
         assert Capability.CHECK in d.capabilities
 

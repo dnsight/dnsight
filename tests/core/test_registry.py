@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from dnsight.core.exceptions import CheckNotFoundError
-from dnsight.core.registry import all_checks, get, register, supporting
+from dnsight.core.registry import all_checks, get_check_def, register, supporting
 from dnsight.core.types import Capability
 
 
@@ -22,7 +22,7 @@ class _FakeGenerateCheck:
 class TestRegister:
     def test_register_and_get(self) -> None:
         register(_FakeCheck)
-        defn = get("fake")
+        defn = get_check_def("fake")
         assert defn.name == "fake"
         assert defn.cls is _FakeCheck
         assert Capability.CHECK in defn.capabilities
@@ -45,7 +45,7 @@ class TestRegister:
 class TestGet:
     def test_unknown_raises(self) -> None:
         with pytest.raises(CheckNotFoundError):
-            get("nonexistent")
+            get_check_def("nonexistent")
 
 
 class TestAllChecks:

@@ -20,7 +20,7 @@ from dnsight.checks.mx.models import MXGenerateParams, MXGenerateTarget
 from dnsight.checks.mx.rules import build_mx_generated_value
 from dnsight.core.config.blocks import Config, MxConfig
 from dnsight.core.models import GeneratedRecord
-from dnsight.core.registry import get
+from dnsight.core.registry import get_check_def
 from dnsight.core.types import Capability, RecordType, Status
 from dnsight.utils.dns import FakeDNSResolver, set_resolver
 from dnsight.utils.smtp import (
@@ -41,7 +41,7 @@ class TestMXRegistry:
         import dnsight.checks.mx
 
         importlib.reload(dnsight.checks.mx)
-        d = get("mx")
+        d = get_check_def("mx")
         assert d.name == "mx"
         assert Capability.CHECK in d.capabilities
         assert Capability.GENERATE in d.capabilities

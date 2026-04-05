@@ -40,8 +40,9 @@ Always run `just check` and `just test` before considering a change complete.
 
 ```text
 src/dnsight/
-├── orchestrator.py  # Generic run_domain, run_zone, run_check_for_target, batch (no per-check symbols)
-├── sdk/               # Human-facing: config resolution + thin calls into orchestrator
+├── orchestrator.py  # Shim re-exporting :mod:`dnsight.sdk.audit` (avoid for new code)
+├── sdk/               # Human-facing: config resolution + audit orchestration
+│   ├── audit/         # run_domain, run_zone, run_targets, RunAuditOptions, DomainResult, AuditResult
 │   ├── _manager.py    # config_manager; resolve_run_manager; minimal_config_manager
 │   ├── run.py         # run_check, run_domain, run_targets, streams (+ sync shims)
 │   ├── generate.py    # generate(check_name, params=...)
@@ -49,7 +50,7 @@ src/dnsight/
 ├── core/          # Foundation — no internal imports
 │   ├── types.py           # Severity, Status, Capability, enums
 │   ├── exceptions.py      # DNSightError, CheckError, ConfigError, CapabilityError
-│   ├── models.py          # Issue, Recommendation, CheckResult[T], ZoneResult, DomainResult
+│   ├── models.py          # Issue, Recommendation, CheckResult[T] (lazy re-export of audit aggregates)
 │   ├── registry.py        # @register decorator, get(), all_checks(), supporting()
 │   ├── throttle.py        # Hierarchical token bucket (ThrottleManager, NoopThrottleManager)
 │   ├── concurrency.py     # ConcurrencyManager, ConcurrencyLimiter protocol
@@ -66,23 +67,24 @@ src/dnsight/
 ### Dependency rules (never violate)
 
 ```text
-cli/  →  sdk/  →  orchestrator.py  →  checks/  →  core/
-                                        checks/  →  utils/
+cli/  →  sdk/  →  sdk/audit/  →  checks/  →  core/
+                         checks/  →  utils/
+serialisers/  →  core/  +  sdk/audit/models  (aggregate result types)
 ```
 
 - `core/` imports nothing from other internal packages
-- `checks/` never imports from each other or from orchestrator
+- `checks/` never imports from each other or from `sdk.audit`
 - `cli/` imports from `dnsight.sdk` and `core/` only — never directly from `checks/`
 
-**Examples:** Good: `from dnsight.sdk import run_check_sync` in `cli/`. Bad: `from dnsight.checks.dmarc import ...` in `cli/` — use the SDK (or orchestrator patterns), not check packages directly.
+**Examples:** Good: `from dnsight.sdk import run_check_sync` in `cli/`. Bad: `from dnsight.checks.dmarc import ...` in `cli/` — use the SDK, not check packages directly.
 
 **CLI (Typer):** Declare every CLI option and argument with `typing.Annotated[..., typer.Option(...)]` or `typer.Argument(...)` (see Typer ≥ 0.24). Put the Python default on the parameter (`= None`, `= False`, etc.); for booleans, do **not** pass the default literal into `typer.Option` inside `Annotated`. Reuse shared shapes as `TypeAlias` values in `cli/helpers.py` (factories + aliases) and `cli/annotations.py` (re-exports).
 
 ### SDK and CLI (same conceptual API)
 
-- **Orchestrator** implements execution only (registry strings, `ConfigManager`, `Runtime`, trees, batch). **SDK** resolves config via `config_manager()` / `resolve_run_manager()` then calls orchestrator; it does not embed check-specific orchestration logic.
+- **Audit** (`dnsight.sdk.audit`): registry dispatch, `ConfigManager`, `Runtime`, zone walk, `DomainResult` / `AuditResult`. **`sdk.run`** resolves config via `config_manager()` / `resolve_run_manager()` then calls `sdk.audit`; no check-specific orchestration logic in `run.py`.
 - **Single check**: `run_check` / `run_check_sync(name, domain, config_path=..., mgr=..., config=...)` with `name` from `all_checks()`. Optional `dnsight.sdk.aliases` provide async `check_<name>` and `check_<name>_sync` for each registered check, plus typed `generate_*`; programmatic overrides use `config=` and optional `config_slice=` (the matching `Config` field) when `mgr` is unset.
-- **Full audit (one root)**: `run_domain` / `run_domain_sync`. **Manifest / execute all targets**: `run_targets` / `run_targets_sync` (deprecated aliases: `run_batch` / `run_batch_sync`). Shared options: `RunAuditOptions` (or equivalent keyword args) for `checks` / `exclude` / `recursive` / `depth`.
+- **Full audit (one root)**: `run_domain` / `run_domain_sync` → `DomainResult`. **Manifest / execute all targets**: `run_targets` / `run_targets_sync` → `AuditResult` with `.domains` (deprecated aliases: `run_batch` / `run_batch_sync`). Shared options: `RunAuditOptions` (or equivalent keyword args) for `checks` / `exclude` / `recursive` / `depth`.
 - **CLI** (when implemented) should parse argv into the **same keyword arguments** as these SDK functions.
 
 #### SDK programmatic `Config` (single-check only, v1)
@@ -108,9 +110,9 @@ For the full config precedence model (defaults → top-level → group → domai
 - **I/O singletons**: `get_resolver()` / `set_resolver()` and `get_http_client()` / `set_http_client()`. Tests inject fakes via `set_*`. Never use real DNS/HTTP in tests.
 - **Throttle**: `ThrottleManager.child()` builds parent-chain hierarchy. `wait()` traverses it.
 - **Capabilities**: `CHECK`, `GENERATE`. `BaseCheck` gates dispatch; raises `CapabilityError` for unsupported actions.
-- **Exceptions (SDK)**: `CapabilityError` and config validation errors belong to the orchestrator/config layer. Check code surfaces DNS/HTTP failures via `CheckError` from utils and partial or completed `CheckResult` with `error`/`issues` as appropriate—not raw resolver exceptions.
+- **Exceptions (SDK)**: `CapabilityError` and config validation errors belong to the audit/config layer. Check code surfaces DNS/HTTP failures via `CheckError` from utils and partial or completed `CheckResult` with `error`/`issues` as appropriate—not raw resolver exceptions.
 - **No caching**: One audit = one run. Pure CPU helpers may use `@lru_cache`; never on DNS/HTTP.
-- **Logging**: Use `get_logger(__name__)` from `dnsight.core.logger` in orchestration and I/O code. **INFO** for user-visible run boundaries (orchestrator), **DEBUG** for DNS/HTTP and per-zone dispatch, **ERROR** for unexpected check failures (results remain the primary contract). The CLI calls `configure()` once from global flags (`use_rich`, `detailed_log`, `rich_tracebacks` as appropriate); `--quiet` lowers log level only—it does not hide audit output. Do not add verbosity parameters to SDK or orchestrator entrypoints. See Phase 7 §12 in `.plan/v2/phases/phase-7-polish.md` and README “Logging (CLI)”.
+- **Logging**: Use `get_logger(__name__)` from `dnsight.core.logger` in audit and I/O code. **INFO** for user-visible run boundaries (e.g. ``dnsight.sdk.audit.run``), **DEBUG** for DNS/HTTP and per-zone dispatch, **ERROR** for unexpected check failures (results remain the primary contract). The CLI calls `configure()` once from global flags (`use_rich`, `detailed_log`, `rich_tracebacks` as appropriate); `--quiet` lowers log level only—it does not hide audit output. Do not add verbosity parameters to SDK entrypoints. See README “Logging (CLI)”.
 
 ---
 

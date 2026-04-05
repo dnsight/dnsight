@@ -20,7 +20,7 @@ from dnsight.checks.headers import (
 )
 from dnsight.core.config.blocks import HeadersConfig
 from dnsight.core.models import GeneratedRecord
-from dnsight.core.registry import get
+from dnsight.core.registry import get_check_def
 from dnsight.core.types import Capability, RecordType, Status
 from dnsight.utils.http import FakeHTTPClient, HTTPResponse, set_http_client
 
@@ -28,7 +28,7 @@ from dnsight.utils.http import FakeHTTPClient, HTTPResponse, set_http_client
 class TestHeadersRegistry:
     def test_headers_registered(self) -> None:
         importlib.reload(dnsight.checks.headers)
-        d = get("headers")
+        d = get_check_def("headers")
         assert d.name == "headers"
         assert Capability.CHECK in d.capabilities
         assert Capability.GENERATE in d.capabilities

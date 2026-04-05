@@ -19,7 +19,7 @@ from dnsight.checks.caa import (
     get_caa,
 )
 from dnsight.core.config.blocks import CaaConfig, Config
-from dnsight.core.registry import get
+from dnsight.core.registry import get_check_def
 from dnsight.core.types import Capability, RecordType, Status
 from dnsight.utils.dns import FakeDNSResolver, reset_resolver, set_resolver
 from dnsight.utils.http import FakeHTTPClient, HTTPResponse, set_http_client
@@ -36,7 +36,7 @@ class TestCAARegistry:
         import dnsight.checks.caa
 
         importlib.reload(dnsight.checks.caa)
-        d = get("caa")
+        d = get_check_def("caa")
         assert d.name == "caa"
         assert Capability.CHECK in d.capabilities
         assert Capability.GENERATE in d.capabilities

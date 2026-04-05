@@ -19,7 +19,7 @@ https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}
 {% for group, commits in commits | group_by(attribute="group") -%}
 {%- if not loop.first %}
 {% endif -%}
-### {{ group | striptags | trim }}
+## {{ group | striptags | trim }}
 
 {% for commit in commits -%}
 - {{ commit.message | upper_first }} ([{{ commit.id | truncate(length=7, end="") }}]({{ self::repo_base() }}/commit/{{ commit.id }})){% if commit.remote.pr_number %} ([#{{ commit.remote.pr_number }}]({{ self::repo_base() }}/pull/{{ commit.remote.pr_number }})){% endif %}

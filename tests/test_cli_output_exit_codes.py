@@ -9,8 +9,9 @@ from dnsight.cli.output import (
     exit_code_for_domain_result,
     exit_code_for_domain_results,
 )
-from dnsight.core.models import CheckResult, DomainResult, Issue, ZoneResult
+from dnsight.core.models import CheckResult, Issue
 from dnsight.core.types import Severity, Status
+from dnsight.sdk.audit.models import DomainResult, ZoneResult
 
 
 def _issue() -> Issue:
@@ -27,6 +28,7 @@ def test_exit_code_domain_result_clean() -> None:
     z = ZoneResult(zone="example.com", results={})
     dr = DomainResult(
         domain="example.com",
+        target="example.com",
         timestamp=datetime.now(UTC),
         config_version=1,
         zones=[z],
@@ -39,6 +41,7 @@ def test_exit_code_domain_result_partial() -> None:
     z = ZoneResult(zone="example.com", results={})
     dr = DomainResult(
         domain="example.com",
+        target="example.com",
         timestamp=datetime.now(UTC),
         config_version=1,
         zones=[z],
@@ -56,6 +59,7 @@ def test_exit_code_domain_result_has_issues() -> None:
     )
     dr = DomainResult(
         domain="example.com",
+        target="example.com",
         timestamp=datetime.now(UTC),
         config_version=1,
         zones=[z],
@@ -74,6 +78,7 @@ def test_exit_code_domain_results_worst_wins() -> None:
     )
     d0 = DomainResult(
         domain="a.com",
+        target="a.com",
         timestamp=datetime.now(UTC),
         config_version=1,
         zones=[z_clean],
@@ -81,6 +86,7 @@ def test_exit_code_domain_results_worst_wins() -> None:
     )
     d1 = DomainResult(
         domain="b.com",
+        target="b.com",
         timestamp=datetime.now(UTC),
         config_version=1,
         zones=[z_issues],

@@ -9,8 +9,9 @@ from typing import TypeAlias
 import typer
 
 from dnsight.cli.state import GlobalState
-from dnsight.core.models import CheckResultAny, DomainResult, GeneratedRecord
+from dnsight.core.models import CheckResultAny, GeneratedRecord
 from dnsight.core.types import OutputFormat
+from dnsight.sdk.audit.models import AuditResult, DomainResult
 from dnsight.serialisers import (
     JsonSerialiser,
     MarkdownSerialiser,
@@ -27,6 +28,7 @@ __all__ = [
     "emit_audit_results",
     "emit_check_result",
     "emit_generated_record",
+    "exit_code_for_audit_result",
     "exit_code_for_check_result",
     "exit_code_for_domain_result",
     "exit_code_for_domain_results",
@@ -34,6 +36,7 @@ __all__ = [
 ]
 
 _Batch: TypeAlias = tuple[DomainResult, ...]
+_EmitInput: TypeAlias = DomainResult | Sequence[DomainResult] | AuditResult
 
 
 def get_serialiser(fmt: OutputFormat) -> BaseDomainSerialiser:
@@ -63,6 +66,11 @@ def exit_code_for_domain_results(results: Sequence[DomainResult]) -> int:
     if not results:
         return 0
     return max(exit_code_for_domain_result(r) for r in results)
+
+
+def exit_code_for_audit_result(result: AuditResult) -> int:
+    """Worst exit code across domains in a manifest batch."""
+    return exit_code_for_domain_results(result.domains)
 
 
 def exit_code_for_check_result(result: CheckResultAny) -> int:
@@ -116,7 +124,9 @@ def emit_check_result(
     return code
 
 
-def _normalise_batch(results: DomainResult | Sequence[DomainResult]) -> _Batch:
+def _normalise_batch(results: _EmitInput) -> _Batch:
+    if isinstance(results, AuditResult):
+        return tuple(results.domains)
     if isinstance(results, DomainResult):
         return (results,)
     t = tuple(results)
@@ -125,9 +135,7 @@ def _normalise_batch(results: DomainResult | Sequence[DomainResult]) -> _Batch:
     return t
 
 
-def emit_audit_results(
-    state: GlobalState, results: DomainResult | Sequence[DomainResult]
-) -> int:
+def emit_audit_results(state: GlobalState, results: _EmitInput) -> int:
     """Serialise to ``--output`` and/or stdout.
 
     Returns:

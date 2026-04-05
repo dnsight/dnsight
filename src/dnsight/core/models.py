@@ -1,12 +1,13 @@
 """Core models for dnsight.
 
-All result types are frozen Pydantic models. Shared vocabulary for checks,
-orchestrator, serialisers, and SDK consumers.
+Frozen Pydantic models for check-level results. Zone/domain audit aggregates live
+in :mod:`dnsight.sdk.audit.models`. :class:`ZoneResult` and :class:`DomainResult`
+are still available as ``from dnsight.core.models import DomainResult`` (lazy
+attribute) for backward compatibility; prefer importing from ``dnsight.sdk.audit``.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -17,14 +18,26 @@ from dnsight.core.types import RecordType, Severity, Status
 __all__ = [
     "CheckResult",
     "CheckResultAny",
-    "DomainResult",
     "GeneratedRecord",
     "Issue",
     "Recommendation",
-    "ZoneResult",
 ]
 
 T = TypeVar("T")
+
+
+def __getattr__(name: str) -> Any:
+    """Lazy re-exports for audit aggregates (prefer :mod:`dnsight.sdk.audit.models`)."""
+    if name == "ZoneResult":
+        from dnsight.sdk.audit.models import ZoneResult as _ZoneResult
+
+        return _ZoneResult
+    if name == "DomainResult":
+        from dnsight.sdk.audit.models import DomainResult as _DomainResult
+
+        return _DomainResult
+    msg = f"module {__name__!r} has no attribute {name!r}"
+    raise AttributeError(msg)
 
 
 class Issue(BaseModel):
@@ -115,87 +128,6 @@ class CheckResult(BaseModel, Generic[T]):
 
 
 CheckResultAny = CheckResult[Any]
-
-
-class ZoneResult(BaseModel):
-    """Result of running checks for one zone.
-
-    Check results are stored in a dict keyed by check name (e.g. ``"dmarc"``).
-    Checks that were not run are absent from the dict.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    zone: str = Field(..., description="FQDN of the zone")
-    parent: str | None = Field(None, description="Parent zone FQDN if child")
-    children: list[ZoneResult] = Field(
-        default_factory=list, description="Child zone results"
-    )
-    results: dict[str, CheckResultAny] = Field(
-        default_factory=dict, description="Check results keyed by check name"
-    )
-
-    def _check_results(self) -> list[CheckResultAny]:
-        """Non-None check results in this zone."""
-        return list(self.results.values())
-
-    @property
-    def partial(self) -> bool:
-        """True if any check in this zone or any child zone is PARTIAL or FAILED."""
-        if any(c.partial or c.failed for c in self._check_results()):
-            return True
-        return any(child.partial for child in self.children)
-
-    @property
-    def issue_count(self) -> int:
-        """Total issues in this zone only (not including children)."""
-        return sum(len(c.issues) for c in self._check_results())
-
-
-class DomainResult(BaseModel):
-    """Top-level result for an entire audit.
-
-    One domain, timestamp, config version, and a list of zone results
-    (root first).
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    domain: str = Field(..., description="Root domain audited")
-    timestamp: datetime = Field(..., description="When the audit ran (UTC)")
-    config_version: int = Field(..., description="Config version used")
-    zones: list[ZoneResult] = Field(
-        default_factory=list, description="Zone results; first is root"
-    )
-    partial: bool = Field(
-        ..., description="True if any zone has a PARTIAL or FAILED check"
-    )
-
-    @property
-    def root(self) -> ZoneResult:
-        """Root zone result (zones[0])."""
-        if not self.zones:
-            raise ValueError("DomainResult has no zones")
-        return self.zones[0]
-
-    def _collect_zone_issues(self, z: ZoneResult) -> list[tuple[str, Issue]]:
-        """Collect ``(zone_fqdn, issue)`` pairs for a zone and its children."""
-        out: list[tuple[str, Issue]] = [
-            (z.zone, issue) for c in z.results.values() for issue in c.issues
-        ]
-        for child in z.children:
-            out.extend(self._collect_zone_issues(child))
-        return out
-
-    @property
-    def all_issues(self) -> list[tuple[str, Issue]]:
-        """Flat ``(zone_fqdn, issue)`` pairs across all zones and children."""
-        return [p for z in self.zones for p in self._collect_zone_issues(z)]
-
-    @property
-    def critical_count(self) -> int:
-        """Number of issues with severity CRITICAL across all zones."""
-        return sum(1 for _, i in self.all_issues if i.severity == Severity.CRITICAL)
 
 
 class GeneratedRecord(BaseModel):

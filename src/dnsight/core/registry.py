@@ -13,7 +13,7 @@ from dnsight.core.exceptions import CheckNotFoundError
 from dnsight.core.types import Capability
 
 
-__all__ = ["CheckDefinition", "all_checks", "get", "register", "supporting"]
+__all__ = ["CheckDefinition", "all_checks", "get_check_def", "register", "supporting"]
 
 # Registry is internal; cls is intentionally type[Any] so core/ does not depend on checks/.
 _CHECKS: dict[str, CheckDefinition] = {}
@@ -47,7 +47,7 @@ def register(cls: type[Any]) -> type[Any]:
     return cls
 
 
-def get(name: str) -> CheckDefinition:
+def get_check_def(name: str) -> CheckDefinition:
     """Look up a check by name.
 
     Args:

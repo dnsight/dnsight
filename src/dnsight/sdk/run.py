@@ -1,4 +1,4 @@
-"""SDK run API: resolve config, then call orchestrator (single-check, domain audit, targets, streams)."""
+"""SDK run API: resolve config, then call audit orchestration (single-check, domain, targets, streams)."""
 
 from __future__ import annotations
 
@@ -9,12 +9,18 @@ from typing import Any
 import warnings
 
 from dnsight.core.config import Config, ConfigManager
-from dnsight.core.models import CheckResult, DomainResult, ZoneResult
-from dnsight.orchestrator import RunAuditOptions, run_check_for_target
-from dnsight.orchestrator import run_config_targets as orchestrator_run_config_targets
-from dnsight.orchestrator import run_domain as orchestrator_run_domain
-from dnsight.orchestrator import run_domain_stream as orchestrator_run_domain_stream
+from dnsight.core.models import CheckResult
 from dnsight.sdk._manager import config_manager, resolve_run_manager
+from dnsight.sdk.audit import (
+    AuditResult,
+    DomainResult,
+    RunAuditOptions,
+    ZoneResult,
+    run_check_for_target,
+)
+from dnsight.sdk.audit import run_config_targets as audit_run_config_targets
+from dnsight.sdk.audit import run_domain as audit_run_domain
+from dnsight.sdk.audit import run_domain_stream as audit_run_domain_stream
 
 
 __all__ = [
@@ -39,21 +45,7 @@ async def run_check(
     mgr: ConfigManager | None = None,
     config: Config | None = None,
 ) -> CheckResult[Any]:
-    """Run one registered check for *domain* using merged config and :class:`Runtime`.
-
-    Args:
-        check_name: Registry name (see :func:`dnsight.core.registry.all_checks`).
-        domain: Domain or target string passed to :meth:`ConfigManager.resolve`.
-        config_path: YAML config path; ignored when *mgr* is set.
-        mgr: Pre-built manager; wins over *config_path*, discovery, and *config*.
-        config: Optional programmatic :class:`~dnsight.core.config.blocks.Config`.
-            When set (and *mgr* is not), merged with YAML/discovered config if a
-            file exists, or used alone via a synthetic manager. See *AGENTS.md*
-            (SDK programmatic config).
-
-    Returns:
-        Result of the check run.
-    """
+    """Run one registered check for *domain* using merged config and runtime."""
     import dnsight.checks  # noqa: F401
 
     m = resolve_run_manager(
@@ -95,7 +87,7 @@ async def run_domain(
     import dnsight.checks  # noqa: F401
 
     m = config_manager(mgr=mgr, config_path=config_path)
-    return await orchestrator_run_domain(
+    return await audit_run_domain(
         domain,
         mgr=m,
         checks=checks,
@@ -143,11 +135,11 @@ async def run_domain_stream(
     depth: int = 3,
     options: RunAuditOptions | None = None,
 ) -> AsyncIterator[ZoneResult]:
-    """Yield each zone’s result depth-first (root first); not a nested tree."""
+    """Yield each zone's result depth-first (root first); not a nested tree."""
     import dnsight.checks  # noqa: F401
 
     m = config_manager(mgr=mgr, config_path=config_path)
-    async for z in orchestrator_run_domain_stream(
+    async for z in audit_run_domain_stream(
         domain,
         mgr=m,
         checks=checks,
@@ -199,12 +191,12 @@ async def run_targets(
     recursive: bool = False,
     depth: int = 3,
     options: RunAuditOptions | None = None,
-) -> list[DomainResult]:
-    """Run a domain audit for each entry in the config manifest ``targets`` list."""
+) -> AuditResult:
+    """Run a domain audit for each manifest ``targets`` row; returns :class:`AuditResult`."""
     import dnsight.checks  # noqa: F401
 
     m = config_manager(mgr=mgr, config_path=config_path)
-    return await orchestrator_run_config_targets(
+    return await audit_run_config_targets(
         mgr=m,
         checks=checks,
         exclude=exclude,
@@ -223,7 +215,7 @@ def run_targets_sync(
     recursive: bool = False,
     depth: int = 3,
     options: RunAuditOptions | None = None,
-) -> list[DomainResult]:
+) -> AuditResult:
     """Synchronously run :func:`run_targets`."""
     return asyncio.run(
         run_targets(
@@ -247,7 +239,7 @@ async def run_batch(
     recursive: bool = False,
     depth: int = 3,
     options: RunAuditOptions | None = None,
-) -> list[DomainResult]:
+) -> AuditResult:
     """Deprecated alias for :func:`run_targets`."""
     warnings.warn(
         "run_batch is deprecated; use run_targets instead",
@@ -274,7 +266,7 @@ def run_batch_sync(
     recursive: bool = False,
     depth: int = 3,
     options: RunAuditOptions | None = None,
-) -> list[DomainResult]:
+) -> AuditResult:
     """Deprecated alias for :func:`run_targets_sync`."""
     warnings.warn(
         "run_batch_sync is deprecated; use run_targets_sync instead",

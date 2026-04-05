@@ -75,7 +75,7 @@ def minimal_config_manager(
         enabled_checks: Registry check names to enable for this run.
 
     Returns:
-        A manager suitable for :func:`~dnsight.orchestrator.run_check_for_target`.
+        A manager suitable for :func:`~dnsight.sdk.audit.run_check_for_target`.
     """
     rules: OrderedDict[str, TargetConfig] = OrderedDict()
     rules["*"] = TargetConfig(include="*", precedence=0, config=Config(), checks=None)
@@ -145,7 +145,7 @@ def resolve_run_manager(
             ``program_config`` is not ``None``.
 
     Returns:
-        Manager to pass to :func:`~dnsight.orchestrator.run_check_for_target`.
+        Manager to pass to :func:`~dnsight.sdk.audit.run_check_for_target`.
 
     Raises:
         ValueError: If ``program_config`` is set but ``single_check`` is ``None``.

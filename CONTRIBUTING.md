@@ -71,7 +71,7 @@ PyPI’s project page uses **`README.md`** as the long description; the **Change
 
 **[AGENTS.md](AGENTS.md)** is the canonical guide for layout, style, public API (`__all__`), tests, and architecture. In particular:
 
-- Respect the **dependency layers** (`cli` → `sdk` → orchestrator → `checks` → `core`; `checks` → `utils` only).
+- Respect the **dependency layers** (`cli` → `sdk` → `sdk/audit` → `checks` → `core`; `checks` → `utils` only; serialisers may use `core` + `sdk.audit.models`).
 - **CLI** must not import from `checks/` directly; go through `dnsight.sdk`.
 - The default test suite must **not** use real DNS or HTTP; use fakes (see `FakeDNSResolver`, `FakeHTTPClient` in `AGENTS.md` and existing tests).
 

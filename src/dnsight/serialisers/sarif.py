@@ -1,4 +1,4 @@
-"""SARIF 2.1.0 serialisation for :class:`~dnsight.core.models.DomainResult` (single or batch)."""
+"""SARIF 2.1.0 serialisation for :class:`~dnsight.sdk.audit.models.DomainResult` (single or batch)."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import json
 from typing import Any
 
 from dnsight import __version__
-from dnsight.core.models import DomainResult
 from dnsight.core.types import Severity
+from dnsight.sdk.audit.models import DomainResult
 from dnsight.serialisers._zone import iter_flat_zones
 from dnsight.serialisers.base import BaseDomainSerialiser, SerialiserOptions
 
@@ -89,6 +89,7 @@ def _sarif_run(result: DomainResult) -> dict[str, Any]:
         + _recommendation_results(result),
         "properties": {
             "domain": result.domain,
+            "target": result.target,
             "timestamp": result.timestamp.isoformat(),
             "configVersion": result.config_version,
         },
@@ -96,7 +97,7 @@ def _sarif_run(result: DomainResult) -> dict[str, Any]:
 
 
 def _sarif_log(results: Sequence[DomainResult]) -> dict[str, Any]:
-    """Full SARIF document: one run per :class:`~dnsight.core.models.DomainResult`."""
+    """Full SARIF document: one run per :class:`~dnsight.sdk.audit.models.DomainResult`."""
     return {
         "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
         "version": "2.1.0",
@@ -105,7 +106,7 @@ def _sarif_log(results: Sequence[DomainResult]) -> dict[str, Any]:
 
 
 class SarifSerialiser(BaseDomainSerialiser):
-    """Serialise one or more :class:`~dnsight.core.models.DomainResult` as SARIF 2.1.0."""
+    """Serialise one or more :class:`~dnsight.sdk.audit.models.DomainResult` as SARIF 2.1.0."""
 
     def _serialise_batch(
         self, results: Sequence[DomainResult], *, options: SerialiserOptions

@@ -10,9 +10,9 @@ from dnsight.core.config import Config, ConfigManager, TargetChecks
 from dnsight.core.config.blocks import ResolverConfig
 from dnsight.core.config.defaults import DNS_PROVIDER_NAMESERVERS
 from dnsight.core.config.targets import Target, TargetConfig
-from dnsight.core.registry import CheckDefinition, get
+from dnsight.core.registry import CheckDefinition, get_check_def
 from dnsight.core.types import DNSProvider, Status
-from dnsight.orchestrator import (
+from dnsight.sdk.audit import (
     RunAuditOptions,
     apply_resolver_config,
     run_check_for_target,
@@ -79,7 +79,7 @@ class TestRunDomain:
     async def test_failed_check_makes_partial(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        real_get = get
+        real_get = get_check_def
 
         class _BoomCheck:
             async def check(
@@ -98,7 +98,7 @@ class TestRunDomain:
                 )
             return real_get(name)
 
-        monkeypatch.setattr("dnsight.orchestrator.get", fake_get)
+        monkeypatch.setattr("dnsight.sdk.audit.run.get_check_def", fake_get)
         set_resolver(FakeDNSResolver(records={}))
 
         mgr = ConfigManager(
@@ -132,7 +132,7 @@ class TestRunDomain:
     async def test_run_config_targets_empty(self) -> None:
         mgr = _mgr_dmarc_only()
         out = await run_config_targets(mgr=mgr)
-        assert out == []
+        assert out.domains == []
 
     async def test_run_config_targets_sequential(self) -> None:
         set_resolver(
@@ -153,11 +153,11 @@ class TestRunDomain:
             default_target_config=Config(),
             default_target_checks=TargetChecks.from_enabled(["dmarc"]),
         )
-        results = await run_config_targets(mgr=mgr)
-        assert len(results) == 2
-        assert results[0].domain == "a.example.com"
-        assert results[1].domain == "b.example.com"
-        assert not results[0].partial and not results[1].partial
+        batch = await run_config_targets(mgr=mgr)
+        assert len(batch.domains) == 2
+        assert batch.domains[0].domain == "a.example.com"
+        assert batch.domains[1].domain == "b.example.com"
+        assert not batch.domains[0].partial and not batch.domains[1].partial
 
     async def test_run_check_for_target_matches_run_zone(self) -> None:
         set_resolver(FakeDNSResolver(records={"_dmarc.example.com/TXT": [_DMARC_TXT]}))
@@ -184,7 +184,7 @@ class TestRunDomain:
         # build_runtime() normally replaces the resolver from merged config; keep the
         # fake so NS discovery and checks see the same records.
         monkeypatch.setattr(
-            "dnsight.orchestrator.apply_resolver_config", lambda _c: None
+            "dnsight.sdk.audit.run.apply_resolver_config", lambda _c: None
         )
         set_resolver(
             FakeDNSResolver(
@@ -211,7 +211,7 @@ class TestRunDomain:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            "dnsight.orchestrator.apply_resolver_config", lambda _c: None
+            "dnsight.sdk.audit.run.apply_resolver_config", lambda _c: None
         )
         set_resolver(
             FakeDNSResolver(
@@ -233,7 +233,7 @@ class TestRunDomain:
     ) -> None:
         """With depth=1, child zones run with remaining depth 0 — no further NS walk."""
         monkeypatch.setattr(
-            "dnsight.orchestrator.apply_resolver_config", lambda _c: None
+            "dnsight.sdk.audit.run.apply_resolver_config", lambda _c: None
         )
         set_resolver(
             FakeDNSResolver(
@@ -259,7 +259,7 @@ class TestRunDomainStream:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            "dnsight.orchestrator.apply_resolver_config", lambda _c: None
+            "dnsight.sdk.audit.run.apply_resolver_config", lambda _c: None
         )
         set_resolver(FakeDNSResolver(records={"_dmarc.example.com/TXT": [_DMARC_TXT]}))
         mgr = _mgr_dmarc_only()
@@ -274,7 +274,7 @@ class TestRunDomainStream:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(
-            "dnsight.orchestrator.apply_resolver_config", lambda _c: None
+            "dnsight.sdk.audit.run.apply_resolver_config", lambda _c: None
         )
         set_resolver(
             FakeDNSResolver(

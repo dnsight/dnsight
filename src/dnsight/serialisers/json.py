@@ -1,4 +1,4 @@
-"""JSON serialisation for :class:`~dnsight.core.models.DomainResult` (single or batch)."""
+"""JSON serialisation for :class:`~dnsight.sdk.audit.models.DomainResult` (single or batch)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,8 @@ from collections.abc import Sequence
 import json
 from typing import Any
 
-from dnsight.core.models import CheckResultAny, DomainResult, ZoneResult
+from dnsight.core.models import CheckResultAny
+from dnsight.sdk.audit.models import DomainResult, ZoneResult
 from dnsight.serialisers._zone import iter_flat_zones
 from dnsight.serialisers.base import BaseDomainSerialiser, SerialiserOptions
 
@@ -29,6 +30,7 @@ def _zone_to_dict(zone: ZoneResult) -> dict[str, Any]:
 def _domain_to_dict(result: DomainResult) -> dict[str, Any]:
     return {
         "domain": result.domain,
+        "target": result.target,
         "timestamp": result.timestamp.isoformat(),
         "config_version": result.config_version,
         "partial": result.partial,
@@ -37,7 +39,7 @@ def _domain_to_dict(result: DomainResult) -> dict[str, Any]:
 
 
 class JsonSerialiser(BaseDomainSerialiser):
-    """Serialise one or more :class:`~dnsight.core.models.DomainResult` to JSON."""
+    """Serialise one or more :class:`~dnsight.sdk.audit.models.DomainResult` to JSON."""
 
     def _serialise_batch(
         self, results: Sequence[DomainResult], *, options: SerialiserOptions

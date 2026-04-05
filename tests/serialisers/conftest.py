@@ -6,8 +6,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from dnsight.core.models import CheckResult, DomainResult, Issue, ZoneResult
+from dnsight.core.models import CheckResult, Issue
 from dnsight.core.types import Severity, Status
+from dnsight.sdk.audit.models import DomainResult, ZoneResult
 
 
 @pytest.fixture
@@ -61,6 +62,7 @@ def domain_result_nested(
     )
     return DomainResult(
         domain="example.com",
+        target="example.com",
         timestamp=datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC),
         config_version=1,
         zones=[root_zone],

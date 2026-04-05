@@ -16,7 +16,6 @@ from dnsight.checks.spf import SPFGenerateParams
 from dnsight.core.config import Config, ConfigManager, DmarcConfig, TargetChecks
 from dnsight.core.config.targets import Target, TargetConfig
 from dnsight.core.exceptions import CapabilityError
-from dnsight.core.models import ZoneResult
 from dnsight.core.types import RecordType
 from dnsight.sdk import (
     check_dmarc,
@@ -36,6 +35,7 @@ from dnsight.sdk import (
     run_targets,
     run_targets_sync,
 )
+from dnsight.sdk.audit.models import ZoneResult
 from dnsight.utils.dns import FakeDNSResolver, reset_resolver, set_resolver
 
 
@@ -202,7 +202,7 @@ class TestSdkCheckSpf:
 class TestSdkTargets:
     def test_run_targets_sync_empty_targets(self) -> None:
         mgr = _mgr_dmarc_only()
-        assert run_targets_sync(mgr=mgr) == []
+        assert run_targets_sync(mgr=mgr).domains == []
 
     def test_run_targets_sync_two_targets(self) -> None:
         txt = "v=DMARC1; p=reject; pct=100; rua=mailto:a@example.com; adkim=r; aspf=r"
@@ -224,25 +224,25 @@ class TestSdkTargets:
             default_target_config=Config(),
             default_target_checks=TargetChecks.from_enabled(["dmarc"]),
         )
-        results = run_targets_sync(mgr=mgr)
-        assert len(results) == 2
-        assert {r.domain for r in results} == {"x.example.com", "y.example.com"}
+        batch = run_targets_sync(mgr=mgr)
+        assert len(batch.domains) == 2
+        assert {r.domain for r in batch.domains} == {"x.example.com", "y.example.com"}
 
     def test_run_batch_sync_deprecated(self) -> None:
         m = _mgr_dmarc_only()
         with pytest.warns(DeprecationWarning, match="run_targets_sync"):
-            assert run_batch_sync(mgr=m) == []
+            assert run_batch_sync(mgr=m).domains == []
 
     @pytest.mark.asyncio
     async def test_run_targets_async_empty_manifest(self) -> None:
         mgr = _mgr_dmarc_only()
-        assert await run_targets(mgr=mgr) == []
+        assert (await run_targets(mgr=mgr)).domains == []
 
     @pytest.mark.asyncio
     async def test_run_batch_deprecated_async(self) -> None:
         m = _mgr_dmarc_only()
         with pytest.warns(DeprecationWarning, match="run_targets"):
-            assert await run_batch(mgr=m) == []
+            assert (await run_batch(mgr=m)).domains == []
 
 
 class TestSdkDomainStream:

@@ -14,6 +14,7 @@ def test_json_partial_and_zone_order(domain_result_nested) -> None:
     d0 = doc["domains"][0]
     assert d0["partial"] is True
     assert d0["domain"] == "example.com"
+    assert d0["target"] == "example.com"
     zones = d0["zones"]
     assert [z["zone"] for z in zones] == ["example.com", "sub.example.com"]
 

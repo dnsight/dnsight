@@ -3,6 +3,7 @@
 import logging
 
 from dnsight.sdk import (
+    AuditResult,
     RunAuditOptions,
     check_caa,
     check_caa_sync,
@@ -40,6 +41,7 @@ from dnsight.version import __version__
 
 __all__ = [
     "__version__",
+    "AuditResult",
     "RunAuditOptions",
     "check_caa",
     "check_caa_sync",

@@ -11,7 +11,7 @@ from dnsight.cli import app
 from dnsight.core.config import Config, ConfigManager, TargetChecks
 from dnsight.core.config.targets import TargetConfig
 from dnsight.core.types import Status
-from dnsight.orchestrator import run_check_for_target, run_domain
+from dnsight.sdk.audit import run_check_for_target, run_domain
 from dnsight.utils.dns import FakeDNSResolver, set_resolver
 from dnsight.utils.http import FakeHTTPClient, HTTPResponse
 
@@ -54,12 +54,12 @@ class TestCliConfigure:
         assert logging.getLogger("dnsight").level == logging.ERROR
 
 
-class TestOrchestratorLogging:
+class TestAuditRunLogging:
     @pytest.mark.asyncio
     async def test_run_domain_info_audit(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
-        caplog.set_level(logging.INFO, logger="dnsight.orchestrator")
+        caplog.set_level(logging.INFO, logger="dnsight.sdk.audit.run")
         set_resolver(FakeDNSResolver(records={"_dmarc.example.com/TXT": [_DMARC_TXT]}))
         mgr = _mgr_dmarc_only()
         await run_domain("example.com", mgr=mgr)
@@ -67,7 +67,7 @@ class TestOrchestratorLogging:
 
     @pytest.mark.asyncio
     async def test_run_check_info(self, caplog: pytest.LogCaptureFixture) -> None:
-        caplog.set_level(logging.INFO, logger="dnsight.orchestrator")
+        caplog.set_level(logging.INFO, logger="dnsight.sdk.audit.run")
         set_resolver(FakeDNSResolver(records={"_dmarc.example.com/TXT": [_DMARC_TXT]}))
         mgr = _mgr_dmarc_only()
         await run_check_for_target("dmarc", "example.com", mgr=mgr)

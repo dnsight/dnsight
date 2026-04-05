@@ -5,7 +5,7 @@ from __future__ import annotations
 from dnsight.checks.base import BaseGenerateParams
 from dnsight.core.exceptions import CapabilityError
 from dnsight.core.models import GeneratedRecord
-from dnsight.core.registry import get
+from dnsight.core.registry import get_check_def
 from dnsight.core.types import Capability
 
 
@@ -21,7 +21,7 @@ def generate(check_name: str, *, params: BaseGenerateParams) -> GeneratedRecord:
     """
     import dnsight.checks  # noqa: F401
 
-    defn = get(check_name)
+    defn = get_check_def(check_name)
     if Capability.GENERATE not in defn.capabilities:
         raise CapabilityError(check_name, str(Capability.GENERATE))
     result: GeneratedRecord = defn.cls().generate(params=params)

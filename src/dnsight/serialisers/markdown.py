@@ -1,12 +1,13 @@
-"""Markdown serialisation for :class:`~dnsight.core.models.DomainResult`."""
+"""Markdown serialisation for :class:`~dnsight.sdk.audit.models.DomainResult`."""
 
 from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Sequence
 
-from dnsight.core.models import CheckResultAny, DomainResult, ZoneResult
+from dnsight.core.models import CheckResultAny
 from dnsight.core.types import Severity
+from dnsight.sdk.audit.models import DomainResult, ZoneResult
 from dnsight.serialisers._data_summary import data_summary_lines
 from dnsight.serialisers._zone import iter_flat_zones
 from dnsight.serialisers.base import BaseDomainSerialiser, SerialiserOptions
@@ -59,18 +60,20 @@ def _zone_section(zone: ZoneResult, *, options: SerialiserOptions) -> list[str]:
 
 
 def _single_domain_markdown(result: DomainResult, *, options: SerialiserOptions) -> str:
-    """Markdown body for one :class:`~dnsight.core.models.DomainResult`."""
+    """Markdown body for one :class:`~dnsight.sdk.audit.models.DomainResult`."""
     lines: list[str] = [
         f"# Audit: {_md_cell(result.domain)}\n",
         f"**Partial:** {'yes' if result.partial else 'no'}\n",
     ]
+    if result.target != result.domain:
+        lines.append(f"**Target:** {_md_cell(result.target)}\n")
     for zone in iter_flat_zones(result):
         lines.extend(_zone_section(zone, options=options))
     return "".join(lines)
 
 
 class MarkdownSerialiser(BaseDomainSerialiser):
-    """Serialise one or more :class:`~dnsight.core.models.DomainResult` to GitHub-friendly Markdown."""
+    """Serialise one or more :class:`~dnsight.sdk.audit.models.DomainResult` to GitHub-friendly Markdown."""
 
     def _serialise_batch(
         self, results: Sequence[DomainResult], *, options: SerialiserOptions

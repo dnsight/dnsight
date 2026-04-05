@@ -14,7 +14,7 @@ from dnsight.checks.dkim.rules import (
     parse_dkim_txt,
 )
 from dnsight.core.config.blocks import Config, DkimConfig
-from dnsight.core.registry import get
+from dnsight.core.registry import get_check_def
 from dnsight.core.types import Capability, Status
 from dnsight.utils.dns import FakeDNSResolver, reset_resolver, set_resolver
 
@@ -64,7 +64,7 @@ class TestDKIMRegistry:
         import dnsight.checks.dkim
 
         importlib.reload(dnsight.checks.dkim)
-        d = get("dkim")
+        d = get_check_def("dkim")
         assert d.name == "dkim"
         assert Capability.CHECK in d.capabilities
         assert Capability.GENERATE not in d.capabilities

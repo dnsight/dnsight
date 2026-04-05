@@ -16,14 +16,14 @@ Long-form reference under `docs/` is **forthcoming**; until then use AGENTS.md, 
 ## Dependency rules (never violate)
 
 ```md
-cli/  →  sdk/  →  orchestrator.py  →  checks/    →  core/
-                                        checks/    →  utils/
-                                        serialisers/ →  core/
+cli/  →  sdk/  →  sdk/audit/  →  checks/  →  core/
+                      checks/  →  utils/
+serialisers/  →  core/  +  sdk/audit/models (aggregate types)
 ```
 
 - `core/` imports nothing from other internal packages
 - `cli/` imports from `dnsight.sdk` and `core/` only
-- Checks import from `core/` and `utils/` only — never from each other or from `orchestrator`
+- Checks import from `core/` and `utils/` only — never from each other or from `sdk.audit`
 - If a proposed change requires violating these rules, stop and flag it
 
 ---

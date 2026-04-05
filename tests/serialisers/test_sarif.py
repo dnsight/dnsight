@@ -17,6 +17,7 @@ def test_sarif_schema_and_invocation(domain_result_nested) -> None:
     )
     assert domain_result_nested.partial is True
     assert run["invocations"][0]["executionSuccessful"] is False
+    assert run["properties"]["target"] == domain_result_nested.target
 
 
 def test_sarif_issue_rule_ids(domain_result_nested) -> None:

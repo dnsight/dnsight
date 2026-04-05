@@ -9,7 +9,6 @@ as these SDK functions.
 
 from __future__ import annotations
 
-from dnsight.orchestrator import RunAuditOptions
 from dnsight.sdk.aliases import (
     check_caa,
     check_caa_sync,
@@ -31,6 +30,7 @@ from dnsight.sdk.aliases import (
     generate_mx,
     generate_spf,
 )
+from dnsight.sdk.audit import AuditResult, RunAuditOptions
 from dnsight.sdk.generate import generate
 from dnsight.sdk.run import (
     run_batch,
@@ -58,6 +58,7 @@ from dnsight.sdk.types import (
 
 
 __all__ = [
+    "AuditResult",
     "RunAuditOptions",
     "check_caa",
     "check_caa_sync",

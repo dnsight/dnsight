@@ -26,6 +26,7 @@
     "mkdocs",
     "mkdocstrings",
     "mypy",
+    "pathlib",
     "pipefail",
     "pipx",
     "pycache",

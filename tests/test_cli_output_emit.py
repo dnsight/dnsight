@@ -9,8 +9,9 @@ import pytest
 
 from dnsight.cli.output import emit_audit_results, emit_check_result, get_serialiser
 from dnsight.cli.state import GlobalState
-from dnsight.core.models import CheckResult, DomainResult, ZoneResult
+from dnsight.core.models import CheckResult
 from dnsight.core.types import OutputFormat, Status
+from dnsight.sdk.audit.models import DomainResult, ZoneResult
 from dnsight.serialisers import (
     JsonSerialiser,
     MarkdownSerialiser,
@@ -56,6 +57,7 @@ def test_emit_audit_results_multi_domain_json_to_stdout(
     z = ZoneResult(zone="a.com", results={})
     dr_a = DomainResult(
         domain="a.com",
+        target="a.com",
         timestamp=datetime.now(UTC),
         config_version=1,
         zones=[z],
@@ -64,6 +66,7 @@ def test_emit_audit_results_multi_domain_json_to_stdout(
     z2 = ZoneResult(zone="b.com", results={})
     dr_b = DomainResult(
         domain="b.com",
+        target="b.com",
         timestamp=datetime.now(UTC),
         config_version=1,
         zones=[z2],

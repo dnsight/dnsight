@@ -6,7 +6,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import overload
 
-from dnsight.core.models import CheckResult, CheckResultAny, DomainResult
+from dnsight.core.models import CheckResult, CheckResultAny
+from dnsight.sdk.audit.models import DomainResult
 from dnsight.serialisers.base import BaseDomainSerialiser, ResultType, SerialiserOptions
 
 
@@ -49,7 +50,7 @@ def write_serialiser(
     """Write serialised output to *path* (atomic replace).
 
     For a :class:`~dnsight.core.models.CheckResult`, pass ``domain=`` and
-    ``check_name=``. For a :class:`~dnsight.core.models.DomainResult` or a
+    ``check_name=``. For a :class:`~dnsight.sdk.audit.models.DomainResult` or a
     non-empty sequence of them, omit those keywords.
 
     ``options.spf_flatten_detail`` expands SPF flattened summaries in Rich/Markdown;
