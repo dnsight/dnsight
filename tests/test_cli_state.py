@@ -28,6 +28,8 @@ def test_get_cli_state_walks_parent_chain() -> None:
         output_path=None,
         quiet=False,
         verbose=False,
+        output_detail=False,
+        markdown_data_preview=False,
     )
     root = MagicMock(spec=typer.Context)
     root.obj = st

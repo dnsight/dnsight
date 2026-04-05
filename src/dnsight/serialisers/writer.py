@@ -28,13 +28,21 @@ def write_serialiser(
 
 @overload
 def write_serialiser(
-    serialiser: BaseDomainSerialiser, result: DomainResult, path: Path | str
+    serialiser: BaseDomainSerialiser,
+    result: DomainResult,
+    path: Path | str,
+    *,
+    options: SerialiserOptions | None = None,
 ) -> None: ...
 
 
 @overload
 def write_serialiser(
-    serialiser: BaseDomainSerialiser, result: Sequence[DomainResult], path: Path | str
+    serialiser: BaseDomainSerialiser,
+    result: Sequence[DomainResult],
+    path: Path | str,
+    *,
+    options: SerialiserOptions | None = None,
 ) -> None: ...
 
 
@@ -54,7 +62,10 @@ def write_serialiser(
     non-empty sequence of them, omit those keywords.
 
     ``options.spf_flatten_detail`` expands SPF flattened summaries in Rich/Markdown;
-    JSON/SARIF ignore it.
+    ``options.human_finding_detail`` expands issue/remediation and recommendation
+    text; ``options.human_data_preview`` (default false; CLI: ``--markdown-data-preview``)
+    adds a generic ``data`` preview in Markdown when no typed summary lines exist.
+    JSON/SARIF ignore these hints.
     """
     if isinstance(result, CheckResult):
         if domain is None or check_name is None:

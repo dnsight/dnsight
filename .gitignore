@@ -10,7 +10,6 @@ __pycache__/
 build/
 dist/
 site/
-site/
 *.egg-info/
 *.egg
 .Python

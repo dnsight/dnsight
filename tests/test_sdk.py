@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -43,7 +44,7 @@ pytestmark = pytest.mark.registry_builtins
 
 
 @pytest.fixture(autouse=True)
-def _reset_resolver() -> None:
+def _reset_resolver() -> Iterator[None]:
     reset_resolver()
     yield
     reset_resolver()
@@ -98,8 +99,9 @@ class TestSdkRunCheck:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Discovered YAML merged with programmatic Config (overlay)."""
-        cfg = tmp_path / "dnsight.yaml"
-        cfg.write_text(
+        monkeypatch.chdir(tmp_path)
+        # noaikido
+        Path("dnsight.yaml").write_text(
             """version: 1
 config:
   - include: "*"
@@ -109,7 +111,6 @@ config:
 """,
             encoding="utf-8",
         )
-        monkeypatch.chdir(tmp_path)
         txt = "v=DMARC1; p=reject; pct=100; rua=mailto:a@example.com; adkim=r; aspf=r"
         set_resolver(FakeDNSResolver(records={"_dmarc.example.com/TXT": [txt]}))
         result = run_check_sync(

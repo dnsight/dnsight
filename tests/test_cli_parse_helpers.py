@@ -36,13 +36,15 @@ def test_checks_and_exclude_options_delegates_to_csv() -> None:
 
 
 def test_config_path_for_sdk_reads_state() -> None:
-    p = Path("/tmp/x.yaml")
+    p = Path("/tmp/x.yaml")  # noqa: S5443
     st = GlobalState(
         config_path=p,
         output_format=OutputFormat.JSON,
         output_path=None,
         quiet=True,
         verbose=False,
+        output_detail=False,
+        markdown_data_preview=False,
     )
     assert config_path_for_sdk(st) == p
 

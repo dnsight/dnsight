@@ -24,7 +24,13 @@ def _state(
     *, fmt: OutputFormat = OutputFormat.JSON, out: Path | None = None
 ) -> GlobalState:
     return GlobalState(
-        config_path=None, output_format=fmt, output_path=out, quiet=True, verbose=False
+        config_path=None,
+        output_format=fmt,
+        output_path=out,
+        quiet=True,
+        verbose=False,
+        output_detail=False,
+        markdown_data_preview=False,
     )
 
 

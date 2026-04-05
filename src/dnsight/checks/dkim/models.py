@@ -33,6 +33,8 @@ __all__ = [
 class DKIMIssueId(IssueId):
     """Issue IDs for the DKIM check."""
 
+    DISCOVERY_NO_VALID_KEY = "dkim.discovery.no_valid_key"
+    EXTRA_SELECTOR_PUBLISHED = "dkim.selector.extra_published"
     SELECTOR_NOT_FOUND = "dkim.selector.not_found"
     KEY_MISSING = "dkim.key.missing"
     ALGORITHM_WEAK = "dkim.algorithm.weak"
@@ -43,6 +45,7 @@ class DKIMIssueId(IssueId):
 class DKIMRecommendationId(RecommendationId):
     """Recommendation IDs for the DKIM check."""
 
+    #: Emitted when no TXT exists for any tried selector; title/copy say "configure".
     ADD_COMMON_SELECTORS = "dkim.add_common_selectors"
     STRONGER_ALGORITHM = "dkim.stronger_algorithm"
 
@@ -52,6 +55,12 @@ class DKIMRecommendationId(RecommendationId):
 # ---------------------------------------------------------------------------
 
 _DKIM_ISSUE_DESCRIPTORS: dict[DKIMIssueId, IssueDescriptor] = {
+    DKIMIssueId.DISCOVERY_NO_VALID_KEY: IssueDescriptor(
+        DKIMIssueId.DISCOVERY_NO_VALID_KEY, Severity.MEDIUM
+    ),
+    DKIMIssueId.EXTRA_SELECTOR_PUBLISHED: IssueDescriptor(
+        DKIMIssueId.EXTRA_SELECTOR_PUBLISHED, Severity.MEDIUM
+    ),
     DKIMIssueId.SELECTOR_NOT_FOUND: IssueDescriptor(
         DKIMIssueId.SELECTOR_NOT_FOUND, Severity.MEDIUM
     ),
@@ -109,3 +118,5 @@ class DKIMData(BaseCheckData):
 
     selectors_tried: list[str] = Field(default_factory=list)
     selectors_found: list[DKIMSelectorResult] = Field(default_factory=list)
+    #: When non-empty, strict mode: these selectors are required; others are probe-only.
+    explicit_allowlist: tuple[str, ...] = Field(default_factory=tuple)

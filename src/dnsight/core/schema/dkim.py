@@ -15,7 +15,7 @@ __all__ = ["DkimSchema"]
 class DkimSchema:
     """DKIM field types — shared by DkimConfig and checks."""
 
-    #: Same tuple as :data:`dnsight.core.config.defaults.DEFAULT_DKIM_COMMON_SELECTORS`.
+    #: Tab-completion hints only (same tuple as :data:`~dnsight.core.config.defaults.DEFAULT_DKIM_COMMON_SELECTORS`).
     COMMON_SELECTOR_SUGGESTIONS: Final[tuple[str, ...]] = (
         _defaults.DEFAULT_DKIM_COMMON_SELECTORS
     )
@@ -28,15 +28,20 @@ class DkimSchema:
         "rsa-sha1",
     )
 
-    MinKeyBitsInt = Annotated[
+    min_key_bits_int = Annotated[
         int,
         Field(ge=512, le=16384, description="Minimum RSA key size in bits for DKIM."),
     ]
-    SelectorsList = Annotated[
+    selectors_list = Annotated[
         list[str],
-        Field(description="DKIM selector names to query (before common defaults)."),
+        Field(
+            description=(
+                "Allowlist when non-empty (strict). When empty, discovery probes "
+                "common names only."
+            )
+        ),
     ]
-    DisallowedAlgorithmsList = Annotated[
+    disallowed_algorithms_list = Annotated[
         list[str],
         Field(
             description=(

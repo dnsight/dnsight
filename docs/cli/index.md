@@ -16,6 +16,9 @@ Use dnsight COMMAND --help for command-specific options (domains, --config, etc.
 | `--output` / `-o` | file | — | no | Write serialised results to this file instead of stdout. |
 | `--quiet` / `-q` | bool | `false` | no | Diagnostics only at ERROR on stderr (suppresses INFO/DEBUG). Audit output is unchanged. Wins over --verbose. |
 | `--verbose` / `-v` | bool | `false` | no | DEBUG logging on stderr with source paths and Rich tracebacks. Ignored if --quiet is set. |
+| `--very-verbose` / `-vv` | bool | `false` | no | DEBUG logging on stderr with source paths and Rich tracebacks. Ignored if --quiet or --verbose is set. |
+| `--output-detail` | bool | `false` | no | Rich and markdown: emit full issue descriptions, remediation, and recommendation text (default uses shorter context lines). |
+| `--markdown-data-preview` | bool | `false` | no | Markdown only: include generic data key/value lines when a check has no typed summary (default omits them). |
 | `--version` | bool | `false` | no | Show the dnsight version and exit. |
 
 ## Subcommands

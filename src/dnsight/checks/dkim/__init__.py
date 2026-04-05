@@ -40,17 +40,21 @@ class DKIMCheck(BaseCheck[DKIMData, BaseGenerateParams]):
     async def get_dkim(
         domain: str, *, config: Config | DkimConfig | None = None
     ) -> DKIMData:
-        """Fetch and parse DKIM records for each configured selector.
+        """Fetch and parse DKIM TXT for the planned selector set.
 
-        Per-selector DNS failures (NODATA) are treated as missing records;
-        they do not raise.
+        Empty ``dkim.selectors`` triggers **discovery** (common selector probes).
+        Non-empty values set ``explicit_allowlist`` on the returned ``DKIMData``;
+        additional common names may be probed to detect unexpected keys.
+
+        Per-selector NODATA is treated as a missing record and does not raise.
 
         Args:
             domain: Signing domain (e.g. ``"example.com"``).
             config: Optional full ``Config`` or ``DkimConfig`` slice.
 
         Returns:
-            ``DKIMData`` with ``selectors_tried`` and ``selectors_found``.
+            ``DKIMData`` including ``selectors_tried``, ``selectors_found``, and
+            ``explicit_allowlist``.
         """
         dkim_cfg = extract_dkim_config(config)
         return await collect_dkim_data(domain, get_resolver(), dkim_cfg)

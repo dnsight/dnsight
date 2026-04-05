@@ -59,6 +59,8 @@ def test_effective_cli_config_path_falls_back_to_global_state() -> None:
         output_path=None,
         quiet=True,
         verbose=False,
+        output_detail=False,
+        markdown_data_preview=False,
     )
     ctx = MagicMock(spec=typer.Context)
     ctx.obj = st
@@ -74,6 +76,8 @@ def test_run_check_sequence_config_error_is_fatal() -> None:
         output_path=None,
         quiet=True,
         verbose=False,
+        output_detail=False,
+        markdown_data_preview=False,
     )
     ctx.obj = st
     ctx.parent = None

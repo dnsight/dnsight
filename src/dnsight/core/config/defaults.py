@@ -60,10 +60,10 @@ __all__ = [
 DEFAULT_DNS_PROVIDER: Final[str] = "system"
 
 DNS_PROVIDER_NAMESERVERS: Final[dict[str, list[str]]] = {
-    "google": ["8.8.8.8", "8.8.4.4"],
-    "cloudflare": ["1.1.1.1", "1.0.0.1"],
-    "quad9": ["9.9.9.9", "149.112.112.112"],
-    "opendns": ["208.67.222.222", "208.67.220.220"],
+    "google": ["8.8.8.8", "8.8.4.4"],  # noqa: S1313
+    "cloudflare": ["1.1.1.1", "1.0.0.1"],  # noqa: S1313
+    "quad9": ["9.9.9.9", "149.112.112.112"],  # noqa: S1313
+    "opendns": ["208.67.222.222", "208.67.220.220"],  # noqa: S1313
 }
 
 # Throttle
@@ -88,6 +88,7 @@ DEFAULT_SPF_MAX_INCLUDES: Final[int | None] = None
 DEFAULT_SPF_ALLOW_REDIRECT: Final[bool] = True
 # DKIM
 DEFAULT_DKIM_MIN_KEY_BITS: Final[int] = 2048
+# Tab-completion / docs hints only — not merged into DKIM lookups unless listed in config.
 DEFAULT_DKIM_COMMON_SELECTORS: Final[tuple[str, ...]] = (
     "default",
     "google",

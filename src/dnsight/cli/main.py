@@ -87,6 +87,34 @@ VerboseOpt: TypeAlias = Annotated[
     ),
 ]
 
+VeryVerboseOpt: TypeAlias = Annotated[
+    bool,
+    typer.Option(
+        "--very-verbose",
+        "-vv",
+        help="DEBUG logging on stderr with source paths and Rich tracebacks. "
+        "Ignored if --quiet or --verbose is set.",
+    ),
+]
+
+OutputDetailOpt: TypeAlias = Annotated[
+    bool,
+    typer.Option(
+        "--output-detail",
+        help="Rich and markdown: emit full issue descriptions, remediation, "
+        "and recommendation text (default uses shorter context lines).",
+    ),
+]
+
+MarkdownDataPreviewOpt: TypeAlias = Annotated[
+    bool,
+    typer.Option(
+        "--markdown-data-preview",
+        help="Markdown only: include generic data key/value lines when a check has "
+        "no typed summary (default omits them).",
+    ),
+]
+
 VersionOpt: TypeAlias = Annotated[
     bool,
     typer.Option(
@@ -116,18 +144,23 @@ def _main(
     output_path: OutputPathOpt = None,
     quiet: QuietOpt = False,
     verbose: VerboseOpt = False,
+    very_verbose: VeryVerboseOpt = False,
+    output_detail: OutputDetailOpt = False,
+    markdown_data_preview: MarkdownDataPreviewOpt = False,
     version: VersionOpt = False,
 ) -> None:
     _ = version
     if quiet:
         configure(
-            logging.ERROR, use_rich=True, detailed_log=False, rich_tracebacks=False
+            logging.CRITICAL, use_rich=True, detailed_log=False, rich_tracebacks=False
         )
     elif verbose:
+        configure(logging.INFO, use_rich=True, detailed_log=True, rich_tracebacks=True)
+    elif very_verbose:
         configure(logging.DEBUG, use_rich=True, detailed_log=True, rich_tracebacks=True)
     else:
         configure(
-            logging.INFO, use_rich=True, detailed_log=False, rich_tracebacks=False
+            logging.ERROR, use_rich=True, detailed_log=False, rich_tracebacks=False
         )
     ctx.obj = GlobalState(
         config_path=config,
@@ -135,6 +168,8 @@ def _main(
         output_path=output_path,
         quiet=quiet,
         verbose=verbose,
+        output_detail=output_detail,
+        markdown_data_preview=markdown_data_preview,
     )
 
 

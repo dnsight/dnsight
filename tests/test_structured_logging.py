@@ -37,21 +37,25 @@ def _mgr_dmarc_only() -> ConfigManager:
 
 
 class TestCliConfigure:
-    def test_default_sets_info(self) -> None:
+    def test_default_sets_error(self) -> None:
         runner.invoke(app, ["dmarc", "--help"])
-        assert logging.getLogger("dnsight").level == logging.INFO
-
-    def test_quiet_sets_error(self) -> None:
-        runner.invoke(app, ["--quiet", "dmarc", "--help"])
         assert logging.getLogger("dnsight").level == logging.ERROR
 
-    def test_verbose_sets_debug(self) -> None:
+    def test_quiet_sets_critical(self) -> None:
+        runner.invoke(app, ["--quiet", "dmarc", "--help"])
+        assert logging.getLogger("dnsight").level == logging.CRITICAL
+
+    def test_verbose_sets_info(self) -> None:
         runner.invoke(app, ["--verbose", "dmarc", "--help"])
+        assert logging.getLogger("dnsight").level == logging.INFO
+
+    def test_very_verbose_sets_debug(self) -> None:
+        runner.invoke(app, ["--very-verbose", "dmarc", "--help"])
         assert logging.getLogger("dnsight").level == logging.DEBUG
 
     def test_quiet_wins_over_verbose(self) -> None:
         runner.invoke(app, ["--quiet", "--verbose", "dmarc", "--help"])
-        assert logging.getLogger("dnsight").level == logging.ERROR
+        assert logging.getLogger("dnsight").level == logging.CRITICAL
 
 
 class TestAuditRunLogging:

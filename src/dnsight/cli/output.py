@@ -28,6 +28,7 @@ __all__ = [
     "emit_audit_results",
     "emit_check_result",
     "emit_generated_record",
+    "serialiser_options_from_state",
     "exit_code_for_audit_result",
     "exit_code_for_check_result",
     "exit_code_for_domain_result",
@@ -37,6 +38,18 @@ __all__ = [
 
 _Batch: TypeAlias = tuple[DomainResult, ...]
 _EmitInput: TypeAlias = DomainResult | Sequence[DomainResult] | AuditResult
+
+
+def serialiser_options_from_state(
+    state: GlobalState, base: SerialiserOptions | None = None
+) -> SerialiserOptions:
+    """Merge CLI :class:`GlobalState` with per-call :class:`SerialiserOptions`."""
+    b = base or SerialiserOptions()
+    return SerialiserOptions(
+        spf_flatten_detail=b.spf_flatten_detail,
+        human_finding_detail=state.output_detail or b.human_finding_detail,
+        human_data_preview=state.markdown_data_preview or b.human_data_preview,
+    )
 
 
 def get_serialiser(fmt: OutputFormat) -> BaseDomainSerialiser:
@@ -98,7 +111,7 @@ def emit_check_result(
     """Serialise one check; Rich + TTY uses a one-domain audit view."""
     code = exit_code_for_check_result(result)
     serialiser = get_serialiser(state.output_format)
-    opts = serialiser_options or SerialiserOptions()
+    opts = serialiser_options_from_state(state, serialiser_options)
     if state.output_path is not None:
         write_serialiser(
             serialiser,
@@ -147,12 +160,13 @@ def emit_audit_results(state: GlobalState, results: _EmitInput) -> int:
 
     code = exit_code_for_domain_results(batch)
     serialiser = get_serialiser(state.output_format)
+    opts = serialiser_options_from_state(state)
 
     if state.output_path is not None:
         payload: DomainResult | list[DomainResult] = (
             batch[0] if len(batch) == 1 else list(batch)
         )
-        write_serialiser(serialiser, payload, state.output_path)
+        write_serialiser(serialiser, payload, state.output_path, options=opts)
 
     if state.output_path is None:
         rich_tty = (
@@ -161,12 +175,12 @@ def emit_audit_results(state: GlobalState, results: _EmitInput) -> int:
             and len(batch) == 1
         )
         if rich_tty:
-            RichSerialiser().serialise_live(batch[0])
+            RichSerialiser().serialise_live(batch[0], options=opts)
         else:
             out = (
-                serialiser.serialise(batch[0])
+                serialiser.serialise(batch[0], options=opts)
                 if len(batch) == 1
-                else serialiser.serialise(list(batch))
+                else serialiser.serialise(list(batch), options=opts)
             )
             typer.echo(out)
 

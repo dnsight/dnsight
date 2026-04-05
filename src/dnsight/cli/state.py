@@ -23,6 +23,10 @@ class GlobalState:
     output_path: Path | None
     quiet: bool
     verbose: bool
+    #: Rich/Markdown only — full issue remediation and recommendation bodies.
+    output_detail: bool
+    #: Markdown only — generic ``data`` key/value preview when there are no typed summary lines.
+    markdown_data_preview: bool
 
 
 def get_cli_state(ctx: typer.Context) -> GlobalState:

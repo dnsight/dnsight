@@ -20,6 +20,9 @@ class SerialiserOptions:
     """Rendering hints for human-oriented output (ignored where irrelevant)."""
 
     spf_flatten_detail: bool = False
+    human_finding_detail: bool = False
+    #: When true, Markdown may append a capped key/value preview if ``data_summary_lines`` is empty.
+    human_data_preview: bool = False
 
 
 def domain_result_from_check(

@@ -132,15 +132,19 @@ class DmarcConfig(MergeableConfig):
 class DkimConfig(MergeableConfig):
     """DKIM selector and validation policy."""
 
-    selectors: DkimSchema.SelectorsList = Field(
+    selectors: DkimSchema.selectors_list = Field(
         default_factory=list,
-        description="Selectors to try first; common defaults are merged after.",
+        description=(
+            "DKIM selector names (s=) for strict checks. If empty, dnsight probes "
+            "common selector names (discovery); if non-empty, only these names are "
+            "required and extra TXT on other probed names is flagged."
+        ),
     )
-    min_key_bits: DkimSchema.MinKeyBitsInt = Field(
+    min_key_bits: DkimSchema.min_key_bits_int = Field(
         default=defaults.DEFAULT_DKIM_MIN_KEY_BITS,
         description="Minimum RSA public key size in bits (when measurable).",
     )
-    disallowed_algorithms: DkimSchema.DisallowedAlgorithmsList = Field(
+    disallowed_algorithms: DkimSchema.disallowed_algorithms_list = Field(
         default_factory=list,
         description="k= or hash algorithm tokens that trigger a weak-algorithm issue.",
     )
