@@ -63,6 +63,8 @@ def get_serialiser(fmt: OutputFormat) -> BaseDomainSerialiser:
             return SarifSerialiser()
         case OutputFormat.RICH:
             return RichSerialiser()
+        case _:
+            raise ValueError(f"Unsupported output format: {fmt!r}")
 
 
 def exit_code_for_domain_result(result: DomainResult) -> int:
