@@ -76,7 +76,7 @@ class BaseDomainSerialiser(ABC):
         if isinstance(result, DomainResult):
             return self._serialise_batch((result,), options=opts)
 
-        if isinstance(result, str | bytes):
+        if isinstance(result, (str, bytes)):
             msg = f"unexpected {type(result).__name__} in serialise()"
             raise TypeError(msg)
 
