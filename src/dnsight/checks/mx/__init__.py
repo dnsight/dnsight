@@ -75,8 +75,6 @@ class MXCheck(BaseCheck[MXData, MXGenerateParams]):
                 error=None,
             )
         except Exception as exc:
-            if isinstance(exc, BaseException) and not isinstance(exc, Exception):
-                raise
             return CheckResult(
                 status=Status.FAILED,
                 data=None,
