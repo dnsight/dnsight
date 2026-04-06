@@ -95,18 +95,27 @@ def node_from_domain(result: DomainResult) -> OutputNode:
 
 
 def node_from_domain_batch(results: Sequence[DomainResult]) -> OutputNode:
-    """Multiple domain audits under one audit root (manifest / multi-CLI domains)."""
+    """Multiple domain audits under one audit root (manifest / multi-CLI domains).
+
+    ``timestamp`` is the earliest domain timestamp in the batch (i.e. when the
+    batch effectively started).  ``config_version`` must be identical across all
+    results; a :exc:`ValueError` is raised if mixed versions are found, since
+    that would make the root metadata meaningless.
+    """
     if not results:
         msg = "domain batch must not be empty"
         raise ValueError(msg)
-    ts = results[0].timestamp
-    cv = results[0].config_version
+    versions = {d.config_version for d in results}
+    if len(versions) > 1:
+        msg = f"mixed config_version values in batch: {sorted(versions)}"
+        raise ValueError(msg)
+    cv = versions.pop()
     return OutputNode(
         kind="audit",
         title="batch",
         children=tuple(node_from_domain(d) for d in results),
         partial=any(d.partial for d in results),
-        timestamp=ts,
+        timestamp=min(d.timestamp for d in results),
         config_version=cv,
     )
 
