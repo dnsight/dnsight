@@ -84,7 +84,7 @@ def register_mx(app: typer.Typer) -> None:
             typer.Option(
                 "--starttls-timeout-seconds",
                 help="TCP/SMTP timeout for STARTTLS probe.",
-                min=0,
+                min=1,
             ),
         ] = None,
     ) -> None:
