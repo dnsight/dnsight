@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import contextlib
+import logging
 import secrets
 import time
 
@@ -41,6 +42,8 @@ from dnsight.utils.dnssec_support import (
 
 
 __all__: list[str] = []
+
+logger = logging.getLogger(__name__)
 
 
 def _apex_name(domain: str) -> str:
@@ -119,7 +122,8 @@ async def collect_dnssec_data(
         dk_msg = dk_q.message
         ad_flag = dk_q.ad
     except CheckError:
-        pass
+        # Expected failure for some zones; continue without DNSKEY message / AD flag.
+        logger.debug("DNSSEC DNSKEY query failed for %s; proceeding without AD flag", apex)
 
     ns_msg: dns.message.Message | None = None
     try:
