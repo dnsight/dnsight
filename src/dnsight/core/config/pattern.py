@@ -1,6 +1,17 @@
 """Domain and path pattern matching for config rules.
 
-* matches exactly one label or path segment. | separates alternative patterns.
+Patterns are matched segment-by-segment (dot-separated domain labels, then
+slash-separated path segments). Two wildcard forms are supported within a
+single label or path segment:
+
+* ``*`` standing alone matches any non-empty label or path segment exactly.
+* ``fnmatch``-style globs **within** a segment (e.g. ``foo*``, ``*bar``,
+  ``foo*bar``) are also accepted; they match using :func:`fnmatch.fnmatch`
+  and therefore apply only to the characters within that one label/segment—
+  they do **not** span a separator (``.`` or ``/``).
+
+``|`` separates alternative patterns; the target matches if it satisfies
+**any** of the alternatives.
 """
 
 from __future__ import annotations
@@ -27,7 +38,11 @@ class Pattern:
 
     @staticmethod
     def matches(pattern: str, target: str) -> bool:
-        """True if target matches pattern (or any |-separated alternative). * = one label/segment."""
+        """True if target matches pattern (or any ``|``-separated alternative).
+
+        ``*`` alone matches one label/segment; ``fnmatch``-style globs
+        (e.g. ``foo*``) are also accepted within a label or segment.
+        """
         t = target.strip().lower()
         for s in pattern.split("|"):
             alt = s.strip()
@@ -48,7 +63,11 @@ class Pattern:
 
     @staticmethod
     def _match_one(pattern: str, target: str) -> bool:
-        """True if target matches pattern. * = one label/segment."""
+        """True if target matches a single pattern alternative.
+
+        ``*`` alone matches one non-empty label/segment; ``fnmatch``-style
+        globs within a label or segment are also accepted.
+        """
         pattern_path_segments, pattern_domain_parts = Pattern._get_match_one_internals(
             pattern
         )
@@ -83,7 +102,13 @@ class Pattern:
 
     @staticmethod
     def _glob_segment(pattern_segment: str, target_segment: str) -> bool:
-        """True if target segment matches pattern segment. * = one label/segment."""
+        """True if *target_segment* matches *pattern_segment*.
+
+        * ``*`` alone → any non-empty segment.
+        * No ``*`` → exact equality.
+        * ``*`` embedded (e.g. ``foo*``) → :func:`fnmatch.fnmatch` within the
+          segment only; does **not** cross ``.`` or ``/`` boundaries.
+        """
         if pattern_segment == "*":
             return bool(target_segment)
         if "*" not in pattern_segment:
