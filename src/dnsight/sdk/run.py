@@ -139,7 +139,7 @@ async def run_domain_stream(
     import dnsight.checks  # noqa: F401
 
     m = config_manager(mgr=mgr, config_path=config_path)
-    async for z in audit_run_domain_stream(
+    zone_stream = audit_run_domain_stream(
         domain,
         mgr=m,
         checks=checks,
@@ -147,7 +147,8 @@ async def run_domain_stream(
         recursive=recursive,
         depth=depth,
         options=options,
-    ):
+    )
+    async for z in zone_stream:
         yield z
 
 
@@ -165,19 +166,20 @@ def run_domain_stream_sync(
     """Synchronously collect all zone results depth-first (root first); not a nested tree."""
 
     async def _collect() -> list[ZoneResult]:
-        return [
-            z
-            async for z in run_domain_stream(
-                domain,
-                config_path=config_path,
-                mgr=mgr,
-                checks=checks,
-                exclude=exclude,
-                recursive=recursive,
-                depth=depth,
-                options=options,
-            )
-        ]
+        zone_stream = run_domain_stream(
+            domain,
+            config_path=config_path,
+            mgr=mgr,
+            checks=checks,
+            exclude=exclude,
+            recursive=recursive,
+            depth=depth,
+            options=options,
+        )
+        out: list[ZoneResult] = []
+        async for z in zone_stream:
+            out.append(z)
+        return out
 
     return asyncio.run(_collect())
 
