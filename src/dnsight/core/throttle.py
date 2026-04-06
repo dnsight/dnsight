@@ -39,8 +39,8 @@ class ThrottleManager:
     ) -> None:
         if max_rps <= 0.0:
             raise ValueError("max_rps must be greater than 0.0")
-        if burst <= 1:
-            raise ValueError("burst must be greater than 1")
+        if burst < 1:
+            raise ValueError("burst must be greater than or equal to 1")
         self._max_rps = max_rps
         self._burst = burst
         self._parent = parent
