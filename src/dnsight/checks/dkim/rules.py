@@ -39,8 +39,6 @@ __all__ = [
 ]
 
 
-DKIM1_PREFIX = "v=DKIM1"
-
 _TAG_SPLIT = re.compile(r"\s*;\s*")  # noqa: S5852
 
 

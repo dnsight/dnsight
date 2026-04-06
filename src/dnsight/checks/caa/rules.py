@@ -117,27 +117,38 @@ def _strip_value(value: str) -> str:
     return s.strip()
 
 
+def _caa_issue_hostname_from_value(value: str) -> str:
+    """Return the issuer hostname token from an issue/issuewild value (RFC 8659).
+
+    Property values are a domain name optionally followed by ``;`` and
+    additional parameters; only the hostname part is used for authorization
+    comparisons.
+    """
+    s = _strip_value(value)
+    return s.split(";", 1)[0].strip()
+
+
 def issue_domains(records: list[CaaRecord]) -> set[str]:
-    """Normalized issue tag values (excludes ';' only)."""
+    """Normalized issue tag issuer hostnames (RFC 8659 parameters after ``;`` ignored)."""
     out: set[str] = set()
     for r in records:
         if r.tag.lower() != "issue":
             continue
-        v = _strip_value(r.value).lower().rstrip(".")
-        if v == ";":
+        v = _caa_issue_hostname_from_value(r.value).lower().rstrip(".")
+        if not v or v == ";":
             continue
         out.add(v)
     return out
 
 
 def issuewild_domains(records: list[CaaRecord]) -> set[str]:
-    """Normalized issuewild tag values (excludes ';' only)."""
+    """Normalized issuewild tag issuer hostnames (parameters after ``;`` ignored)."""
     out: set[str] = set()
     for r in records:
         if r.tag.lower() != "issuewild":
             continue
-        v = _strip_value(r.value).lower().rstrip(".")
-        if v == ";":
+        v = _caa_issue_hostname_from_value(r.value).lower().rstrip(".")
+        if not v or v == ";":
             continue
         out.add(v)
     return out

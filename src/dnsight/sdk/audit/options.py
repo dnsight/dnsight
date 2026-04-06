@@ -32,5 +32,10 @@ def resolve_audit_params(
 ) -> tuple[list[str] | None, list[str] | None, bool, int]:
     """Merge :class:`RunAuditOptions` with explicit kwargs (options win when set)."""
     if options is not None:
-        return options.checks, options.exclude, options.recursive, options.depth
+        return (
+            options.checks if options.checks is not None else checks,
+            options.exclude if options.exclude is not None else exclude,
+            options.recursive,
+            options.depth,
+        )
     return checks, exclude, recursive, depth

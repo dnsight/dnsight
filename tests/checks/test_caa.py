@@ -79,6 +79,20 @@ class TestCAAValidation:
         assert result.status == Status.COMPLETED
         assert CaaIssueId.ISSUER_MISSING.value not in [i.id for i in result.issues]
 
+    async def test_required_issuer_present_with_issue_parameters(self) -> None:
+        """RFC 8659 allows parameters after ';'; match is on the hostname token only."""
+        z = "example.com"
+        records = _base_empty_caa(z)
+        records[f"{z}/CAA"] = [
+            (0, "issue", "letsencrypt.org; cansignhttpexchanges=yes")
+        ]
+        records[f"www.{z}/CAA"] = []
+        set_resolver(FakeDNSResolver(records))
+        cfg = CaaConfig(required_issuers=["letsencrypt.org"])
+        result = await check_caa(z, config=cfg)
+        assert result.status == Status.COMPLETED
+        assert CaaIssueId.ISSUER_MISSING.value not in [i.id for i in result.issues]
+
     async def test_issuewild_permissive(self) -> None:
         z = "example.com"
         records = _base_empty_caa(z)

@@ -6,11 +6,11 @@ from collections.abc import Sequence
 import json
 from typing import Any
 
-from dnsight import __version__
 from dnsight.core.types import Severity
 from dnsight.sdk.audit.models import DomainResult
 from dnsight.serialisers._zone import iter_flat_zones
 from dnsight.serialisers.base import BaseDomainSerialiser, SerialiserOptions
+from dnsight.version import __version__
 
 
 __all__ = ["SarifSerialiser"]
