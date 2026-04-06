@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 from datetime import UTC, datetime
 import re
 from typing import Any
@@ -177,7 +177,8 @@ async def run_zone(
                 res = _failed_check_result(exc)
             return name, res
 
-    pairs = await asyncio.gather(*(_run_one(name) for name in checks))
+    tasks = [_run_one(name) for name in checks]
+    pairs = await asyncio.gather(*tasks)
     return ZoneResult(zone=domain, parent=parent, results=dict(pairs), children=[])
 
 
@@ -189,7 +190,7 @@ async def _iter_zone_results_dfs(
     *,
     recursive: bool,
     remaining_depth: int,
-) -> AsyncIterator[ZoneResult]:
+) -> AsyncGenerator[ZoneResult, None]:
     """Yield one leaf :class:`ZoneResult` per zone (depth-first, root first)."""
     target = mgr.target_string(apex)
     resolved = mgr.resolve(target)
@@ -198,9 +199,10 @@ async def _iter_zone_results_dfs(
     if not recursive or remaining_depth <= 0:
         return
     for ch in await discover_child_zone_names(apex):
-        async for z in _iter_zone_results_dfs(
+        child_zones = _iter_zone_results_dfs(
             ch, mgr, checks, apex, recursive=True, remaining_depth=remaining_depth - 1
-        ):
+        )
+        async for z in child_zones:
             yield z
 
 
@@ -224,12 +226,12 @@ async def run_domain(
     apex = key.split("/", maxsplit=1)[0] if key else key
     names = _resolved_check_names(mgr, domain, checks=checks_r, exclude=exclude_r)
     logger.info("Running audit for %s", key)
-    flat = [
-        z
-        async for z in _iter_zone_results_dfs(
-            apex, mgr, names, None, recursive=recursive_r, remaining_depth=depth_r
-        )
-    ]
+    zone_stream = _iter_zone_results_dfs(
+        apex, mgr, names, None, recursive=recursive_r, remaining_depth=depth_r
+    )
+    flat: list[ZoneResult] = []
+    async for z in zone_stream:
+        flat.append(z)
     root = nest_flat_zone_results(flat)
     return DomainResult(
         domain=apex,
@@ -261,9 +263,10 @@ async def run_domain_stream(
     apex = key.split("/", maxsplit=1)[0] if key else key
     names = _resolved_check_names(mgr, domain, checks=checks_r, exclude=exclude_r)
     logger.info("Running audit for %s", key)
-    async for z in _iter_zone_results_dfs(
+    zone_stream = _iter_zone_results_dfs(
         apex, mgr, names, None, recursive=recursive_r, remaining_depth=depth_r
-    ):
+    )
+    async for z in zone_stream:
         yield z
 
 
