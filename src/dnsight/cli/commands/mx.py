@@ -47,9 +47,11 @@ def _parse_mx_targets(s: str) -> list[MXGenerateTarget]:
         if not chunk or ":" not in chunk:
             continue
         pref_s, _, host = chunk.partition(":")
-        out.append(
-            MXGenerateTarget(priority=int(pref_s.strip()), hostname=host.strip())
-        )
+        try:
+            priority = int(pref_s.strip())
+        except ValueError:
+            continue
+        out.append(MXGenerateTarget(priority=priority, hostname=host.strip()))
     return out
 
 
