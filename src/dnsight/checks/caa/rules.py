@@ -44,6 +44,17 @@ _SRV_PROBE_NAMES: tuple[str, ...] = (
     "_pop3._tcp",
 )
 
+# FQDN-shaped tokens in crt.sh ``issuer_name`` (often an X.509 DN). Used only to
+# avoid naive substring false positives (e.g. ``evil-letsencrypt.org`` vs ``letsencrypt.org``).
+_CRTSH_HOSTNAME_RE = re.compile(
+    r"(?<![a-z0-9.*_-])"
+    r"(?:\*\.)?"
+    r"(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+"
+    r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+    r"(?![a-z0-9.*_-])",
+    re.IGNORECASE,
+)
+
 
 def extract_caa_config(config: Config | CaaConfig | None) -> CaaConfig:
     """Return the CaaConfig slice from full Config or bare CaaConfig."""
@@ -529,12 +540,57 @@ def apply_caa_validation(
     return issues, recs
 
 
-def _issuer_matches_crt_row(issuer_name: str | None, allowed: set[str]) -> bool:
-    """Heuristic: crt.sh issuer_name matches any allowed CA domain."""
-    if not issuer_name:
+def _labels_for_crtsh_host(host: str) -> tuple[str, ...]:
+    """Split a hostname into lowercase labels; strip leading ``*.`` if present."""
+    h = canonical_fqdn(host)
+    if h.startswith("*."):
+        h = h[2:]
+    return tuple(p.lower() for p in h.split(".") if p)
+
+
+def _dns_suffix_matches(
+    host_labels: tuple[str, ...], ca_labels: tuple[str, ...]
+) -> bool:
+    """True if *host_labels* is *ca_labels* or a subdomain thereof (DNS tree)."""
+    if not ca_labels or len(host_labels) < len(ca_labels):
         return False
-    low = issuer_name.lower()
-    return any(a and a in low for a in allowed)
+    return host_labels[-len(ca_labels) :] == ca_labels
+
+
+def _issuer_hostname_label_sets(issuer_name: str) -> frozenset[tuple[str, ...]]:
+    """Extract distinct hostname label-tuples from an issuer string."""
+    found: set[tuple[str, ...]] = set()
+    for m in _CRTSH_HOSTNAME_RE.finditer(issuer_name.lower()):
+        raw = (m.group(0) or "").strip().strip(".")
+        labs = _labels_for_crtsh_host(raw)
+        if len(labs) >= 2:
+            found.add(labs)
+    return frozenset(found)
+
+
+def _issuer_matches_crt_row(issuer_name: str | None, allowed: set[str]) -> bool:
+    """Heuristic: a hostname token in the issuer string matches an allowed CAA ``issue`` domain.
+
+    Tokens are FQDN-shaped substrings from the crt.sh ``issuer_name`` field (often a DN).
+    A match requires DNS label suffix equality (e.g. ``www.letsencrypt.org`` matches
+    ``letsencrypt.org``). This is not X.509 path validation; issuer text without
+    parseable hostnames never matches here.
+    """
+    if not issuer_name or not allowed:
+        return False
+    candidates = _issuer_hostname_label_sets(issuer_name)
+    if not candidates:
+        return False
+    for a in allowed:
+        if not a.strip():
+            continue
+        ca_labels = _labels_for_crtsh_host(a)
+        if len(ca_labels) < 2:
+            continue
+        for host_labels in candidates:
+            if _dns_suffix_matches(host_labels, ca_labels):
+                return True
+    return False
 
 
 async def crt_sh_issues(
@@ -599,7 +655,8 @@ async def crt_sh_issues(
                 title="Certificate issuer may not match CAA",
                 description=(
                     f"crt.sh lists a certificate for {name_val!r} from "
-                    f"{issuer_name!r} that may not match effective CAA issue tags."
+                    f"{issuer_name!r} that may not match effective CAA issue tags "
+                    "(hostnames parsed from the issuer field only; not full PKI validation)."
                 ),
                 remediation="Align public certificates with CAA or update CAA records.",
             )

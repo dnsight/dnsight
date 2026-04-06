@@ -257,7 +257,9 @@ def register_dmarc(app: typer.Typer) -> None:
             ctx, "dmarc", targets, config_path=path, program_config=overlay
         )
 
-    @t.command("generate", help="Print a suggested DMARC TXT record.")
+    @t.command(
+        "generate", help="Print a suggested DMARC TXT record.", no_args_is_help=True
+    )
     def generate_cmd(
         *,
         policy: DmarcGenPolicyOpt = "none",

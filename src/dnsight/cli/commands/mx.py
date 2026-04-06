@@ -97,7 +97,11 @@ def register_mx(app: typer.Typer) -> None:
         )
         run_check_sequence(ctx, "mx", targets, config_path=path, program_config=overlay)
 
-    @t.command("generate", help="Print MX RDATA lines from pref:host rows.")
+    @t.command(
+        "generate",
+        help="Print MX RDATA lines from pref:host rows.",
+        no_args_is_help=True,
+    )
     def generate_cmd(
         *,
         mx: Annotated[

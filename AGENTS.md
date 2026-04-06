@@ -61,7 +61,13 @@ src/dnsight/
 │   └── http.py            # HTTPClient protocol, AsyncHTTPClient, FakeHTTPClient, singleton
 └── checks/        # Business logic — imports core and utils only
     ├── base.py            # BaseCheckData, BaseCheck[T] ABC
-    └── dmarc/             # DMARCCheck, models, rules
+    ├── caa/               # CAACheck, models, rules
+    ├── dkim/              # DKIMCheck, models, rules
+    ├── dmarc/             # DMARCCheck, models, rules
+    ├── dnssec/            # DNSSECCheck, models, rules
+    ├── headers/           # HeadersCheck, models, rules
+    ├── mx/                # MXCheck, models, rules
+    └── spf/               # SPFCheck, models, rules
 ```
 
 ### Dependency rules (never violate)

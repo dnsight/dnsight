@@ -44,7 +44,7 @@ Defined in [`base.py`](base.py).
 
 - **`get(domain, config=, throttler=)`** → `CheckDataT`: Fetch and parse without validation. Calls `throttler.wait()` if provided, then delegates to `_get()`.
 - **`check(domain, config=, throttler=)`** → `CheckResult[CheckDataT]`: Fetch, parse, and validate. Raises `CapabilityError` if `CHECK` not in capabilities. Calls `throttler.wait()` if provided, then delegates to `_check()`.
-- **`generate(config=)`** → `GeneratedRecord`: Generate a DNS record from config. Raises `CapabilityError` if `GENERATE` not in capabilities. Delegates to `_generate()`.
+- **`generate(*, params=)`** → `GeneratedRecord`: Generate a DNS record from params. Raises `CapabilityError` if `GENERATE` not in capabilities. Delegates to `_generate(params=...)`.
 
 ### Abstract methods (implement in subclass)
 
@@ -53,7 +53,7 @@ Defined in [`base.py`](base.py).
 
 ### Optional override
 
-- **`_generate(config=)`** → `GeneratedRecord`: Override only if the check declares `GENERATE`. The base raises `NotImplementedError` if a subclass declares `GENERATE` but does not override.
+- **`_generate(*, params=)`** → `GeneratedRecord`: Override only if the check declares `GENERATE`. The base raises `NotImplementedError` if a subclass declares `GENERATE` but does not override.
 
 ### BaseCheckData
 
@@ -63,8 +63,8 @@ All check data types (e.g. `DMARCData`, `SPFData`) extend `BaseCheckData`: a fro
 
 1. **Create a package** `checks/<name>/` (e.g. `checks/spf/`) with at least **`__init__.py`** containing:
    - The check class extending `BaseCheck[XxxData, XxxGenerateParams]`, with `name` and `capabilities` class variables.
-   - Static methods as the direct public API: `get_xxx(domain, config=)`, `check_xxx(domain, config=)`, and optionally `generate_xxx(config=)`.
-   - Implementations of `_get` and `_check` that delegate to those static methods (and `_generate` if applicable).
+   - Static methods as the direct public API: `get_xxx(domain, config=)`, `check_xxx(domain, config=)`, and optionally `generate_xxx(*, params=...)`.
+   - Implementations of `_get` and `_check` that delegate to those static methods (and `_generate(params=...)` if applicable).
    - Re-exports so that `from dnsight.checks.xxx import get_xxx, check_xxx, XxxCheck, ...` works.
 
    Optionally add **`models.py`** (IssueId, RecommendationId, descriptor maps, `*Data`, `*GenerateParams`) and **`rules.py`** (validation rules and helpers) when the check is complex enough; see **Check structure** above.

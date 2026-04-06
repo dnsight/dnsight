@@ -32,7 +32,7 @@ def test_make_check_typer_dispatches_named_subcommand_before_variadic_domains() 
             return
         raise AssertionError(f"expected subcommand, got domains={domains!r}")
 
-    @t.command("generate")
+    @t.command("generate", no_args_is_help=True)
     def _gen() -> None:
         typer.echo("gen-ok")
 

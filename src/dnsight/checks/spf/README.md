@@ -1,6 +1,6 @@
 # SPF check
 
-Normative behaviour and field semantics: [checks-reference.md — SPF](../../../../.plan/v2/reference/checks-reference.md) (search for SPF).
+**Ground truth:** This check’s code (`__init__.py`, `rules.py`, `models.py`), its config slice under [`core/schema/`](../../core/schema/), tests under [`tests/checks/`](../../../../tests/checks/), and YAML merge rules in [`core/config/parser/README.md`](../../core/config/parser/README.md). Repo-wide conventions: [`AGENTS.md`](../../../../AGENTS.md).
 
 ## Probe and validation order
 

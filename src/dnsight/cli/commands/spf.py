@@ -133,7 +133,7 @@ def register_spf(app: typer.Typer) -> None:
             ),
         )
 
-    @t.command("generate", help="Print a minimal SPF TXT record.")
+    @t.command("generate", help="Print a minimal SPF TXT record.", no_args_is_help=True)
     def generate_cmd(
         *,
         include: Annotated[

@@ -18,6 +18,7 @@ from dnsight.checks.caa import (
     generate_caa,
     get_caa,
 )
+from dnsight.checks.caa.rules import _issuer_matches_crt_row
 from dnsight.core.config.blocks import CaaConfig, Config
 from dnsight.core.registry import get_check_def
 from dnsight.core.types import Capability, RecordType, Status
@@ -148,6 +149,26 @@ class TestCAAGenerate:
         assert "issuewild" not in rec.value.lower()
 
 
+class TestCAAIssuerMatchesCrtRow:
+    def test_no_substring_false_positive_for_hyphenated_unrelated_host(self) -> None:
+        allowed = {"letsencrypt.org"}
+        issuer = "CN=evil-letsencrypt.org,O=Untrusted"
+        assert not _issuer_matches_crt_row(issuer, allowed)
+
+    def test_dns_suffix_positive_www(self) -> None:
+        allowed = {"letsencrypt.org"}
+        issuer = "C=US,O=Let's Encrypt,CN=www.letsencrypt.org"
+        assert _issuer_matches_crt_row(issuer, allowed)
+
+    def test_dns_suffix_positive_subdomain_token(self) -> None:
+        allowed = {"letsencrypt.org"}
+        issuer = "r3.o.lencr.org is intermediate; leaf www.letsencrypt.org"
+        assert _issuer_matches_crt_row(issuer, allowed)
+
+    def test_empty_allowed_never_matches(self) -> None:
+        assert not _issuer_matches_crt_row("CN=www.letsencrypt.org", set())
+
+
 @pytest.mark.asyncio
 class TestCAACrtSh:
     async def test_crt_sh_violation(self) -> None:
@@ -157,6 +178,54 @@ class TestCAACrtSh:
         q = quote("%." + z)
         url = f"https://crt.sh/?q={q}&output=json"
         payload = json.dumps([{"name_value": f"www.{z}", "issuer_name": "O=Evil CA"}])
+        set_http_client(
+            FakeHTTPClient(
+                {url: HTTPResponse(status_code=200, headers={}, text=payload)}
+            )
+        )
+        cfg = CaaConfig(cross_reference_crt_sh=True)
+        result = await check_caa(z, config=cfg)
+        assert CaaIssueId.CRT_SH_VIOLATION.value in [i.id for i in result.issues]
+
+    async def test_crt_sh_no_issue_when_issuer_hostname_suffix_matches(self) -> None:
+        z = "example.com"
+        records = {f"{z}/CAA": [(0, "issue", "letsencrypt.org")], f"www.{z}/CAA": []}
+        set_resolver(FakeDNSResolver(records))
+        q = quote("%." + z)
+        url = f"https://crt.sh/?q={q}&output=json"
+        payload = json.dumps(
+            [
+                {
+                    "name_value": f"www.{z}",
+                    "issuer_name": "C=US,O=Let's Encrypt,CN=www.letsencrypt.org",
+                }
+            ]
+        )
+        set_http_client(
+            FakeHTTPClient(
+                {url: HTTPResponse(status_code=200, headers={}, text=payload)}
+            )
+        )
+        cfg = CaaConfig(cross_reference_crt_sh=True)
+        result = await check_caa(z, config=cfg)
+        assert CaaIssueId.CRT_SH_VIOLATION.value not in [i.id for i in result.issues]
+
+    async def test_crt_sh_still_violates_for_hyphenated_hostname_false_match(
+        self,
+    ) -> None:
+        z = "example.com"
+        records = {f"{z}/CAA": [(0, "issue", "letsencrypt.org")], f"www.{z}/CAA": []}
+        set_resolver(FakeDNSResolver(records))
+        q = quote("%." + z)
+        url = f"https://crt.sh/?q={q}&output=json"
+        payload = json.dumps(
+            [
+                {
+                    "name_value": f"www.{z}",
+                    "issuer_name": "CN=evil-letsencrypt.org,O=Evil",
+                }
+            ]
+        )
         set_http_client(
             FakeHTTPClient(
                 {url: HTTPResponse(status_code=200, headers={}, text=payload)}

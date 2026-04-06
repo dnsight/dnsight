@@ -203,7 +203,7 @@ def register_caa(app: typer.Typer) -> None:
             ctx, "caa", targets, config_path=path, program_config=overlay
         )
 
-    @t.command("generate", help="Print suggested CAA records.")
+    @t.command("generate", help="Print suggested CAA records.", no_args_is_help=True)
     def generate_cmd(
         *,
         issuers: Annotated[
