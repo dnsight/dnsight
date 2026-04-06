@@ -166,7 +166,7 @@ async def run_zone(
                 res = await inst.check(
                     domain, config=resolved.config, throttler=check_throttle
                 )
-            except BaseException as exc:
+            except Exception as exc:
                 logger.error(
                     "Check %r raised %s for zone %r",
                     name,
