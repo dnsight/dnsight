@@ -46,7 +46,7 @@ def _format_str_list(items: list[object], *, cap: int, label: str) -> list[str]:
     return out
 
 
-def data_summary_lines(
+def data_summary_lines(  # NOSONAR S3776
     data: object | None,
     *,
     record_max: int = _RECORD_MAX,

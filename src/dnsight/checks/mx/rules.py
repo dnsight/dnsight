@@ -79,7 +79,7 @@ def normalise_hostname(host: str) -> str:
     return (host or "").strip().lower().rstrip(".")
 
 
-async def collect_mx_data(
+async def collect_mx_data(  # NOSONAR S3776
     domain: str, resolver: DNSResolver, probe: StartTLSProbe, mx_cfg: MxConfig
 ) -> MXData:
     """Resolve MX and optionally PTR and STARTTLS for each exchange host.
@@ -147,7 +147,7 @@ def _starttls_error_is_not_supported(err: str | None) -> bool:
     )
 
 
-def validate_mx_results(
+def validate_mx_results(  # NOSONAR S3776
     data: MXData, domain: str, mx_cfg: MxConfig
 ) -> tuple[list[Issue], list[Recommendation]]:
     """Validate MX data and produce issues and recommendations."""

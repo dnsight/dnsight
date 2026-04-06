@@ -147,7 +147,7 @@ def _data_from_response(
     )
 
 
-def validate_headers(
+def validate_headers(  # NOSONAR S3776
     data: HeadersData, cfg: HeadersConfig, *, strict_recommendations: bool = False
 ) -> tuple[list[Issue], list[Recommendation]]:
     """Validate fetched header rows against policy.

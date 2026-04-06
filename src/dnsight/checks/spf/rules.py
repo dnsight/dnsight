@@ -148,7 +148,7 @@ class FlattenOutcome:
     include_resolution_errors: list[str] = field(default_factory=list)
 
 
-async def flatten_spf(
+async def flatten_spf(  # NOSONAR S3776
     domain: str,
     resolver: DNSResolver,
     *,

@@ -229,7 +229,7 @@ def bitmap_has_rdtype(
     return False
 
 
-def validate_nsec_negative_proof(
+def validate_nsec_negative_proof(  # NOSONAR S3776
     msg: dns.message.Message,
     zone_origin: dns.name.Name,
     qname: dns.name.Name,

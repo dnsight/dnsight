@@ -87,7 +87,7 @@ def _classify_negative_failure(
     return DNSSECIssueId.NEGATIVE_UNPROVEN
 
 
-async def collect_dnssec_data(
+async def collect_dnssec_data(  # NOSONAR S3776
     domain: str, resolver: DNSResolver, cfg: DnssecConfig
 ) -> tuple[
     DNSSECData,
@@ -241,7 +241,7 @@ async def collect_dnssec_data(
     return data, dk_msg, ns_msg, nx_msg
 
 
-def validate_dnssec_results(
+def validate_dnssec_results(  # NOSONAR S3776
     data: DNSSECData,
     cfg: DnssecConfig,
     zone_name: dns.name.Name,

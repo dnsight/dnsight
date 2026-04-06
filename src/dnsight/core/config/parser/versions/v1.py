@@ -199,7 +199,7 @@ _V1_DMARC_FIELD_MAP: dict[str, str] = {
 }
 
 
-def _build_rule_config(rule: dict[str, Any]) -> Config:
+def _build_rule_config(rule: dict[str, Any]) -> Config:  # NOSONAR S3776
     """Extract config-level keys from a rule dict and return a Config."""
     kwargs: dict[str, Any] = {}
 

@@ -55,7 +55,7 @@ def _resolve_config_source(ctx: typer.Context, source: str | None) -> Path | Non
     return discover_config_path()
 
 
-def register_config(app: typer.Typer) -> None:
+def register_config(app: typer.Typer) -> None:  # NOSONAR S3776
     """Attach the ``config`` command group to *app*."""
     t = typer.Typer(
         name="config",

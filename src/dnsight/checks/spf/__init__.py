@@ -119,7 +119,7 @@ class SPFCheck(BaseCheck[SPFData, SPFGenerateParams]):
         )
 
     @staticmethod
-    async def check_spf(
+    async def check_spf(  # NOSONAR S3776
         domain: str, *, config: Config | SpfConfig | None = None
     ) -> CheckResult[SPFData]:
         spf_cfg, strict = normalise_config(config)

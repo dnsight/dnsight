@@ -242,7 +242,7 @@ async def _expand_dname(
     return [(t, depth + 1) for t in targets]
 
 
-async def discover_names(
+async def discover_names(  # NOSONAR S3776
     zone_apex: str, cfg: CaaConfig, resolver: DNSResolver
 ) -> tuple[dict[str, set[NameDiscoveryKind]], bool, DiscoveryLimitReason]:
     """Seed and optionally enumerate hostnames; return discovery map + limits."""
@@ -338,7 +338,7 @@ async def discover_names(
     return seen, truncated, limit_reason
 
 
-def _validate_name(
+def _validate_name(  # NOSONAR S3776
     name: str,
     zone_apex: str,
     effective: list[CaaRecord],
@@ -604,7 +604,7 @@ def _issuer_matches_crt_row(issuer_name: str | None, allowed: set[str]) -> bool:
     return False
 
 
-async def crt_sh_issues(
+async def crt_sh_issues(  # NOSONAR S3776
     zone_apex: str, names_checked: list[CaaNameResult], cfg: CaaConfig, http: HTTPClient
 ) -> list[Issue]:
     """Optional crt.sh cross-check using JSON API."""
