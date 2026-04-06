@@ -85,7 +85,7 @@ def register_spf(app: typer.Typer) -> None:
         lookup_limit: Annotated[
             int | None,
             typer.Option(
-                "--lookup-limit", help="Max DNS lookups during SPF evaluation.", min=0
+                "--lookup-limit", help="Max DNS lookups during SPF evaluation.", min=1
             ),
         ] = None,
         max_includes: Annotated[
