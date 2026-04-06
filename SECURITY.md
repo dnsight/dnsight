@@ -2,11 +2,11 @@
 
 ## Reporting
 
-dnsight is developed in the open. **Security-related concerns** (for example suspected vulnerabilities in this codebase or its CLI/SDK behaviour) can be **raised in public GitHub Issues** so maintainers and the community can discuss them with full context.
+dnsight is developed in the open, but **security-related concerns** (for example suspected vulnerabilities in this codebase or its CLI/SDK behaviour) should be reported **privately first** so maintainers can investigate and coordinate a fix before details are disclosed publicly.
 
-When you open an issue, choose **Security report** from the [issue templates](.github/ISSUE_TEMPLATE/) so the right fields are captured. Use **Bug report** for ordinary defects that are not security-sensitive.
+Please use **GitHub Security Advisories** for private reporting if it is enabled for this repository. If that private reporting channel is not available, contact the maintainers through a private channel they list on their GitHub profile or in the repository **README**.
 
-If you believe a report should not be public (for example it involves sensitive deployment details), say so in the issue or contact maintainers through channels they list on their GitHub profile or the repository **README**.
+Use **public GitHub Issues** only for ordinary defects that are not security-sensitive, or for security concerns that are already public / safe to discuss openly. If you are unsure, prefer private reporting first.
 
 ## Scope
 
