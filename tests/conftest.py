@@ -3,6 +3,13 @@
 from __future__ import annotations
 
 import logging
+import os
+
+
+# Typer forces Rich terminal mode when GITHUB_ACTIONS is set; CliRunner is not a
+# TTY, so help text can render without option names on Linux CI. Set before any
+# import of typer.rich_utils (via dnsight.cli). Typer documents this env toggle.
+os.environ.setdefault("_TYPER_FORCE_DISABLE_TERMINAL", "1")
 
 import pytest
 

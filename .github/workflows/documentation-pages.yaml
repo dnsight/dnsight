@@ -8,13 +8,12 @@ concurrency:
   group: documentation-pages
   cancel-in-progress: false
 
-permissions:
-  contents: read
-
 jobs:
   build:
     name: Build site
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
 
@@ -39,6 +38,7 @@ jobs:
     # GitHub creates the ``github-pages`` environment on first deploy; you may
     # be prompted once to approve deployment rules (org/repo settings).
     permissions:
+      contents: read
       pages: write
       id-token: write
     environment:
