@@ -73,11 +73,12 @@ class ThrottleManager:
         )
         self._last_refill = now
 
-    def child(self, max_rps: float, burst: int = 1) -> ThrottleManager:
+    def child(self, max_rps: float = float("inf"), burst: int = 1) -> ThrottleManager:
         """Create a child throttler that respects this throttler's limits.
 
         Args:
             max_rps: Maximum requests per second for the child bucket.
+                Defaults to an effectively unlimited rate if not provided.
             burst: Maximum burst size for the child. Defaults to 1.
 
         Returns:
