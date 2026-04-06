@@ -85,7 +85,9 @@ def register_dkim(app: typer.Typer) -> None:
         selectors: DkimSelectorsOpt = None,
         min_key_bits: Annotated[
             int | None,
-            typer.Option("--min-key-bits", help="Minimum RSA key size in bits.", min=0),
+            typer.Option(
+                "--min-key-bits", help="Minimum RSA key size in bits.", min=512
+            ),
         ] = None,
         disallowed_algorithms: DkimDisallowedAlgorithmsOpt = None,
     ) -> None:
