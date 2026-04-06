@@ -123,7 +123,9 @@ async def collect_dnssec_data(
         ad_flag = dk_q.ad
     except CheckError:
         # Expected failure for some zones; continue without DNSKEY message / AD flag.
-        logger.debug("DNSSEC DNSKEY query failed for %s; proceeding without AD flag", apex)
+        logger.debug(
+            "DNSSEC DNSKEY query failed for %s; proceeding without AD flag", apex
+        )
 
     ns_msg: dns.message.Message | None = None
     try:
