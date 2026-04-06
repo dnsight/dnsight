@@ -131,8 +131,13 @@ async def collect_dnssec_data(
     try:
         ns_q = await resolver.query_dnssec(apex, "NS")
         ns_msg = ns_q.message
-    except CheckError:
-        pass
+    except CheckError as exc:
+        # Expected failure for some zones; proceed without NS DNSSEC message.
+        logger.debug(
+            "DNSSEC NS query failed for %s; proceeding without NS DNSSEC data: %s",
+            apex,
+            exc,
+        )
 
     neg: NegativeValidationAttempt | None = None
     nod: NodataValidationAttempt | None = None
