@@ -13,8 +13,8 @@ __all__ = ["DmarcSchema"]
 class DmarcSchema:
     """DMARC field types — shared by DmarcConfig, DMARCData, DMARCGenerateParams."""
 
-    PolicyLiteral: TypeAlias = Literal["none", "quarantine", "reject"]
-    AlignmentLiteral: TypeAlias = Literal["r", "s"]
+    PolicyLiteral: TypeAlias = Literal["none", "quarantine", "reject"]  # NOSONAR S6794
+    AlignmentLiteral: TypeAlias = Literal["r", "s"]  # NOSONAR S6794
     POLICY_VALUES: Final[tuple[str, ...]] = ("none", "quarantine", "reject")
     ALIGNMENT_VALUES: Final[tuple[str, ...]] = ("r", "s")
 

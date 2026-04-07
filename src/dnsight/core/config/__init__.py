@@ -37,7 +37,7 @@ from dnsight.core.config.targets import (
 )
 
 
-ResolvedConfig: TypeAlias = ResolvedTargetConfig
+ResolvedConfig: TypeAlias = ResolvedTargetConfig  # NOSONAR S6794
 """Alias so runtime and orchestrator import a stable name."""
 
 

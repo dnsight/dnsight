@@ -34,7 +34,7 @@ def _complete_dkim_disallowed(ctx: typer.Context, incomplete: str | None) -> lis
     )
 
 
-DkimSelectorsOpt: TypeAlias = Annotated[
+DkimSelectorsOpt: TypeAlias = Annotated[  # NOSONAR S6794
     str | None,
     typer.Option(
         "--selectors",
@@ -43,7 +43,7 @@ DkimSelectorsOpt: TypeAlias = Annotated[
     ),
 ]
 
-DkimDisallowedAlgorithmsOpt: TypeAlias = Annotated[
+DkimDisallowedAlgorithmsOpt: TypeAlias = Annotated[  # NOSONAR S6794
     str | None,
     typer.Option(
         "--disallowed-algorithms",

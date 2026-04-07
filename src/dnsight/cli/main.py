@@ -30,7 +30,7 @@ def _version_option_callback(value: bool) -> None:
         version_cmd()
 
 
-ConfigPathOpt: TypeAlias = Annotated[
+ConfigPathOpt: TypeAlias = Annotated[  # NOSONAR S6794
     Path | None,
     typer.Option(
         "--config",
@@ -43,7 +43,7 @@ ConfigPathOpt: TypeAlias = Annotated[
     ),
 ]
 
-OutputFormatOpt: TypeAlias = Annotated[
+OutputFormatOpt: TypeAlias = Annotated[  # NOSONAR S6794
     OutputFormat,
     typer.Option(
         "--format",
@@ -54,7 +54,7 @@ OutputFormatOpt: TypeAlias = Annotated[
     ),
 ]
 
-OutputPathOpt: TypeAlias = Annotated[
+OutputPathOpt: TypeAlias = Annotated[  # NOSONAR S6794
     Path | None,
     typer.Option(
         "--output",
@@ -67,7 +67,7 @@ OutputPathOpt: TypeAlias = Annotated[
     ),
 ]
 
-QuietOpt: TypeAlias = Annotated[
+QuietOpt: TypeAlias = Annotated[  # NOSONAR S6794
     bool,
     typer.Option(
         "--quiet",
@@ -77,7 +77,7 @@ QuietOpt: TypeAlias = Annotated[
     ),
 ]
 
-VerboseOpt: TypeAlias = Annotated[
+VerboseOpt: TypeAlias = Annotated[  # NOSONAR S6794
     bool,
     typer.Option(
         "--verbose",
@@ -87,7 +87,7 @@ VerboseOpt: TypeAlias = Annotated[
     ),
 ]
 
-VeryVerboseOpt: TypeAlias = Annotated[
+VeryVerboseOpt: TypeAlias = Annotated[  # NOSONAR S6794
     bool,
     typer.Option(
         "--very-verbose",
@@ -97,7 +97,7 @@ VeryVerboseOpt: TypeAlias = Annotated[
     ),
 ]
 
-OutputDetailOpt: TypeAlias = Annotated[
+OutputDetailOpt: TypeAlias = Annotated[  # NOSONAR S6794
     bool,
     typer.Option(
         "--output-detail",
@@ -106,7 +106,7 @@ OutputDetailOpt: TypeAlias = Annotated[
     ),
 ]
 
-MarkdownDataPreviewOpt: TypeAlias = Annotated[
+MarkdownDataPreviewOpt: TypeAlias = Annotated[  # NOSONAR S6794
     bool,
     typer.Option(
         "--markdown-data-preview",
@@ -115,7 +115,7 @@ MarkdownDataPreviewOpt: TypeAlias = Annotated[
     ),
 ]
 
-VersionOpt: TypeAlias = Annotated[
+VersionOpt: TypeAlias = Annotated[  # NOSONAR S6794
     bool,
     typer.Option(
         "--version",

@@ -219,7 +219,7 @@ class FakeHTTPClient:
             raise CheckError(f"no configured response for {url}")
         return self._responses[url]
 
-    async def get(self, url: str, **kwargs: Any) -> HTTPResponse:
+    async def get(self, url: str, **kwargs: Any) -> HTTPResponse:  # NOSONAR S7503
         """Return pre-configured response for *url* or raise ``CheckError``."""
         logger.debug(
             "HTTP request backend=%s method=GET url=%s",
@@ -228,7 +228,7 @@ class FakeHTTPClient:
         )
         return self._get_response(url)
 
-    async def head(self, url: str, **kwargs: Any) -> HTTPResponse:
+    async def head(self, url: str, **kwargs: Any) -> HTTPResponse:  # NOSONAR S7503
         """Return pre-configured response for *url* or raise ``CheckError``."""
         logger.debug(
             "HTTP request backend=%s method=HEAD url=%s",

@@ -235,7 +235,9 @@ def _build_rule_config(rule: dict[str, Any]) -> Config:  # NOSONAR S3776
     return Config(**kwargs) if kwargs else Config()
 
 
-def _remap_fields(cls: type[_T], raw: dict[str, Any], field_map: dict[str, str]) -> _T:
+def _remap_fields(  # NOSONAR S6796
+    cls: type[_T], raw: dict[str, Any], field_map: dict[str, str]
+) -> _T:
     """Build a config block by remapping v1 YAML keys to model field names."""
     kw: dict[str, Any] = {}
     for yaml_key, model_field in field_map.items():

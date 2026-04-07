@@ -73,7 +73,7 @@ class Recommendation(BaseModel):
     description: str = Field(..., description="Full explanation of the recommendation")
 
 
-class CheckResult(BaseModel, Generic[T]):
+class CheckResult(BaseModel, Generic[T]):  # NOSONAR S6792
     """The result of a single check run.
 
     Generic over the check's data type *T*. So

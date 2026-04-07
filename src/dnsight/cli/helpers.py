@@ -37,7 +37,7 @@ def domains_argument() -> ArgumentInfo:
     )
 
 
-DomainsArg: TypeAlias = Annotated[list[str] | None, domains_argument()]
+DomainsArg: TypeAlias = Annotated[list[str] | None, domains_argument()]  # NOSONAR S6794
 
 
 def recursive_option() -> OptionInfo:
@@ -52,7 +52,7 @@ def recursive_option() -> OptionInfo:
     )
 
 
-RecursiveOpt: TypeAlias = Annotated[bool, recursive_option()]
+RecursiveOpt: TypeAlias = Annotated[bool, recursive_option()]  # NOSONAR S6794
 
 
 def depth_option() -> OptionInfo:
@@ -66,7 +66,7 @@ def depth_option() -> OptionInfo:
     )
 
 
-DepthOpt: TypeAlias = Annotated[int, depth_option()]
+DepthOpt: TypeAlias = Annotated[int, depth_option()]  # NOSONAR S6794
 
 
 def check_command_config_path_option() -> OptionInfo:
@@ -85,7 +85,7 @@ def check_command_config_path_option() -> OptionInfo:
     )
 
 
-CheckCommandConfigPath: TypeAlias = Annotated[
+CheckCommandConfigPath: TypeAlias = Annotated[  # NOSONAR S6794
     Path | None, check_command_config_path_option()
 ]
 
@@ -102,7 +102,9 @@ def config_source_argument() -> ArgumentInfo:
     )
 
 
-ConfigSourceArg: TypeAlias = Annotated[str | None, config_source_argument()]
+ConfigSourceArg: TypeAlias = Annotated[
+    str | None, config_source_argument()
+]  # NOSONAR S6794
 
 
 def resolve_targets_option() -> OptionInfo:
@@ -113,7 +115,9 @@ def resolve_targets_option() -> OptionInfo:
     )
 
 
-ResolveTargetsOpt: TypeAlias = Annotated[bool, resolve_targets_option()]
+ResolveTargetsOpt: TypeAlias = Annotated[
+    bool, resolve_targets_option()
+]  # NOSONAR S6794
 
 
 def cli_exit_fatal(message: str, *, code: int = 3) -> Never:

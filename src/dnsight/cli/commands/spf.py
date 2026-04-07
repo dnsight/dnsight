@@ -30,7 +30,7 @@ def _complete_spf_disposition(ctx: typer.Context, incomplete: str | None) -> lis
     return prefix_choices(incomplete, SpfSchema.DISPOSITION_VALUES)
 
 
-SpfRequiredDispositionOpt: TypeAlias = Annotated[
+SpfRequiredDispositionOpt: TypeAlias = Annotated[  # NOSONAR S6794
     SpfSchema.RequiredDispositionLiteral | None,
     typer.Option(
         "--required-disposition",
@@ -40,7 +40,7 @@ SpfRequiredDispositionOpt: TypeAlias = Annotated[
     ),
 ]
 
-SpfGenDispositionOpt: TypeAlias = Annotated[
+SpfGenDispositionOpt: TypeAlias = Annotated[  # NOSONAR S6794
     SpfSchema.DispositionLiteral,
     typer.Option(
         "--disposition",

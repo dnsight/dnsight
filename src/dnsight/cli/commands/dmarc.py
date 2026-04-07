@@ -82,7 +82,7 @@ def _build_dmarc_overlay(
     )
 
 
-DmarcCheckPolicyOpt: TypeAlias = Annotated[
+DmarcCheckPolicyOpt: TypeAlias = Annotated[  # NOSONAR S6794
     DmarcSchema.PolicyLiteral | None,
     typer.Option(
         "--policy",
@@ -93,7 +93,7 @@ DmarcCheckPolicyOpt: TypeAlias = Annotated[
     ),
 ]
 
-DmarcTargetPolicyOpt: TypeAlias = Annotated[
+DmarcTargetPolicyOpt: TypeAlias = Annotated[  # NOSONAR S6794
     DmarcSchema.PolicyLiteral | None,
     typer.Option(
         "--target-policy",
@@ -103,7 +103,7 @@ DmarcTargetPolicyOpt: TypeAlias = Annotated[
     ),
 ]
 
-DmarcAdkimCheckOpt: TypeAlias = Annotated[
+DmarcAdkimCheckOpt: TypeAlias = Annotated[  # NOSONAR S6794
     DmarcSchema.AlignmentLiteral | None,
     typer.Option(
         "--adkim",
@@ -113,7 +113,7 @@ DmarcAdkimCheckOpt: TypeAlias = Annotated[
     ),
 ]
 
-DmarcAspfCheckOpt: TypeAlias = Annotated[
+DmarcAspfCheckOpt: TypeAlias = Annotated[  # NOSONAR S6794
     DmarcSchema.AlignmentLiteral | None,
     typer.Option(
         "--aspf",
@@ -123,7 +123,7 @@ DmarcAspfCheckOpt: TypeAlias = Annotated[
     ),
 ]
 
-DmarcSubdomainMinOpt: TypeAlias = Annotated[
+DmarcSubdomainMinOpt: TypeAlias = Annotated[  # NOSONAR S6794
     str | None,
     typer.Option(
         "--subdomain-policy-minimum",
@@ -135,7 +135,7 @@ DmarcSubdomainMinOpt: TypeAlias = Annotated[
     ),
 ]
 
-DmarcGenPolicyOpt: TypeAlias = Annotated[
+DmarcGenPolicyOpt: TypeAlias = Annotated[  # NOSONAR S6794
     DmarcSchema.PolicyLiteral,
     typer.Option(
         "--policy",
@@ -146,7 +146,7 @@ DmarcGenPolicyOpt: TypeAlias = Annotated[
     ),
 ]
 
-DmarcGenSubdomainPolicyOpt: TypeAlias = Annotated[
+DmarcGenSubdomainPolicyOpt: TypeAlias = Annotated[  # NOSONAR S6794
     DmarcSchema.PolicyLiteral | None,
     typer.Option(
         "--subdomain-policy",
@@ -156,7 +156,7 @@ DmarcGenSubdomainPolicyOpt: TypeAlias = Annotated[
     ),
 ]
 
-DmarcGenAdkimOpt: TypeAlias = Annotated[
+DmarcGenAdkimOpt: TypeAlias = Annotated[  # NOSONAR S6794
     DmarcSchema.AlignmentLiteral,
     typer.Option(
         "--adkim",
@@ -166,7 +166,7 @@ DmarcGenAdkimOpt: TypeAlias = Annotated[
     ),
 ]
 
-DmarcGenAspfOpt: TypeAlias = Annotated[
+DmarcGenAspfOpt: TypeAlias = Annotated[  # NOSONAR S6794
     DmarcSchema.AlignmentLiteral,
     typer.Option(
         "--aspf",
@@ -184,7 +184,7 @@ def register_dmarc(app: typer.Typer) -> None:
     )
 
     @t.callback(invoke_without_command=True)
-    def dmarc_run(
+    def dmarc_run(  # NOSONAR S107
         ctx: typer.Context,
         domains: DomainsArg = None,
         *,

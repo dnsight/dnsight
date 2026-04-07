@@ -156,7 +156,7 @@ See Also:
 """
 
 
-class CheckRunBinder(Generic[CheckDataT, SliceT]):
+class CheckRunBinder(Generic[CheckDataT, SliceT]):  # NOSONAR S6792
     """Bind a registry check name to typed :func:`~dnsight.sdk.run.run_check` helpers."""
 
     __slots__ = ("_check_name", "_config_field", "_summary")
@@ -231,7 +231,7 @@ class CheckRunBinder(Generic[CheckDataT, SliceT]):
         return _sync
 
 
-class GenerateBinder(Generic[ParamsT]):
+class GenerateBinder(Generic[ParamsT]):  # NOSONAR S6792
     """Bind a registry check name to :func:`~dnsight.sdk.generate.generate`."""
 
     __slots__ = ("_check_name", "_default_factory", "_summary")

@@ -31,7 +31,7 @@ def _complete_dnssec_disallowed(
     )
 
 
-DnssecDisallowedAlgorithmsOpt: TypeAlias = Annotated[
+DnssecDisallowedAlgorithmsOpt: TypeAlias = Annotated[  # NOSONAR S6794
     str | None,
     typer.Option(
         "--disallowed-algorithms",

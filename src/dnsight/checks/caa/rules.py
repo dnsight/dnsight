@@ -340,7 +340,7 @@ async def discover_names(  # NOSONAR S3776
 
 def _validate_name(  # NOSONAR S3776
     name: str,
-    zone_apex: str,
+    _zone_apex: str,
     effective: list[CaaRecord],
     eff_node: str,
     cfg: CaaConfig,

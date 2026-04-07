@@ -155,7 +155,7 @@ class AsyncStartTLSProbe:
             with contextlib.suppress(OSError):
                 await writer.wait_closed()
 
-    async def _read_smtp_greeting(
+    async def _read_smtp_greeting(  # NOSONAR S7483
         self, reader: asyncio.StreamReader, timeout: float
     ) -> StartTLSProbeResult | None:
         while True:
@@ -172,7 +172,7 @@ class AsyncStartTLSProbe:
             if line.startswith(b"220"):
                 return None
 
-    async def _read_multiline_250(
+    async def _read_multiline_250(  # NOSONAR S7483
         self, reader: asyncio.StreamReader, timeout: float
     ) -> _EhloRead:
         buf = bytearray()
@@ -228,9 +228,10 @@ class FakeStartTLSProbe:
     ) -> None:
         self._results: dict[tuple[str, int], StartTLSProbeResult] = results or {}
 
-    async def probe(
+    async def probe(  # NOSONAR S7503
         self, host: str, *, port: int = 25, timeout_seconds: float
     ) -> StartTLSProbeResult:
+        _ = timeout_seconds
         key = (host.lower().rstrip("."), port)
         if key not in self._results:
             return StartTLSProbeResult(

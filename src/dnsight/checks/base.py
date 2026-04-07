@@ -47,7 +47,7 @@ class BaseGenerateParams(BaseModel):
 GenerateParamsT = TypeVar("GenerateParamsT", bound=BaseGenerateParams)
 
 
-class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):
+class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):  # NOSONAR S6792
     """Abstract base for all checks.
 
     Subclasses declare ``name`` and ``capabilities`` as class variables,
@@ -77,7 +77,7 @@ class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):
 
     # -- Public API (capability gate + throttle) ---------------------------
 
-    async def get(
+    async def get(  # NOSONAR S6796
         self,
         domain: str,
         *,
@@ -98,7 +98,7 @@ class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):
             await throttler.wait()
         return await self._get(domain, config=config)
 
-    async def check(
+    async def check(  # NOSONAR S6796
         self,
         domain: str,
         *,
@@ -124,7 +124,7 @@ class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):
             await throttler.wait()
         return await self._check(domain, config=config)
 
-    def generate(self, *, params: GenerateParamsT) -> GeneratedRecord:
+    def generate(self, *, params: GenerateParamsT) -> GeneratedRecord:  # NOSONAR S6796
         """Generate a DNS record from config.
 
         Args:
@@ -143,18 +143,20 @@ class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):
     # -- Abstract / override methods --------------------------------------
 
     @abstractmethod
-    async def _get(self, domain: str, *, config: Any | None = None) -> CheckDataT:
+    async def _get(
+        self, domain: str, *, config: Any | None = None
+    ) -> CheckDataT:  # NOSONAR S6796
         """Fetch and parse — implement in subclass."""
         ...
 
     @abstractmethod
-    async def _check(
+    async def _check(  # NOSONAR S6796
         self, domain: str, *, config: Any | None = None
     ) -> CheckResult[CheckDataT]:
         """Fetch, parse, validate — implement in subclass."""
         ...
 
-    def _generate(self, *, params: GenerateParamsT) -> GeneratedRecord:
+    def _generate(self, *, params: GenerateParamsT) -> GeneratedRecord:  # NOSONAR S6796
         """Generate a record — override in subclass if GENERATE capability.
 
         This is a missing-override fallback, not capability gating (that is done in generate()).

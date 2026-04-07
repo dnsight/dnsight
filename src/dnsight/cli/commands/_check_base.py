@@ -124,7 +124,7 @@ def effective_cli_config_path(ctx: typer.Context, override: Path | None) -> Path
 
 
 def resolve_target_domain_strings(
-    ctx: typer.Context, domains: list[str] | None, config_path: Path | None
+    _ctx: typer.Context, domains: list[str] | None, config_path: Path | None
 ) -> list[str]:
     """Explicit domains, or manifest targets from YAML when *domains* is omitted."""
     domain_list = domains_from_argument(domains)

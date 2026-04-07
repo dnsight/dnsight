@@ -22,7 +22,7 @@ from dnsight.sdk import CaaGenerateParams, generate_caa
 __all__ = ["register_caa"]
 
 
-def _build_caa_overlay(
+def _build_caa_overlay(  # NOSONAR S107
     *,
     require_caa: bool | None,
     required_issuers: str | None,
@@ -83,7 +83,7 @@ def register_caa(app: typer.Typer) -> None:
     )
 
     @t.callback(invoke_without_command=True)
-    def caa_run(
+    def caa_run(  # NOSONAR S107
         ctx: typer.Context,
         domains: DomainsArg = None,
         *,
