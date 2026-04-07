@@ -6,6 +6,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: 'deps:'
     groups:
       actions:
         patterns: ['*']  # group all action updates into one PR
@@ -15,6 +17,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: 'deps:'
     groups:
       python-deps:
         patterns: ['*']

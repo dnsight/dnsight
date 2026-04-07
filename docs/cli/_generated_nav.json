@@ -1,0 +1,112 @@
+[
+  {
+    "Overview": "cli/index.md"
+  },
+  {
+    "version": "cli/version/index.md"
+  },
+  {
+    "docs": "cli/docs/index.md"
+  },
+  {
+    "config": [
+      {
+        "Overview": "cli/config/index.md"
+      },
+      {
+        "example": "cli/config/example/index.md"
+      },
+      {
+        "migrate": "cli/config/migrate/index.md"
+      },
+      {
+        "validate": "cli/config/validate/index.md"
+      }
+    ]
+  },
+  {
+    "Audit": [
+      {
+        "audit": "cli/audit/index.md"
+      }
+    ]
+  },
+  {
+    "Checks": [
+      {
+        "caa": [
+          {
+            "Overview": "cli/caa/index.md"
+          },
+          {
+            "generate": "cli/caa/generate/index.md"
+          }
+        ]
+      },
+      {
+        "dkim": [
+          {
+            "Overview": "cli/dkim/index.md"
+          }
+        ]
+      },
+      {
+        "dmarc": [
+          {
+            "Overview": "cli/dmarc/index.md"
+          },
+          {
+            "generate": "cli/dmarc/generate/index.md"
+          }
+        ]
+      },
+      {
+        "dnssec": [
+          {
+            "Overview": "cli/dnssec/index.md"
+          }
+        ]
+      },
+      {
+        "headers": [
+          {
+            "Overview": "cli/headers/index.md"
+          },
+          {
+            "generate": [
+              {
+                "Overview": "cli/headers/generate/index.md"
+              },
+              {
+                "csp": "cli/headers/generate/csp/index.md"
+              },
+              {
+                "hsts": "cli/headers/generate/hsts/index.md"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "mx": [
+          {
+            "Overview": "cli/mx/index.md"
+          },
+          {
+            "generate": "cli/mx/generate/index.md"
+          }
+        ]
+      },
+      {
+        "spf": [
+          {
+            "Overview": "cli/spf/index.md"
+          },
+          {
+            "generate": "cli/spf/generate/index.md"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -4,12 +4,10 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - '**.md'
       - LICENSE
   pull_request:
     branches: [main]
     paths-ignore:
-      - '**.md'
       - LICENSE
 
 concurrency:
@@ -31,9 +29,45 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      - name: Run Checks
+      - name: Run checks
         shell: bash
         run: just check
+
+      - name: Build package
+        shell: bash
+        run: just build
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          uv_groups: docs
+
+      - name: Regenerate CLI documentation
+        shell: bash
+        run: uv run --group docs python -m tools.docgen
+
+      - name: Check docs/cli matches generator output
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --exit-code -- docs/cli/; then
+            echo "::error::docs/cli is out of sync with the CLI. Run \`just docs-generate\`" \
+              "(or \`uv run --group docs python -m tools.docgen\`) and commit under docs/cli/."
+            git diff -- docs/cli/ || true
+            exit 1
+          fi
+
+      - name: Build MkDocs (strict)
+        shell: bash
+        run: uv run --group docs mkdocs build --strict
 
   # Tests - matrix across Python versions
   test:

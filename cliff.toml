@@ -1,0 +1,51 @@
+# https://git-cliff.org/docs/configuration
+
+[remote.github]
+owner = "dnsight"
+repo = "dnsight"
+
+[changelog]
+trim = true
+render_always = true
+footer = ""
+body = """{%- macro repo_base() -%}
+https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}
+{%- endmacro %}
+{% if version %}\
+# {{ version }} — {{ timestamp | date(format="%d %b %Y") }}
+{% else %}\
+# Unreleased
+{% endif %}
+{% for group, commits in commits | group_by(attribute="group") -%}
+{%- if not loop.first %}
+{% endif -%}
+## {{ group | striptags | trim }}
+
+{% for commit in commits -%}
+- {{ commit.message | upper_first }} ([{{ commit.id | truncate(length=7, end="") }}]({{ self::repo_base() }}/commit/{{ commit.id }})){% if commit.remote.pr_number %} ([#{{ commit.remote.pr_number }}]({{ self::repo_base() }}/pull/{{ commit.remote.pr_number }})){% endif %}
+{% endfor -%}
+{% endfor -%}"""
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+filter_commits = true
+split_commits = false
+topo_order_commits = true
+sort_commits = "oldest"
+tag_pattern = "v[0-9]*"
+commit_parsers = [
+  # Merge commits (non-squash PR merges) — never list the boilerplate merge line; child commits still appear.
+  { message = "^Merge pull request", skip = true },
+  { message = "^Merge branch", skip = true },
+  { message = "^Merge remote-tracking branch", skip = true },
+  { message = "^chore", skip = true },
+  { message = "^deps(\\(.+\\))?:", skip = true },
+  { message = "^ci(\\(.+\\))?!?:", skip = true },
+  { message = "^test(\\(.+\\))?!?:", skip = true },
+  { message = "^feat", group = "<!-- 0 -->✨ Features" },
+  { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
+  { message = "^docs", group = "<!-- 2 -->📖 Documentation" },
+  { message = "^refactor", group = "<!-- 3 -->♻️ Refactor" },
+  { message = "^rm", group = "<!-- 4 -->🗑️ Removed" },
+]

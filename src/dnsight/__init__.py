@@ -1,11 +1,78 @@
-from importlib.metadata import PackageNotFoundError
+"""dnsight — DNS, email, and web security hygiene."""
+
+import logging
+
+from dnsight.sdk import (
+    AuditResult,
+    RunAuditOptions,
+    check_caa,
+    check_caa_sync,
+    check_dkim,
+    check_dkim_sync,
+    check_dmarc,
+    check_dmarc_sync,
+    check_dnssec,
+    check_dnssec_sync,
+    check_headers,
+    check_headers_sync,
+    check_mx,
+    check_mx_sync,
+    check_spf,
+    check_spf_sync,
+    generate,
+    generate_caa,
+    generate_dmarc,
+    generate_headers,
+    generate_mx,
+    generate_spf,
+    run_batch,
+    run_batch_sync,
+    run_check,
+    run_check_sync,
+    run_domain,
+    run_domain_stream,
+    run_domain_stream_sync,
+    run_domain_sync,
+    run_targets,
+    run_targets_sync,
+)
+from dnsight.version import __version__
 
 
-try:
-    from importlib.metadata import version
+__all__ = [
+    "__version__",
+    "AuditResult",
+    "RunAuditOptions",
+    "check_caa",
+    "check_caa_sync",
+    "check_dkim",
+    "check_dkim_sync",
+    "check_dmarc",
+    "check_dmarc_sync",
+    "check_dnssec",
+    "check_dnssec_sync",
+    "check_headers",
+    "check_headers_sync",
+    "check_mx",
+    "check_mx_sync",
+    "check_spf",
+    "check_spf_sync",
+    "generate",
+    "generate_caa",
+    "generate_dmarc",
+    "generate_headers",
+    "generate_mx",
+    "generate_spf",
+    "run_batch",
+    "run_batch_sync",
+    "run_check",
+    "run_check_sync",
+    "run_domain",
+    "run_domain_stream",
+    "run_domain_stream_sync",
+    "run_domain_sync",
+    "run_targets",
+    "run_targets_sync",
+]
 
-    raw = version("dnsight")
-    # Show clean version for releases, "dev" for untagged local builds
-    __version__ = raw if "dev" not in raw else "dev.local"
-except PackageNotFoundError:
-    __version__ = "dev"
+logging.getLogger("dnsight").addHandler(logging.NullHandler())
