@@ -15,7 +15,7 @@ jobs:
     # Prefer tag_name over github.ref (release payload is the source of truth for the tag).
     if: ${{ startsWith(github.event.release.tag_name, 'v') }}
     permissions:
-      contents: write  # checkout + release notes + assets
+      contents: write  # checkout + release notes
       id-token: write  # PyPI trusted publishing
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
@@ -41,6 +41,3 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name }}
           body_path: release-notes.md
-          files: |-
-            dist/*.whl
-            dist/*.tar.gz
