@@ -102,9 +102,7 @@ def config_source_argument() -> ArgumentInfo:
     )
 
 
-ConfigSourceArg: TypeAlias = Annotated[
-    str | None, config_source_argument()
-]  # NOSONAR S6794
+ConfigSourceArg: TypeAlias = Annotated[str | None, config_source_argument()]
 
 
 def resolve_targets_option() -> OptionInfo:
@@ -115,9 +113,7 @@ def resolve_targets_option() -> OptionInfo:
     )
 
 
-ResolveTargetsOpt: TypeAlias = Annotated[
-    bool, resolve_targets_option()
-]  # NOSONAR S6794
+ResolveTargetsOpt: TypeAlias = Annotated[bool, resolve_targets_option()]
 
 
 def cli_exit_fatal(message: str, *, code: int = 3) -> Never:

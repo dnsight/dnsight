@@ -13,10 +13,8 @@ __all__ = ["SpfSchema"]
 class SpfSchema:
     """SPF field types — shared by SpfConfig, SPFData, SpfGenerateParams."""
 
-    DispositionLiteral: TypeAlias = Literal[
-        "+all", "-all", "~all", "?all"
-    ]  # NOSONAR S6794
-    RequiredDispositionLiteral: TypeAlias = DispositionLiteral  # NOSONAR S6794
+    DispositionLiteral: TypeAlias = Literal["+all", "-all", "~all", "?all"]
+    RequiredDispositionLiteral: TypeAlias = DispositionLiteral
     DISPOSITION_VALUES: Final[tuple[str, ...]] = ("-all", "~all", "?all", "+all")
 
     DispositionStr = Annotated[

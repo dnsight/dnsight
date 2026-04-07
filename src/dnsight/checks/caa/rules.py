@@ -285,7 +285,7 @@ async def discover_names(  # NOSONAR S3776
     queue: deque[tuple[str, int]] = deque()
     expanded: set[str] = set()
 
-    for name in list(seen.keys()):
+    for name in tuple(seen):
         queue.append((name, 0))
 
     while queue:
@@ -473,7 +473,7 @@ def _validate_name(  # NOSONAR S3776
 
     result = CaaNameResult(
         name=name,
-        discovery=tuple(),  # filled by caller
+        discovery=(),  # filled by caller
         records_at_node=[CaaRecord(**r.model_dump()) for r in effective],
         effective_node=eff_node,
         effective_records=[CaaRecord(**r.model_dump()) for r in effective],

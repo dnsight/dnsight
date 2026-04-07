@@ -184,7 +184,7 @@ def register_dmarc(app: typer.Typer) -> None:
     )
 
     @t.callback(invoke_without_command=True)
-    def dmarc_run(  # NOSONAR S107
+    def dmarc_run(
         ctx: typer.Context,
         domains: DomainsArg = None,
         *,

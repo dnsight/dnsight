@@ -63,7 +63,7 @@ def configure(
             with Rich (only affects records with exception info).
     """
     root = logging.getLogger(_ROOT_NAME)
-    for h in list(root.handlers):
+    for h in root.handlers[:]:
         root.removeHandler(h)
 
     if format_string is not None:

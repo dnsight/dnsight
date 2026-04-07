@@ -48,9 +48,7 @@ def domain_result_from_check(
     )
 
 
-ResultType: TypeAlias = (
-    DomainResult | CheckResultAny | Sequence[DomainResult]
-)  # NOSONAR S6794
+ResultType: TypeAlias = DomainResult | CheckResultAny | Sequence[DomainResult]
 
 
 class BaseDomainSerialiser(ABC):

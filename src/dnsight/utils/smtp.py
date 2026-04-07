@@ -155,7 +155,7 @@ class AsyncStartTLSProbe:
             with contextlib.suppress(OSError):
                 await writer.wait_closed()
 
-    async def _read_smtp_greeting(  # NOSONAR S7483
+    async def _read_smtp_greeting(
         self, reader: asyncio.StreamReader, timeout: float
     ) -> StartTLSProbeResult | None:
         while True:
@@ -172,7 +172,7 @@ class AsyncStartTLSProbe:
             if line.startswith(b"220"):
                 return None
 
-    async def _read_multiline_250(  # NOSONAR S7483
+    async def _read_multiline_250(
         self, reader: asyncio.StreamReader, timeout: float
     ) -> _EhloRead:
         buf = bytearray()

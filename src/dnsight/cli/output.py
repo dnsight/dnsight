@@ -36,10 +36,8 @@ __all__ = [
     "get_serialiser",
 ]
 
-_Batch: TypeAlias = tuple[DomainResult, ...]  # NOSONAR S6794
-_EmitInput: TypeAlias = (
-    DomainResult | Sequence[DomainResult] | AuditResult
-)  # NOSONAR S6794
+_Batch: TypeAlias = tuple[DomainResult, ...]
+_EmitInput: TypeAlias = DomainResult | Sequence[DomainResult] | AuditResult
 
 
 def serialiser_options_from_state(

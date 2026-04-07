@@ -124,7 +124,7 @@ class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):  # NOSONAR S6792
             await throttler.wait()
         return await self._check(domain, config=config)
 
-    def generate(self, *, params: GenerateParamsT) -> GeneratedRecord:  # NOSONAR S6796
+    def generate(self, *, params: GenerateParamsT) -> GeneratedRecord:
         """Generate a DNS record from config.
 
         Args:
@@ -143,20 +143,18 @@ class BaseCheck(ABC, Generic[CheckDataT, GenerateParamsT]):  # NOSONAR S6792
     # -- Abstract / override methods --------------------------------------
 
     @abstractmethod
-    async def _get(
-        self, domain: str, *, config: Any | None = None
-    ) -> CheckDataT:  # NOSONAR S6796
+    async def _get(self, domain: str, *, config: Any | None = None) -> CheckDataT:
         """Fetch and parse — implement in subclass."""
         ...
 
     @abstractmethod
-    async def _check(  # NOSONAR S6796
+    async def _check(
         self, domain: str, *, config: Any | None = None
     ) -> CheckResult[CheckDataT]:
         """Fetch, parse, validate — implement in subclass."""
         ...
 
-    def _generate(self, *, params: GenerateParamsT) -> GeneratedRecord:  # NOSONAR S6796
+    def _generate(self, *, params: GenerateParamsT) -> GeneratedRecord:
         """Generate a record — override in subclass if GENERATE capability.
 
         This is a missing-override fallback, not capability gating (that is done in generate()).
