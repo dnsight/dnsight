@@ -9,6 +9,7 @@ __pycache__/
 ### Packaging / build artifacts
 build/
 dist/
+site/
 *.egg-info/
 *.egg
 .Python
@@ -20,6 +21,7 @@ env/
 ENV/
 
 ### Tests / coverage
+.hypothesis/
 .pytest_cache/
 .coverage
 .coverage.*
@@ -39,6 +41,10 @@ dmypy.json
 .envrc
 .pypirc
 
+### Local dnsight YAML (see local/dnsight-configs/README.md)
+local/
+!local/dnsight-configs/README.md
+
 ### Cursor
 .cursorignore
 .cursorindexingignore
@@ -46,3 +52,6 @@ dmypy.json
 
 ### Archive
 archive/
+
+### Plan
+.plan/

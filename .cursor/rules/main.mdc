@@ -1,0 +1,46 @@
+---
+description: Cursor behaviour rules for dnsight — dependency rules and never-do list
+globs: ""
+alwaysApply: true
+---
+# dnsight — Cursor rules
+
+**AGENTS.md** — full standards, layout, quality bar, and SDK/config behaviour. **CONTRIBUTING.md** — human contributor workflow.
+
+Long-form reference under `docs/` is **forthcoming**; until then use AGENTS.md, code under `core/config/` and `core/schema/`, and tests.
+
+- Adding a check: **AGENTS.md** (architecture, registry, config slice, tests with fakes) and **CONTRIBUTING.md** (PR expectations).
+
+---
+
+## Dependency rules (never violate)
+
+```md
+cli/  →  sdk/  →  sdk/audit/  →  checks/  →  core/
+                      checks/  →  utils/
+serialisers/  →  core/  +  sdk/audit/models (aggregate types)
+```
+
+- `core/` imports nothing from other internal packages
+- `cli/` imports from `dnsight.sdk` and `core/` only
+- Checks import from `core/` and `utils/` only — never from each other or from `sdk.audit`
+- If a proposed change requires violating these rules, stop and flag it
+
+---
+
+## Never do
+
+- **Do not put generic type parameters on constructor calls** (e.g. `defaultdict[K, V](...)`, `list[str](...)`). Type parameters belong in variable annotations or return types only; the constructor is called without brackets.
+- Add `Any` to a public API signature
+- Import from `cli/` outside of `cli/`
+- Import from `checks/` in `cli/` — go through `dnsight.sdk`
+- Add persistence, a database, scheduled jobs, or an HTTP server
+- Raise `NotImplementedError` for capabilities — use the capability registry and `CapabilityError` instead
+- Use real DNS or HTTP in the default test suite — use fakes
+- Silently swallow exceptions in checks — wrap in partial result with error message
+
+---
+
+## Output formats
+
+Default: Rich. Also JSON, SARIF, Markdown. Partial runs still produce output — never suppress results because one check failed.
