@@ -18,7 +18,10 @@ jobs:
     name: Conventional PR title
     runs-on: ubuntu-latest
     steps:
-      - uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50  # v6.1.1
+      # Grouped Dependabot PRs use titles like "Bump the … group …", not conventional commits.
+      - name: Conventional PR title
+        if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' }}
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50  # v6.1.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -33,3 +36,8 @@ jobs:
             ci
             rm
           validateSingleCommit: true
+
+      - name: Waive title check (Dependabot)
+        if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+        shell: bash
+        run: echo 'Dependabot PR — conventional title check skipped.'

@@ -20,6 +20,10 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Install safe-chain
+      shell: bash
+      run: curl -fsSL https://github.com/AikidoSec/safe-chain/releases/latest/download/install-safe-chain.sh | sh -s -- --ci
+
     - name: Install just
       uses: extractions/setup-just@f8a3cce218d9f83db3a2ecd90e41ac3de6cdfd9b  # v3
 
