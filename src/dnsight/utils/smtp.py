@@ -47,7 +47,7 @@ class StartTLSProbeResult:
 class StartTLSProbe(Protocol):
     """Protocol for async SMTP STARTTLS probes."""
 
-    async def probe(
+    async def probe(  # NOSONAR S7483
         self, host: str, *, port: int = 25, timeout_seconds: float
     ) -> StartTLSProbeResult: ...
 
@@ -87,7 +87,7 @@ class _EhloRead:
 class AsyncStartTLSProbe:
     """Real SMTP STARTTLS handshake on port 25 (asyncio + TLS)."""
 
-    async def probe(
+    async def probe(  # NOSONAR S7483
         self, host: str, *, port: int = 25, timeout_seconds: float
     ) -> StartTLSProbeResult:
         """Connect, EHLO, and verify STARTTLS is offered and upgrades."""
@@ -155,7 +155,7 @@ class AsyncStartTLSProbe:
             with contextlib.suppress(OSError):
                 await writer.wait_closed()
 
-    async def _read_smtp_greeting(
+    async def _read_smtp_greeting(  # NOSONAR S7483
         self, reader: asyncio.StreamReader, timeout: float
     ) -> StartTLSProbeResult | None:
         while True:
@@ -172,7 +172,7 @@ class AsyncStartTLSProbe:
             if line.startswith(b"220"):
                 return None
 
-    async def _read_multiline_250(
+    async def _read_multiline_250(  # NOSONAR S7483
         self, reader: asyncio.StreamReader, timeout: float
     ) -> _EhloRead:
         buf = bytearray()
@@ -228,7 +228,7 @@ class FakeStartTLSProbe:
     ) -> None:
         self._results: dict[tuple[str, int], StartTLSProbeResult] = results or {}
 
-    async def probe(  # NOSONAR S7503
+    async def probe(  # NOSONAR — S7483 (timeout_seconds); S7503 (protocol parity, no I/O)
         self, host: str, *, port: int = 25, timeout_seconds: float
     ) -> StartTLSProbeResult:
         _ = timeout_seconds

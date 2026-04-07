@@ -83,7 +83,7 @@ def register_caa(app: typer.Typer) -> None:
     )
 
     @t.callback(invoke_without_command=True)
-    def caa_run(
+    def caa_run(  # NOSONAR S107
         ctx: typer.Context,
         domains: DomainsArg = None,
         *,

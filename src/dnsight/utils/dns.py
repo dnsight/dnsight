@@ -12,8 +12,9 @@ type.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
-from typing import Any, Protocol, TypedDict, cast, runtime_checkable
+from typing import Any, Protocol, TypedDict, TypeVar, cast, runtime_checkable
 
 import dns.asyncresolver
 from dns.exception import DNSException
@@ -49,6 +50,8 @@ class DnssecQueryResult:
 
 
 logger = get_logger(__name__)
+
+_T_fake_immediate = TypeVar("_T_fake_immediate")
 
 
 def _dns_debug(resolver: object, name: str, rdtype: str) -> None:
@@ -450,6 +453,10 @@ class FakeDNSResolver:
         self._records: dict[str, list[Any]] = records or {}
         self._dnssec_messages: dict[str, dns.message.Message] = dnssec_messages or {}
 
+    async def _immediate(self, value: _T_fake_immediate) -> _T_fake_immediate:
+        await asyncio.sleep(0)
+        return value
+
     def _get(self, name: str, rtype: str) -> list[Any]:
         _dns_debug(self, name, rtype)
         key = f"{name}/{rtype}"
@@ -459,53 +466,53 @@ class FakeDNSResolver:
 
     async def resolve_txt(self, name: str) -> list[str]:
         """Return pre-configured TXT records or raise ``CheckError``."""
-        return self._get(name, "TXT")
+        return await self._immediate(self._get(name, "TXT"))
 
     async def resolve_mx(self, name: str) -> list[tuple[int, str]]:
         """Return pre-configured MX records or raise ``CheckError``."""
-        return self._get(name, "MX")
+        return await self._immediate(self._get(name, "MX"))
 
     async def resolve_a(self, name: str) -> list[str]:
         """Return pre-configured A records or raise ``CheckError``."""
-        return self._get(name, "A")
+        return await self._immediate(self._get(name, "A"))
 
     async def resolve_aaaa(self, name: str) -> list[str]:
         """Return pre-configured AAAA records or raise ``CheckError``."""
-        return self._get(name, "AAAA")
+        return await self._immediate(self._get(name, "AAAA"))
 
     async def resolve_cname(self, name: str) -> list[str]:
         """Return pre-configured CNAME targets or raise ``CheckError``."""
-        return self._get(name, "CNAME")
+        return await self._immediate(self._get(name, "CNAME"))
 
     async def resolve_dname(self, name: str) -> list[str]:
         """Return pre-configured DNAME targets or raise ``CheckError``."""
-        return self._get(name, "DNAME")
+        return await self._immediate(self._get(name, "DNAME"))
 
     async def resolve_srv(self, name: str) -> list[tuple[int, int, int, str]]:
         """Return pre-configured SRV tuples or raise ``CheckError``."""
-        return self._get(name, "SRV")
+        return await self._immediate(self._get(name, "SRV"))
 
     async def resolve_ptr(self, ipv4: str) -> list[str]:
         """Return pre-configured PTR records or raise ``CheckError``."""
         rev = dns.reversename.from_address(ipv4)
         key_name = rev.to_text(omit_final_dot=True)
-        return self._get(key_name, "PTR")
+        return await self._immediate(self._get(key_name, "PTR"))
 
     async def resolve_caa(self, name: str) -> list[tuple[int, str, str]]:
         """Return pre-configured CAA records or raise ``CheckError``."""
-        return self._get(name, "CAA")
+        return await self._immediate(self._get(name, "CAA"))
 
     async def resolve_ns(self, name: str) -> list[str]:
         """Return pre-configured NS records or raise ``CheckError``."""
-        return self._get(name, "NS")
+        return await self._immediate(self._get(name, "NS"))
 
     async def resolve_ds(self, name: str) -> list[tuple[int, int, int, bytes]]:
         """Return pre-configured DS records or raise ``CheckError``."""
-        return self._get(name, "DS")
+        return await self._immediate(self._get(name, "DS"))
 
     async def resolve_dnskey(self, name: str) -> list[DNSKEYDict]:
         """Return pre-configured DNSKEY records or raise ``CheckError``."""
-        return self._get(name, "DNSKEY")
+        return await self._immediate(self._get(name, "DNSKEY"))
 
     async def query_dnssec(self, name: str, rdtype: str) -> DnssecQueryResult:
         """Return a pre-built DNS message for ``query_dnssec``."""
@@ -514,6 +521,8 @@ class FakeDNSResolver:
         if key not in self._dnssec_messages:
             raise CheckError(f"no dnssec response for {name} {rdtype}")
         msg = self._dnssec_messages[key]
-        return DnssecQueryResult(
-            rcode=msg.rcode(), ad=bool(msg.flags & dns.flags.AD), message=msg
+        return await self._immediate(
+            DnssecQueryResult(
+                rcode=msg.rcode(), ad=bool(msg.flags & dns.flags.AD), message=msg
+            )
         )
