@@ -2,10 +2,12 @@
 
 | | |
 | :--- | :--- |
-| **Testing** | [![CI](https://github.com/dnsight/dnsight/actions/workflows/ci.yaml/badge.svg)](https://github.com/dnsight/dnsight/actions/workflows/ci.yaml) [![codecov](https://codecov.io/github/dnsight/dnsight/graph/badge.svg?token=B4BKEX1G8O)](https://codecov.io/github/dnsight/dnsight) [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=dnsight_dnsight&metric=alert_status&token=479932a2a9cce01e25841c72ae83c300d5534029)](https://sonarcloud.io/summary/new_code?id=dnsight_dnsight) |
-| **Package** | [![PyPI](https://img.shields.io/pypi/v/dnsight.svg)](https://pypi.org/project/dnsight/) [![Python](https://img.shields.io/pypi/pyversions/dnsight.svg)](https://pypi.org/project/dnsight/) [![Downloads](https://img.shields.io/pypi/dm/dnsight.svg)](https://pypi.org/project/dnsight/) |
+| **Quality** | [![CI](https://github.com/dnsight/dnsight/actions/workflows/ci.yaml/badge.svg)](https://github.com/dnsight/dnsight/actions/workflows/ci.yaml) [![codecov](https://codecov.io/github/dnsight/dnsight/graph/badge.svg?token=B4BKEX1G8O)](https://codecov.io/github/dnsight/dnsight) [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=dnsight_dnsight&metric=alert_status&token=479932a2a9cce01e25841c72ae83c300d5534029)](https://sonarcloud.io/summary/new_code?id=dnsight_dnsight) |
+| **Package** | [![PyPI](https://img.shields.io/pypi/v/dnsight.svg)](https://pypi.org/project/dnsight/) [![Python](https://img.shields.io/pypi/pyversions/dnsight.svg)](https://pypi.org/project/dnsight/) ![PyPI - Downloads](https://img.shields.io/pypi/dw/dnsight) ![PyPI - Downloads](https://img.shields.io/pypi/dm/dnsight) |
 | **Meta** | [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Docs](https://img.shields.io/badge/docs-site-blue)](https://dnsight.github.io/dnsight/) |
 | **Stack** | [![uv](https://img.shields.io/badge/uv-black?logo=uv)](https://docs.astral.sh/uv/) [![Ruff](https://img.shields.io/badge/ruff-black?logo=ruff)](https://docs.astral.sh/ruff/) [![just](https://img.shields.io/badge/just-black?logo=just)](https://just.systems/) [![SonarCloud](https://img.shields.io/badge/SonarCloud-126ED3?logo=sonarcloud)](https://sonarcloud.io) [![Aikido](https://img.shields.io/badge/Aikido%20Security-645DD7)](https://aikido.dev/) |
+| **Discussions** | [![Roadmap](https://img.shields.io/badge/Roadmap-purple?logo=github)](https://github.com/dnsight/dnsight/discussions/18) [![Ideas](https://img.shields.io/badge/Ideas-brightgreen?logo=github)](https://github.com/dnsight/dnsight/discussions/19) |
+
 
 **dnsight** is a Python SDK and CLI for auditing DNS, email authentication (SPF, DKIM, DMARC), and related signals. Use it from the shell or import it in your own tooling.
 
