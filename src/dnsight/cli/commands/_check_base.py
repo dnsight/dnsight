@@ -113,6 +113,7 @@ def make_check_typer(check_name: str, *, help_text: str | None = None) -> typer.
         help=help_text or f"Run the {check_name} check.",
         no_args_is_help=True,
         cls=_SubcommandsBeforeVariadicGroup,
+        context_settings={"allow_interspersed_args": True},
     )
 
 

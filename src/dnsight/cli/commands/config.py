@@ -63,7 +63,9 @@ def register_config(app: typer.Typer) -> None:  # NOSONAR S3776
         no_args_is_help=True,
     )
 
-    @t.command("validate", help="Validate a dnsight configuration file.")
+    @t.command(
+        "validate", help="Validate a dnsight configuration file.", no_args_is_help=True
+    )
     def validate_cmd(
         ctx: typer.Context,
         # ConfigSourceArg / ResolveTargetsOpt: Annotated[..., typer.Argument/Option] (see cli/helpers).
